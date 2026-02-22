@@ -51,7 +51,9 @@ export default async function ProtectedLayout({
                 </SidebarHeader>
 
                 <SidebarContent>
-                    <SidebarNav />
+                    <Suspense fallback={null}>
+                        <SidebarNav />
+                    </Suspense>
                 </SidebarContent>
 
                 <SidebarFooter>
