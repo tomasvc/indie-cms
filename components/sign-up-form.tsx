@@ -23,6 +23,7 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -44,6 +45,10 @@ export function SignUpForm({
         email,
         password,
         options: {
+          data: {
+            full_name: fullName,
+            username: email,
+          },
           emailRedirectTo: `${window.location.origin}/protected`,
         },
       });
@@ -66,6 +71,17 @@ export function SignUpForm({
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+            <div className="grid gap-2">
+                <Label htmlFor="email">Full Name</Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  placeholder="John Doe"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
