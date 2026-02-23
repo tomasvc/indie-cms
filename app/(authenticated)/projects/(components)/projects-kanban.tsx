@@ -11,7 +11,7 @@ import {
     type DragEndEvent,
     type DragStartEvent,
 } from "@dnd-kit/core";
-import { Project } from "@/types";
+import { Project, ProjectStatus } from "@/types";
 import { createPortal } from "react-dom";
 import { KanbanColumn } from "./kanban/projects-kanban-column";
 import { KanbanCard } from "./kanban/projects-kanban-card";
@@ -100,8 +100,8 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
             if (!project || project.status === newStatus) return;
 
             setLocalProjects((prev) =>
-                prev.map((p) =>
-                    p.id === projectId ? { ...p, status: newStatus } : p
+                prev.map((p: Project) =>
+                    p.id === projectId ? { ...p, status: newStatus as ProjectStatus } : p
                 )
             );
             onStatusChange?.(projectId, newStatus);
