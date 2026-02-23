@@ -4,12 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+const toDateOrNull = (s: string) => (s?.trim() ? s : null)
+
 export async function handleCreateProject(formData: FormData) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     // const client = formData.get('client') as string;
-    const start_date = formData.get('start_date') as string;
-    const due_date = formData.get('due_date') as string;
+    const start_date = toDateOrNull(formData.get('start_date') as string);
+    const due_date = toDateOrNull(formData.get('due_date') as string);
 
     const supabase = await createClient();
     const { data: user } = await supabase.auth.getUser();
@@ -55,9 +57,9 @@ export async function handleUpdateProject(formData: FormData) {
     const description = formData.get('description') as string;
     const status = formData.get('status') as string;
     const value = formData.get('value') as string;
-    const start_date = formData.get('start_date') as string;
-    const due_date = formData.get('due_date') as string;
-    const completed_date = formData.get('completed_date') as string;
+    const start_date = toDateOrNull(formData.get('start_date') as string);
+    const due_date = toDateOrNull(formData.get('due_date') as string);
+    const completed_date = toDateOrNull(formData.get('completed_date') as string);
     const progress = formData.get('progress') as string;
 
     const supabase = await createClient();
