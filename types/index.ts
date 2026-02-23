@@ -1,15 +1,20 @@
+type ProjectStatus = 'proposal' | 'active' | 'review' | 'completed' | 'archived';
+type ClientStatus = 'lead' | 'active' | 'archived';
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
+type TaskStatus = 'todo' | 'in_progress' | 'done';
+
 interface Project {
     id: string;
     user_id: string;
     client_id: string;
     title: string;
     description: string;
-    status: string;
+    status: ProjectStatus;
     progress: number;
     value: number;
     start_date: string;
     due_date: string;
-    completed_date: string;
+    completed_date: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -20,11 +25,11 @@ interface Client {
     name: string;
     company: string;
     email: string;
-    status: string;
+    status: ClientStatus;
     total_billed: number;
-    last_contact: Date;
-    created_at: Date;
-    updated_at: Date;
+    last_contact: string;
+    created_at: string;
+    updated_at: string;
 }
 
 interface Invoice {
@@ -34,13 +39,13 @@ interface Invoice {
     client_id: string;
     number: string;
     amount: number;
-    status: string;
-    issue_date: Date;
-    due_date: Date;
-    paid_date: Date | null;
+    status: InvoiceStatus;
+    issue_date: string;
+    due_date: string;
+    paid_date: string | null;
     pdf_url: string;
-    created_at: Date;
-    updated_at: Date;
+    created_at: string;
+    updated_at: string;
 }
 
 interface PortfolioProject {
@@ -52,7 +57,7 @@ interface PortfolioProject {
     thumbnail_url: string;
     live_url: string;
     view_count: number;
-    created_at: Date;
+    created_at: string;
 }
 
 interface Profile {
@@ -61,10 +66,10 @@ interface Profile {
     full_name: string;
     avatar_url: string | null;
     hourly_rate: number;
-    curency: string;
+    currency: string;
     bio: string | null;
-    created_at: Date;
-    updated_at: Date;
+    created_at: string;
+    updated_at: string;
 }
 
 interface Task {
@@ -72,11 +77,11 @@ interface Task {
     project_id: string;
     title: string;
     description: string;
-    status: string;
-    due_date: Date;
-    completed_date: Date;
+    status: TaskStatus;
+    due_date: string;
+    completed_date: string | null;
     is_overdue: boolean;
-    created_at: Date;
+    created_at: string;
 }
 
 interface TimeEntry {
@@ -86,8 +91,20 @@ interface TimeEntry {
     description: string;
     hours: number;
     rate: number;
-    entry_date: Date;
-    created_at: Date;
+    entry_date: string;
+    created_at: string;
 }
 
-export type { Project, Client, Invoice, PortfolioProject, Profile, Task, TimeEntry };
+export type {
+    Project,
+    Client,
+    Invoice,
+    PortfolioProject,
+    Profile,
+    Task,
+    TimeEntry,
+    ProjectStatus,
+    ClientStatus,
+    InvoiceStatus,
+    TaskStatus,
+};

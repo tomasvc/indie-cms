@@ -5,12 +5,14 @@ import { handleDeleteProject } from "@/lib/actions/projects";
 import { ProjectOverview } from "./(components)/project-overview";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { PencilIcon, StarIcon, TrashIcon } from "lucide-react";
+import { StarIcon } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Client } from "@/types";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
+import { EditProjectDialog } from "./(components)/edit-project-dialog";
+import { handleUpdateProject } from "@/lib/actions/projects";
 
 async function Project({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -46,10 +48,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         <Button size="icon-lg" variant="secondary">
                             <StarIcon className="size-3" />
                         </Button>
-                        <Button size="lg" variant="secondary" >
-                            <PencilIcon className="size-3 mb-0.5" />
-                            Edit
-                        </Button>
+                        <EditProjectDialog project={project} editProject={handleUpdateProject} />
                         <DeleteProjectButton id={id} deleteProject={handleDeleteProject} />
                     </div>
                 </div>

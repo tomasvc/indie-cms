@@ -1,11 +1,12 @@
 'use client';
 
 import { Project } from "@/types";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsKanban } from "./projects-kanban";
 import { ProjectsList } from "./projects-list";
 import { ProjectsTable } from "./projects-table";
+import { updateProjectStatus } from "@/lib/actions/projects";
 
 interface ProjectsViewProps {
     projects: Project[];
@@ -13,6 +14,13 @@ interface ProjectsViewProps {
 
 export function ProjectsView({ projects }: ProjectsViewProps) {
     const [state, setState] = useState<"list" | "kanban" | "table">("list");
+    const handleStatusChange = useCallback(async (projectId: string, status: string) => {
+        try {
+            await updateProjectStatus(projectId, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }, []);
 
     return (
         <Tabs defaultValue={state} className="flex flex-col gap-4">
@@ -25,7 +33,7 @@ export function ProjectsView({ projects }: ProjectsViewProps) {
                 <ProjectsList projects={projects} />
             </TabsContent>
             <TabsContent value="kanban">
-                <ProjectsKanban projects={projects} />
+                <ProjectsKanban projects={projects} onStatusChange={handleStatusChange} />
             </TabsContent>
             <TabsContent value="table">
                 <ProjectsTable projects={projects} />

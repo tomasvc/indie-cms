@@ -40,3 +40,29 @@ export async function handleDeleteProject(formData: FormData) {
     revalidatePath('/projects');
     redirect('/projects');
 }
+
+export async function updateProjectStatus(projectId: string, status: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('projects').update({ status }).eq('id', projectId);
+
+    if (error) throw error;
+    revalidatePath(`/projects`);
+}
+
+export async function handleUpdateProject(formData: FormData) {
+    const id = formData.get('id') as string;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const status = formData.get('status') as string;
+    const value = formData.get('value') as string;
+    const start_date = formData.get('start_date') as string;
+    const due_date = formData.get('due_date') as string;
+    const completed_date = formData.get('completed_date') as string;
+    const progress = formData.get('progress') as string;
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('projects').update({ title, description, status, value, start_date, due_date, completed_date, progress }).eq('id', id);
+    if (error) throw error;
+    revalidatePath(`/projects`);
+    redirect(`/projects/${id}`);
+}
