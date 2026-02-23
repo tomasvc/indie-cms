@@ -75,7 +75,7 @@ function mockInvoice(userId: string, projectId: string, clientId: string) {
   };
 }
 
-function mockTask(projectId: string) {
+function mockTask(projectId: string, userId: string) {
   const dueDate = faker.date.soon({ days: 21 });
   const completed = faker.datatype.boolean({ probability: 0.3 });
   return {
@@ -94,6 +94,7 @@ function mockTask(projectId: string) {
     due_date: dueDate.toISOString().split("T")[0],
     completed_date: completed ? faker.date.recent({ days: 7 }).toISOString().split("T")[0] : null,
     is_overdue: !completed && dueDate < new Date(),
+    projects: [{ user_id: userId, id: projectId }],
     created_at: faker.date.recent({ days: 45 }).toISOString(),
     updated_at: faker.date.recent({ days: 45 }).toISOString(),
   };
@@ -144,7 +145,7 @@ export function getMockDashboardCoreData(userId: string): DashboardCoreData {
 
   const tasks = projects.flatMap((p) =>
     Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => {
-      const t = mockTask(p.id);
+      const t = mockTask(p.id, userId);
       return t;
     })
   );

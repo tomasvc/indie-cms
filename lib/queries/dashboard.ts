@@ -49,7 +49,7 @@ async function fetchTasks(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('tasks')
-        .select('id, project_id, title, description, status, due_date, completed_date, is_overdue')
+        .select('id, project_id, title, description, status, due_date, completed_date, is_overdue, projects!inner(user_id)')
         .eq('projects.user_id', userId)
         .order('created_at', { ascending: true })
 
