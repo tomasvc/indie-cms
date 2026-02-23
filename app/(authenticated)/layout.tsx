@@ -14,18 +14,16 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { User } from "@supabase/supabase-js";
 
 async function SidebarUser() {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
 
-    const user = data?.claims as unknown as {
-        email: string;
-        name: string;
-        avatar: string;
-    };
+    const user = data?.claims as unknown as User;
+    const { email, full_name } = user.user_metadata;
 
-    return <NavUser user={user} />;
+    return <NavUser user={{ email, full_name }} />;
 }
 
 export default async function ProtectedLayout({
