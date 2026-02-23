@@ -40,7 +40,7 @@ async function Projects() {
                                     <DialogTitle>New Project</DialogTitle>
                                     <DialogDescription>Create a new project to get started.</DialogDescription>
                                 </DialogHeader>
-                                <FieldGroup>
+                                <FieldGroup className="my-4">
                                     <Field>
                                         <FieldLabel htmlFor="title">Title</FieldLabel>
                                         <Input id="title" name="title" placeholder="Enter the project title" />

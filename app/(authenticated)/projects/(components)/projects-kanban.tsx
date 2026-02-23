@@ -12,17 +12,17 @@ import {
     type DragStartEvent,
 } from "@dnd-kit/core";
 import { Project } from "@/types";
-import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { KanbanColumn } from "./kanban/projects-kanban-column";
 import { KanbanCard } from "./kanban/projects-kanban-card";
 import { KanbanCardOverlay } from "./kanban/projects-kanban-card-overlay";
 
 const KANBAN_COLUMNS = [
+    { id: "proposal", label: "Proposal" },
     { id: "active", label: "Active" },
-    { id: "on_hold", label: "On hold" },
+    { id: "review", label: "Review" },
     { id: "completed", label: "Completed" },
-    { id: "cancelled", label: "Cancelled" },
+    { id: "archived", label: "Archived" },
 ] as const;
 
 export type KanbanStatus = (typeof KANBAN_COLUMNS)[number]["id"];
