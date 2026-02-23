@@ -20,8 +20,16 @@ async function SidebarUser() {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
 
-    const user = data?.claims as unknown as User;
-    const { email, full_name } = user.user_metadata;
+    const claims = data?.claims as unknown as User | undefined;
+    if (!claims?.user_metadata) {
+        return null;
+    }
+
+    const email =
+        claims.user_metadata?.email ??
+        (claims as { email?: string }).email ??
+        "";
+    const full_name = claims.user_metadata?.full_name ?? "";
 
     return <NavUser user={{ email, full_name }} />;
 }
