@@ -14,7 +14,8 @@ export async function getClient(id: string) {
 
 export async function getClients() {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('clients').select('*');
+    const { data: user } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from('clients').select('*').eq('user_id', user.user?.id);
     if (error) throw error;
     return data;
 }

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getProject } from "@/lib/actions";
+import { getProject } from "@/lib/actions/projects";
 import { handleDeleteProject } from "@/lib/actions/projects";
 import { ProjectOverview } from "./(components)/project-overview";
 import { notFound } from "next/navigation";
@@ -14,6 +14,7 @@ import { DeleteProjectButton } from "./(components)/delete-project-button";
 import { EditProjectDialog } from "./(components)/edit-project-dialog";
 import { handleUpdateProject } from "@/lib/actions/projects";
 import { getClients } from "@/lib/actions/clients";
+import { ProjectDetailFallback } from "./(components)/project-detail-fallback";
 
 async function Project({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -109,7 +110,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
 
 export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
     return (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-md border" />}>
+        <Suspense fallback={<ProjectDetailFallback />}>
             <Project params={params} />
         </Suspense>
     );

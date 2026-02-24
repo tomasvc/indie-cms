@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ClientsView } from "./(components)/clients-view";
 import { CreateClientDialog } from "./(components)/create-client-dialog";
+import { ClientsPageFallback } from "./(components)/clients-fallback";
 
 async function Clients() {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('clients').select('*');
+    const { data: user } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from('clients').select('*').eq('user_id', user.user?.id);
 
     if (error) throw error;
     const clients = data ?? [];
@@ -30,7 +32,7 @@ async function Clients() {
 
 export default function ClientsPage() {
     return (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-md border" />}>
+        <Suspense fallback={<ClientsPageFallback />}>
             <Clients />
         </Suspense>
     );

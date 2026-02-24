@@ -121,4 +121,18 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .animate-fadein {
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
 }

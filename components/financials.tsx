@@ -33,7 +33,14 @@ export function Financials({ data }: FinancialsProps) {
                         <div>
                             <p className="text-xs text-muted-foreground">This month earned</p>
                             <p className="text-lg font-bold">{Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(monthlyEarnings)}</p>
-                            <p className="text-xs text-muted-foreground">vs {Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(previousMonthEarnings)} last month</p>
+                            <p className="text-xs text-muted-foreground">
+                                vs {previousMonthEarnings >= 1000
+                                    ? `$${(previousMonthEarnings / 1000).toFixed(
+                                        previousMonthEarnings % 1000 === 0 ? 0 : 1
+                                    )}K`
+                                    : Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(previousMonthEarnings)
+                                } last month
+                            </p>
                         </div>
                     </div>
                     <div className="flex gap-3 py-3">

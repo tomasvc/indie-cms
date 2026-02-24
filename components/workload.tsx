@@ -6,6 +6,7 @@ import { getActiveProjects, getOverdueTasks, getUpcomingDeadlines } from "@/lib/
 import { Project, Task } from "@/types";
 import { Progress } from "./ui/progress";
 import { format } from "date-fns";
+import Link from "next/link";
 
 type WorkloadProps = {
     data: DashboardCoreData;
@@ -34,12 +35,14 @@ export function Workload({ data }: WorkloadProps) {
                         {activeProjects.length > 0 ? activeProjects.map((project) => (
                             <div className="flex flex-col gap-1 pb-2" key={project.id}>
                                 <div className="flex justify-between">
-                                    <p>
-                                        {project.title}
-                                        {project.id === "others" && "count" in project && project.count != null
-                                            ? ` (${project.count})`
-                                            : ""}
-                                    </p>
+                                    <Link href={project.id === "others" ? "/projects" : `/projects/${project.id}`} className="hover:opacity-80 transition-opacity">
+                                        <p>
+                                            {project.title}
+                                            {project.id === "others" && "count" in project && project.count != null
+                                                ? ` (${project.count})`
+                                                : ""}
+                                        </p>
+                                    </Link>
                                     <p className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground">{project.progress}%</span>
                                         <Badge variant="secondary" className="text-xs capitalize">{project.status}</Badge>

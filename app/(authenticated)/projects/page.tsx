@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Suspense } from "react";
 import { ProjectsView } from "./(components)/projects-view";
+import { ProjectsPageFallback } from "./(components)/projects-fallback";
 import { PlusIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,7 +13,7 @@ import { handleCreateProject } from "@/lib/actions/projects";
 async function Projects() {
     const supabase = await createClient();
     const { data: user } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from('projects').select('*');
+    const { data, error } = await supabase.from('projects').select('*').eq('user_id', user.user?.id);
 
     if (error) throw error;
     const projects = data ?? [];
@@ -95,7 +96,7 @@ async function Projects() {
 
 export default function ProjectsPage() {
     return (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-md border" />}>
+        <Suspense fallback={<ProjectsPageFallback />}>
             <Projects />
         </Suspense>
     );

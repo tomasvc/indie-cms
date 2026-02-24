@@ -1,6 +1,7 @@
 import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { DollarSign, Eye, FileCheck, FolderKanban, TrendingUp, Users } from "lucide-react";
 import { Card } from "./ui/card";
+import { getFinancialSummary } from "@/lib/dashboard/financials";
 
 type TopStatsProps = {
     data: DashboardCoreData;
@@ -11,13 +12,23 @@ export function TopStats({ data }: TopStatsProps) {
     if (!projects || projects.length === 0) {
         return <div>No projects found</div>;
     }
+    const financialSummary = getFinancialSummary(data.invoices);
+    const { monthlyEarnings } = financialSummary;
+
+    const revenueMTD = monthlyEarnings >= 1000000
+        ? `$${(monthlyEarnings / 1000000).toFixed(2)}M`
+        : monthlyEarnings >= 1000
+            ? `$${(monthlyEarnings / 1000).toFixed(
+                monthlyEarnings % 1000 === 0 ? 0 : 1
+            )}K`
+            : Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(monthlyEarnings);
 
     const sections = [
         {
             id: crypto.randomUUID(),
             name: "Revenue (MTD)",
             icon: DollarSign,
-            value: 0,
+            value: revenueMTD,
             subvalue: "0%",
         },
         {

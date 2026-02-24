@@ -11,18 +11,17 @@ import { XIcon } from "lucide-react";
 import { useState } from "react";
 import { Client, InvoiceStatus, Project } from "@/types";
 import { createInvoice } from "@/lib/actions/invoices";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
-export function CreateInvoiceDialog({ projects, clients }: { projects: Project[], clients: Client[] }) {
+export function CreateInvoiceDialog({ trigger, projects, clients }: { trigger: React.ReactNode, projects: Project[], clients: Client[] }) {
     const [status, setStatus] = useState<InvoiceStatus>('draft');
     const [project_id, setProjectId] = useState<string>('');
     const [client_id, setClientId] = useState<string>('');
+
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button size="lg" variant="default" >
-                    <PlusIcon className="size-3 mb-0.5" />
-                    New Invoice
-                </Button>
+                {trigger}
             </DialogTrigger>
             <DialogContent>
                 <form action={createInvoice}>
@@ -61,30 +60,6 @@ export function CreateInvoiceDialog({ projects, clients }: { projects: Project[]
                             </Select>
                         </Field>
                         <Field>
-                            <FieldLabel htmlFor="number">Number</FieldLabel>
-                            <Input id="number" name="number" placeholder="Enter the invoice number" type="text" required />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="amount">Amount</FieldLabel>
-                            <Input id="amount" name="amount" placeholder="Enter the invoice amount" type="number" required min={0} step="any" />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="due_date">Due Date</FieldLabel>
-                            <Input id="due_date" name="due_date" placeholder="Enter the invoice due date" type="date" required />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="issue_date">Issue Date</FieldLabel>
-                            <Input id="issue_date" name="issue_date" placeholder="Enter the invoice issue date" type="date" required />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="paid_date">Paid Date</FieldLabel>
-                            <Input id="paid_date" name="paid_date" placeholder="Enter the invoice paid date" type="date" />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="pdf_url">PDF URL</FieldLabel>
-                            <Input id="pdf_url" name="pdf_url" placeholder="Enter the invoice PDF URL" type="url" />
-                        </Field>
-                        <Field>
                             <FieldLabel htmlFor="status">Status</FieldLabel>
                             <Select name="status" value={status} onValueChange={(value: string) => setStatus(value as InvoiceStatus)}>
                                 <SelectTrigger>
@@ -98,6 +73,44 @@ export function CreateInvoiceDialog({ projects, clients }: { projects: Project[]
                                     <SelectItem value="void">Void</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </Field>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Field>
+                                <FieldLabel htmlFor="number">Reference Number</FieldLabel>
+                                <InputGroup>
+                                    <InputGroupInput id="number" name="number" placeholder="Ref. number" type="string" maxLength={4} required />
+                                    <InputGroupAddon>
+                                        <span>INV-</span>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="amount">Amount</FieldLabel>
+                                <InputGroup>
+                                    <InputGroupInput id="amount" name="amount" placeholder="Enter amount" type="number" required min={0} step="any" />
+                                    <InputGroupAddon>
+                                        <span>$</span>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </Field>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Field>
+                                <FieldLabel htmlFor="due_date">Due Date</FieldLabel>
+                                <Input id="due_date" name="due_date" placeholder="Enter the invoice due date" type="date" required />
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="issue_date">Issue Date</FieldLabel>
+                                <Input id="issue_date" name="issue_date" placeholder="Enter the invoice issue date" type="date" required />
+                            </Field>
+                        </div>
+                        <Field>
+                            <FieldLabel htmlFor="paid_date">Paid Date</FieldLabel>
+                            <Input id="paid_date" name="paid_date" placeholder="Enter the invoice paid date" type="date" />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="pdf_url">PDF URL</FieldLabel>
+                            <Input id="pdf_url" name="pdf_url" placeholder="Enter the invoice PDF URL" type="url" />
                         </Field>
                     </FieldGroup>
                     <DialogFooter>
@@ -114,6 +127,6 @@ export function CreateInvoiceDialog({ projects, clients }: { projects: Project[]
                     </DialogFooter>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

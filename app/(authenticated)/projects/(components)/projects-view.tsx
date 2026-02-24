@@ -1,12 +1,15 @@
 'use client';
 
 import { Project } from "@/types";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectsKanban } from "./projects-kanban";
 import { ProjectsList } from "./projects-list";
 import { ProjectsTable } from "./projects-table";
 import { updateProjectStatus } from "@/lib/actions/projects";
+import { getStoredProjectsView, type ProjectsViewType } from "./projects-fallback";
+
+const PROJECTS_VIEW_KEY = "projects-view";
 
 interface ProjectsViewProps {
     projects: Project[];
@@ -14,6 +17,19 @@ interface ProjectsViewProps {
 
 export function ProjectsView({ projects }: ProjectsViewProps) {
     const [state, setState] = useState<"list" | "kanban" | "table">("list");
+
+    useEffect(() => {
+        setState(getStoredProjectsView());
+    }, []);
+
+    const handleTabChange = useCallback((value: string) => {
+        const v = value as ProjectsViewType;
+        setState(v);
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem(PROJECTS_VIEW_KEY, v);
+        }
+    }, []);
+
     const handleStatusChange = useCallback(async (projectId: string, status: string) => {
         try {
             await updateProjectStatus(projectId, status);
@@ -23,7 +39,7 @@ export function ProjectsView({ projects }: ProjectsViewProps) {
     }, []);
 
     return (
-        <Tabs defaultValue={state} className="flex flex-col gap-4">
+        <Tabs value={state} onValueChange={handleTabChange} className="flex flex-col gap-4">
             <TabsList>
                 <TabsTrigger value="list">List</TabsTrigger>
                 <TabsTrigger value="kanban">Kanban</TabsTrigger>

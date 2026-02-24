@@ -39,9 +39,8 @@ export default function RootLayout({
           <TooltipProvider>
             {children}
           </TooltipProvider>
-
         </ThemeProvider>
       </body>
-    </html>
+    </html >
   );
 }

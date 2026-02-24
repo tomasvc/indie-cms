@@ -139,11 +139,10 @@ export default function Page() {
             {navItems.map((item) => (
               <button
                 key={item.label}
-                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors ${
-                  item.active
+                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors ${item.active
                     ? "bg-primary/10 text-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
                 type="button"
               >
                 <item.icon className="size-3.5" />

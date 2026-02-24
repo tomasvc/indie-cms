@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 async function Earnings() {
     return (
@@ -8,9 +9,18 @@ async function Earnings() {
     )
 }
 
+function EarningsFallback() {
+    return (
+        <div className="flex flex-col gap-4 animate-fadein">
+            <Skeleton className="h-9 w-36" />
+            <Skeleton className="h-4 w-64" />
+        </div>
+    );
+}
+
 export default function EarningsPage() {
     return (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-md border" />}>
+        <Suspense fallback={<EarningsFallback />}>
             <Earnings />
         </Suspense>
     );

@@ -1,6 +1,7 @@
 import { getClient } from "@/lib/actions/clients";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ClientDetailFallback } from "./(components)/client-detail-fallback";
 
 async function Client({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -18,7 +19,7 @@ async function Client({ params }: { params: Promise<{ id: string }> }) {
 
 export default function ClientPage({ params }: { params: Promise<{ id: string }> }) {
     return (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-md border" />}>
+        <Suspense fallback={<ClientDetailFallback />}>
             <Client params={params} />
         </Suspense>
     );

@@ -11,6 +11,7 @@ import {
 import {
   BriefcaseBusiness,
   Clock,
+  FileText,
   Folder,
   Home,
   Receipt,
@@ -28,6 +29,12 @@ const mainNav = [
   { label: "Portfolio", href: "/portfolio", icon: BriefcaseBusiness },
 ];
 
+const AITools = [
+  { label: "AI Proposal", href: "/ai/proposal-generator", icon: FileText },
+  { label: "Invoice Creator", href: "/ai/invoice-creator", icon: Receipt },
+  { label: "Project Estimator", href: "/ai/project-estimator", icon: Clock },
+];
+
 export function SidebarNav() {
   const pathname = usePathname();
 
@@ -37,6 +44,21 @@ export function SidebarNav() {
       <SidebarGroupContent>
         <SidebarMenu>
           {mainNav.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+      <SidebarGroupLabel>AI Tools</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {AITools.map((item) => (
             <SidebarMenuItem key={item.label}>
               <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
                 <Link href={item.href}>

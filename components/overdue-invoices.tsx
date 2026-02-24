@@ -31,7 +31,7 @@ export function OverdueInvoices({ data }: OverdueInvoicesProps) {
                     <TableBody>
                         {overdueOrUpcomingInvoices.map(invoice => (
                             <TableRow key={invoice.id}>
-                                <TableCell className="px-4 py-3">{invoice.number}</TableCell>
+                                <TableCell className="px-4 py-3 font-mono">{invoice.number}</TableCell>
                                 <TableCell className="px-4 py-3">{data.clients.find(c => c.id === invoice.client_id)?.name}</TableCell>
                                 <TableCell className="px-4 py-3">{Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(invoice.amount)}</TableCell>
                                 <TableCell className="px-4 py-3 text-muted-foreground">{format(new Date(invoice.due_date), "MMM d, yyyy")}</TableCell>
