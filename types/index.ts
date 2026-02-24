@@ -43,7 +43,7 @@ interface Invoice {
     issue_date: string;
     due_date: string;
     paid_date: string | null;
-    pdf_url: string;
+    pdf_url: string | null;
     created_at: string;
     updated_at: string;
 }

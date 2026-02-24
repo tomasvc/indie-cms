@@ -29,7 +29,7 @@ export function TopStats({ data }: TopStatsProps) {
         },
         {
             id: crypto.randomUUID(),
-            name: "Pipeliine Value",
+            name: "Pipeline Value",
             icon: TrendingUp,
             value: 0,
             subvalue: "0%"
@@ -58,7 +58,7 @@ export function TopStats({ data }: TopStatsProps) {
     ]
 
     return (
-        <Card className="grid grid-cols-6 rounded-lg divide-x p-0">
+        <Card className="grid grid-cols-6 gap-0 rounded-lg divide-x p-0">
             {sections.map((s) => {
                 const Icon = s.icon;
 

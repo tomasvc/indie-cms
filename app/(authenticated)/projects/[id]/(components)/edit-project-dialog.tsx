@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogTrigger, DialogDescription, DialogClose, DialogFooter } from "@/components/ui/dialog";
-import { Project, ProjectStatus } from "@/types";
+import { Client, Project, ProjectStatus } from "@/types";
 import { CheckIcon, PencilIcon, XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
-export const EditProjectDialog = ({ project, editProject }: { project: Project, editProject: (formData: FormData) => Promise<void> }) => {
+export const EditProjectDialog = ({ project, clients, editProject }: { project: Project, clients: Client[], editProject: (formData: FormData) => Promise<void> }) => {
     const [title, setTitle] = useState(project.title || "");
     const [description, setDescription] = useState(project.description || "");
     const [status, setStatus] = useState<ProjectStatus>(project.status || "proposal");
@@ -19,6 +19,7 @@ export const EditProjectDialog = ({ project, editProject }: { project: Project, 
     const [startDate, setStartDate] = useState(project.start_date || "");
     const [dueDate, setDueDate] = useState(project.due_date || "");
     const [completedDate, setCompletedDate] = useState(project.completed_date || "");
+    const [client, setClient] = useState(project.client_id || "");
 
     return (
         <Dialog>
@@ -46,6 +47,20 @@ export const EditProjectDialog = ({ project, editProject }: { project: Project, 
                         <Field>
                             <FieldLabel htmlFor="description">Description</FieldLabel>
                             <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter the project description" />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="client">Client</FieldLabel>
+                            <Input type="hidden" name="client_id" value={client} />
+                            <Select name="client" value={client} onValueChange={(value: string) => setClient(value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select the project client" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clients.map((client: Client) => (
+                                        <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </Field>
                         <div className="grid grid-cols-2 gap-4">
                             <Field>
@@ -84,7 +99,6 @@ export const EditProjectDialog = ({ project, editProject }: { project: Project, 
                             <FieldLabel htmlFor="completed_date">Completed Date</FieldLabel>
                             <Input id="completed_date" name="completed_date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} type="date" placeholder="Enter the project completed date" />
                         </Field>
-
                     </FieldGroup>
                     <DialogFooter className="mt-6">
                         <DialogClose asChild>
@@ -98,7 +112,6 @@ export const EditProjectDialog = ({ project, editProject }: { project: Project, 
                             Save
                         </Button>
                     </DialogFooter>
-
                 </form>
             </DialogContent>
         </Dialog>

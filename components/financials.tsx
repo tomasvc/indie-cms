@@ -64,8 +64,8 @@ export function Financials({ data }: FinancialsProps) {
                         </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                        {clientFinancialBreakdown.map((client) =>
-                            client.total_billed > 0 ? (
+                        {clientFinancialBreakdown && clientFinancialBreakdown.map((client) =>
+                            client.total_billed > 0 && (
                                 <div className="flex flex-col gap-1 pb-2" key={client.id}>
                                     <div className="flex justify-between">
                                         <p>
@@ -86,7 +86,7 @@ export function Financials({ data }: FinancialsProps) {
                                         }
                                     />
                                 </div>
-                            ) : null
+                            )
                         )}
                     </div>
                 </div>

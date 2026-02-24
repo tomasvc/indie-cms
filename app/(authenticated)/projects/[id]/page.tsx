@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getClient, getProject } from "@/lib/actions";
+import { getProject } from "@/lib/actions";
 import { handleDeleteProject } from "@/lib/actions/projects";
 import { ProjectOverview } from "./(components)/project-overview";
 import { notFound } from "next/navigation";
@@ -9,31 +9,29 @@ import { StarIcon } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Client } from "@/types";
+import { Client, Project as ProjectType } from "@/types";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
 import { EditProjectDialog } from "./(components)/edit-project-dialog";
 import { handleUpdateProject } from "@/lib/actions/projects";
+import { getClients } from "@/lib/actions/clients";
 
 async function Project({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    let project;
+    let project: ProjectType | null = null;
+    let clients: Client[] = [];
 
     try {
         project = await getProject(id);
+        if (!project) {
+            notFound();
+        }
     } catch {
         notFound();
     }
-    if (!project) {
-        notFound();
-    }
 
-    let client: Client | null = null;
-    if (project.client_id) {
-        try {
-            client = await getClient(project.client_id);
-        } catch {
-            client = null;
-        }
+    clients = await getClients();
+    if (!clients) {
+        notFound();
     }
 
     return (
@@ -48,7 +46,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         <Button size="icon-lg" variant="secondary">
                             <StarIcon className="size-3" />
                         </Button>
-                        <EditProjectDialog project={project} editProject={handleUpdateProject} />
+                        <EditProjectDialog project={project} clients={clients} editProject={handleUpdateProject} />
                         <DeleteProjectButton id={id} deleteProject={handleDeleteProject} />
                     </div>
                 </div>
@@ -87,7 +85,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                     <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
-                    <ProjectOverview project={project} client={client} />
+                    <ProjectOverview project={project} client={project.client_id ? clients.find((client) => client.id === project.client_id) ?? null : null} />
                 </TabsContent>
                 <TabsContent value="tasks">
                     <div>Tasks</div>

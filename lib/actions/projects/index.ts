@@ -53,6 +53,7 @@ export async function updateProjectStatus(projectId: string, status: string) {
 
 export async function handleUpdateProject(formData: FormData) {
     const id = formData.get('id') as string;
+    const client_id = formData.get('client_id') as string;
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const status = formData.get('status') as string;
@@ -63,8 +64,15 @@ export async function handleUpdateProject(formData: FormData) {
     const progress = formData.get('progress') as string;
 
     const supabase = await createClient();
-    const { data, error } = await supabase.from('projects').update({ title, description, status, value, start_date, due_date, completed_date, progress }).eq('id', id);
+    const { data, error } = await supabase.from('projects').update({ title, description, client_id, status, value, start_date, due_date, completed_date, progress }).eq('id', id);
     if (error) throw error;
     revalidatePath(`/projects`);
     redirect(`/projects/${id}`);
+}
+
+export async function getProjects(userId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('projects').select('*').eq('user_id', userId);
+    if (error) throw error;
+    return data;
 }

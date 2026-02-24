@@ -15,6 +15,7 @@ export function Workload({ data }: WorkloadProps) {
     const activeProjects = getActiveProjects(data.projects as Array<Project>);
     const overdueTasks = getOverdueTasks(data.tasks as unknown as Array<Task>);
     const upcomingDeadlines = getUpcomingDeadlines(data.tasks as unknown as Array<Task>);
+    console.log(activeProjects);
     return (
         <Card className="col-span-2">
             <CardHeader className="border-b">
@@ -35,6 +36,9 @@ export function Workload({ data }: WorkloadProps) {
                                 <div className="flex justify-between">
                                     <p>
                                         {project.title}
+                                        {project.id === "others" && "count" in project && project.count != null
+                                            ? ` (${project.count})`
+                                            : ""}
                                     </p>
                                     <p className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground">{project.progress}%</span>
