@@ -5,7 +5,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export function ProjectDetailFallback() {
     return (
         <div className="flex flex-col gap-4 animate-fadein">
-            {/* Page header */}
             <div>
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex flex-col gap-1.5">
@@ -26,7 +25,6 @@ export function ProjectDetailFallback() {
                 </div>
             </div>
 
-            {/* Tabs */}
             <Tabs defaultValue="overview" className="flex flex-col gap-4">
                 <TabsList variant="line">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -37,9 +35,7 @@ export function ProjectDetailFallback() {
                     <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
 
-                {/* Overview tab content skeleton */}
                 <div className="flex flex-col gap-3">
-                    {/* KPI row */}
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         {[...Array(4)].map((_, i) => (
                             <Card key={i}>
@@ -55,11 +51,8 @@ export function ProjectDetailFallback() {
                         ))}
                     </div>
 
-                    {/* Two-column main content */}
                     <div className="grid gap-3 lg:grid-cols-[1fr_1fr] xl:grid-cols-[3fr_2fr]">
-                        {/* Left column */}
                         <div className="flex flex-col gap-3">
-                            {/* Client card */}
                             <Card>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
@@ -83,7 +76,6 @@ export function ProjectDetailFallback() {
                                 </CardContent>
                             </Card>
 
-                            {/* Tags card */}
                             <Card>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
@@ -100,7 +92,6 @@ export function ProjectDetailFallback() {
                                 </CardContent>
                             </Card>
 
-                            {/* Timeline card */}
                             <Card className="flex-1">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
@@ -120,9 +111,7 @@ export function ProjectDetailFallback() {
                             </Card>
                         </div>
 
-                        {/* Right column */}
                         <div className="flex flex-col gap-3">
-                            {/* Financial health card */}
                             <Card>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
@@ -148,7 +137,6 @@ export function ProjectDetailFallback() {
                                 </CardContent>
                             </Card>
 
-                            {/* Time burn card */}
                             <Card className="flex-1">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
@@ -183,7 +171,6 @@ export function ProjectDetailFallback() {
                         </div>
                     </div>
 
-                    {/* Recent activity card */}
                     <Card>
                         <CardHeader className="pb-3">
                             <div className="flex items-center gap-2">
