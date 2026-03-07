@@ -169,11 +169,11 @@ export function ProjectDetailFallback() {
                                     <div className="space-y-2">
                                         <Skeleton className="h-3 w-20" />
                                         <div className="flex items-end gap-1 h-8">
-                                            {[...Array(7)].map((_, i) => (
+                                            {[22, 28, 20, 30, 24, 26, 20].map((h, i) => (
                                                 <Skeleton
                                                     key={i}
                                                     className="flex-1 rounded-sm"
-                                                    style={{ height: `${20 + Math.random() * 12}px` }}
+                                                    style={{ height: `${h}px` }}
                                                 />
                                             ))}
                                         </div>
