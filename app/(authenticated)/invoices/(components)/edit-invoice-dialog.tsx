@@ -37,13 +37,13 @@ type InvoiceWithTotal = Invoice & { total?: number; amount?: number };
 
 function getInvoiceNumber(inv: InvoiceWithCode): string {
     if (inv.code != null && inv.code !== "") return String(inv.code);
-    if ((inv as Record<string, unknown>).number != null) return String((inv as Record<string, unknown>).number);
+    if ((inv as unknown as Record<string, unknown>).number != null) return String((inv as unknown as Record<string, unknown>).number);
     return "";
 }
 
 function getInvoiceAmount(inv: InvoiceWithTotal): number | "" {
     if (typeof inv.total === "number") return inv.total;
-    if (typeof (inv as Record<string, unknown>).amount === "number") return (inv as Record<string, unknown>).amount as number;
+    if (typeof (inv as unknown as Record<string, unknown>).amount === "number") return (inv as unknown as Record<string, unknown>).amount as number;
     return "";
 }
 

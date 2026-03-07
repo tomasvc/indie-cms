@@ -14,17 +14,6 @@ import { OverdueInvoices } from "@/app/(authenticated)/dashboard/(components)/ov
 import { DashboardFallback } from "@/app/(authenticated)/dashboard/(components)/dashboard-fallback";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
-// async function UserDetails() {
-//   const supabase = await createClient();
-//   const { data, error } = await supabase.auth.getClaims();
-
-//   if (error || !data?.claims) {
-//     redirect("/auth/login");
-//   }
-
-//   return JSON.stringify(data.claims, null, 2);
-// }
-
 async function Dashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser()
