@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-
-export const dynamic = "force-dynamic";
+import { connection } from "next/server";
 
 export default async function RootPage() {
+    await connection();
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
 
