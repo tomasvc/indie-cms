@@ -1,0 +1,863 @@
+---
+description: "Design system for Freelance OS — CSS tokens (--c-*), typography (Outfit, Fraunces, JetBrains Mono), layout, components (cards, KPI, badges, buttons), and animation. Use when building or editing UI components and styles."
+alwaysApply: false
+---
+# Freelance OS — Design System Rules (CLAUDE.md)
+
+This document defines the design system for the **Freelance OS** dashboard application. All values are extracted directly from the live UI implementation — treat this as the single source of truth for any agent building new screens or components.
+
+---
+
+## 1. Design Tokens (CSS Variables)
+
+The token system has two layers that work together:
+
+1. **shadcn base tokens** — the source of truth for all color values. Defined once in `:root` and `.dark`. Never edit values anywhere else.
+2. **`--c-*` semantic aliases** — shorthand aliases that point to shadcn tokens via `var()`. Used throughout component code for brevity and clarity. They automatically inherit light/dark mode because they reference shadcn tokens, not raw values.
+
+**Rule:** Always define values in shadcn tokens. Always consume them via `--c-*` aliases in component CSS.
+
+---
+
+### Layer 1 — shadcn Base Tokens
+
+Add this to your global stylesheet (e.g. `globals.css`). This is the only place raw `oklch()` values should appear.
+
+```css
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Surfaces ── */
+  --background:             oklch(1 0 0);
+  --foreground:             oklch(0.141 0.005 285.823);
+  --card:                   oklch(1 0 0);
+  --card-foreground:        oklch(0.141 0.005 285.823);
+  --popover:                oklch(1 0 0);
+  --popover-foreground:     oklch(0.141 0.005 285.823);
+
+  /* ── Brand / Primary — green-teal ── */
+  --primary:                oklch(0.60 0.13 163);
+  --primary-foreground:     oklch(0.98 0.02 166);
+
+  /* ── Secondary / Muted surfaces ── */
+  --secondary:              oklch(0.967 0.001 286.375);
+  --secondary-foreground:   oklch(0.21 0.006 285.885);
+  --muted:                  oklch(0.967 0.001 286.375);
+  --muted-foreground:       oklch(0.552 0.016 285.938);
+  --accent:                 oklch(0.967 0.001 286.375);
+  --accent-foreground:      oklch(0.21 0.006 285.885);
+
+  /* ── Destructive / Error ── */
+  --destructive:            oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* ── Borders & Inputs ── */
+  --border:                 oklch(0.92 0.004 286.32);
+  --input:                  oklch(0.92 0.004 286.32);
+  --ring:                   oklch(0.705 0.015 286.067);
+
+  /* ── Radius ── */
+  --radius:                 0.625rem; /* 10px base */
+
+  /* ── Charts — green monochromatic scale ── */
+  --chart-1:                oklch(0.85 0.13 165);
+  --chart-2:                oklch(0.77 0.15 163);
+  --chart-3:                oklch(0.70 0.15 162);
+  --chart-4:                oklch(0.60 0.13 163);
+  --chart-5:                oklch(0.51 0.10 166);
+
+  /* ── Sidebar ── */
+  --sidebar:                oklch(0.985 0 0);
+  --sidebar-foreground:     oklch(0.141 0.005 285.823);
+  --sidebar-primary:        oklch(0.60 0.13 163);
+  --sidebar-primary-foreground: oklch(0.98 0.02 166);
+  --sidebar-accent:         oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border:         oklch(0.92 0.004 286.32);
+  --sidebar-ring:           oklch(0.705 0.015 286.067);
+
+  /* ── Freelance OS supplemental — status/priority ── */
+  --status-active:          oklch(0.60 0.13 163);   /* = --primary */
+  --status-review:          oklch(0.75 0.18 65);    /* amber */
+  --status-overdue:         oklch(0.577 0.245 27.325); /* = --destructive */
+  --priority-high:          oklch(0.577 0.245 27.325);
+  --priority-medium:        oklch(0.75 0.18 65);
+  --priority-low:           oklch(0.60 0.13 163);
+}
+
+.dark {
+  --background:             oklch(0.141 0.005 285.823);
+  --foreground:             oklch(0.985 0 0);
+  --card:                   oklch(0.21 0.006 285.885);
+  --card-foreground:        oklch(0.985 0 0);
+  --popover:                oklch(0.21 0.006 285.885);
+  --popover-foreground:     oklch(0.985 0 0);
+  --primary:                oklch(0.70 0.15 162);
+  --primary-foreground:     oklch(0.26 0.05 173);
+  --secondary:              oklch(0.274 0.006 286.033);
+  --secondary-foreground:   oklch(0.985 0 0);
+  --muted:                  oklch(0.274 0.006 286.033);
+  --muted-foreground:       oklch(0.705 0.015 286.067);
+  --accent:                 oklch(0.274 0.006 286.033);
+  --accent-foreground:      oklch(0.985 0 0);
+  --destructive:            oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border:                 oklch(1 0 0 / 10%);
+  --input:                  oklch(1 0 0 / 15%);
+  --ring:                   oklch(0.552 0.016 285.938);
+  --chart-1:                oklch(0.85 0.13 165);
+  --chart-2:                oklch(0.77 0.15 163);
+  --chart-3:                oklch(0.70 0.15 162);
+  --chart-4:                oklch(0.60 0.13 163);
+  --chart-5:                oklch(0.51 0.10 166);
+  --sidebar:                oklch(0.21 0.006 285.885);
+  --sidebar-foreground:     oklch(0.985 0 0);
+  --sidebar-primary:        oklch(0.77 0.15 163);
+  --sidebar-primary-foreground: oklch(0.26 0.05 173);
+  --sidebar-accent:         oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border:         oklch(1 0 0 / 10%);
+  --sidebar-ring:           oklch(0.552 0.016 285.938);
+
+  /* Dark mode: status/priority re-mapped to dark primary/destructive */
+  --status-active:          oklch(0.70 0.15 162);   /* = dark --primary */
+  --status-overdue:         oklch(0.704 0.191 22.216);
+  --priority-high:          oklch(0.704 0.191 22.216);
+  --priority-low:           oklch(0.70 0.15 162);
+}
+```
+
+---
+
+### Layer 2 — `--c-*` Semantic Aliases
+
+Add this block **after** the shadcn tokens in the same `:root`. These aliases consume shadcn tokens — they hold no raw values of their own. Because they reference `var(--shadcn-token)`, they automatically update when `.dark` overrides the base tokens.
+
+```css
+:root {
+  /* ── Surfaces ── */
+  --c-bg:          var(--sidebar);           /* page canvas */
+  --c-card:        var(--card);
+  --c-subtle:      var(--muted);             /* tag bg, qa-bar, client row fills */
+
+  /* ── Text ── */
+  --c-text:        var(--foreground);
+  --c-muted:       var(--muted-foreground);
+
+  /* ── Brand ── */
+  --c-green:       var(--primary);
+  --c-green-lt:    oklch(from var(--primary) calc(l + 0.35) calc(c - 0.08) h);
+  --c-green-hover: oklch(from var(--primary) calc(l - 0.08) c h);
+
+  /* ── Status ── */
+  --c-amber:       var(--status-review);
+  --c-red:         var(--destructive);
+
+  /* ── Structure ── */
+  --c-border:      var(--border);
+
+  /* ── Shadows ── */
+  --c-shadow:      0 1px 3px oklch(0 0 0 / 7%), 0 1px 2px oklch(0 0 0 / 4%);
+  --c-shadow-md:   0 4px 16px oklch(0 0 0 / 8%);
+
+  /* ── Typography ── */
+  --font-sans:     'Outfit', sans-serif;
+  --font-serif:    'Fraunces', serif;
+  --font-mono:     'JetBrains Mono', monospace;
+}
+```
+
+> **Note on `--c-green-lt` and `--c-green-hover`:** These use relative `oklch()` color syntax to derive tints/shades directly from `--primary`. This means they automatically adapt when `--primary` changes in `.dark` mode. If your target browser doesn't support relative color syntax yet, define them as literal `oklch()` values in both `:root` and `.dark` instead:
+> ```css
+> /* Light */  --c-green-lt:    oklch(0.95 0.05 163);
+> /* Light */  --c-green-hover: oklch(0.52 0.13 163);
+> /* Dark  */  --c-green-lt:    oklch(0.25 0.05 163);
+> /* Dark  */  --c-green-hover: oklch(0.78 0.15 162);
+> ```
+
+---
+
+### Complete Token Map
+
+| `--c-*` alias | Resolves via | shadcn source token |
+|---|---|---|
+| `--c-bg` | `var(--sidebar)` | `--sidebar` |
+| `--c-card` | `var(--card)` | `--card` |
+| `--c-subtle` | `var(--muted)` | `--muted` / `--accent` / `--secondary` |
+| `--c-text` | `var(--foreground)` | `--foreground` |
+| `--c-muted` | `var(--muted-foreground)` | `--muted-foreground` |
+| `--c-green` | `var(--primary)` | `--primary` |
+| `--c-green-lt` | derived from `--primary` | `--primary` |
+| `--c-green-hover` | derived from `--primary` | `--primary` |
+| `--c-amber` | `var(--status-review)` | supplemental |
+| `--c-red` | `var(--destructive)` | `--destructive` |
+| `--c-border` | `var(--border)` | `--border` |
+
+---
+
+## 2. Typography
+
+Three font families are used, each with a specific role. Never substitute or mix these.
+
+| Family | Variable | Role |
+|---|---|---|
+| Outfit | `--font-sans` | Default body, labels, buttons, nav, metadata |
+| Fraunces | `--font-serif` | Display values: page titles, KPI numbers, metric values |
+| JetBrains Mono | `--font-mono` | Codes, dates, small metadata, timeline labels |
+
+### Type Scale
+
+| Token | Size | Weight | Font | Usage |
+|---|---|---|---|---|
+| Page title | 28px | 600 | serif | Screen/page heading (`letter-spacing: -0.3px`, `line-height: 1.2`) |
+| Subtitle | 14px | 300 | sans | Page description under title |
+| KPI value | 22px | 600 | serif | Hero metric numbers in KPI cards |
+| Metric value | 18px | 600 | serif | Values inside detail cards (Financial, Time) |
+| Card section title | 11px | 600 | sans | Card `<h3>` headers — ALL CAPS, `letter-spacing: 0.9px` |
+| Client name | 14px | 600 | sans | Primary entity name in client card |
+| Body / activity text | 13–14px | 400 | sans | Table rows, activity entries, general content |
+| Button text | 13px | 500 | sans | All button labels |
+| Labels / badge text | 11–12px | 500 | sans | Status badges, tags, KPI labels — often ALL CAPS |
+| Metadata / dates | 11–12px | 400–500 | mono | Gantt dates, activity dates, days-elapsed |
+
+---
+
+## 3. Layout & Spacing
+
+### Page Structure
+```
+┌─────────────────────────────────────────────────┐
+│  Header  (padding: 28px 32px 0)                 │
+│  Tabs    (padding: 0 32px)                       │
+│  Content (padding: 24px 32px 0)                  │
+│  ┌──────────────────────────────────────────┐   │
+│  │  KPI Row  (4-col grid, gap: 12px)        │   │
+│  ├─────────────────────┬────────────────────┤   │
+│  │  Left col  (60fr)   │  Right col (40fr)  │   │
+│  │  gap: 16px between  │  cards             │   │
+│  └─────────────────────┴────────────────────┘   │
+│  Bottom Section (full width)                     │
+└─────────────────────────────────────────────────┘
+```
+
+- **Content padding:** `24px 32px` (collapses to `16px` below 900px)
+- **KPI grid:** `grid-template-columns: repeat(4, 1fr)`, `gap: 12px`
+- **Two-col grid:** `grid-template-columns: 60fr 40fr`, `gap: 16px`
+- **Card vertical gap:** `margin-bottom: 16px` on each card (except last: `0`)
+
+### Spacing Scale
+
+| Value | Common usage |
+|---|---|
+| 3px | Badge vertical padding |
+| 4px | Progress bar height; tag dot size |
+| 5px | Icon gap in buttons/badges |
+| 6px | Tag list gap; avatar text |
+| 7px | Button padding (vertical); card head icon gap |
+| 8px | Client action button gap |
+| 9px | Badge radius fallback |
+| 10px | Badge/tag horizontal padding |
+| 12px | Activity row gap; client action gap; QA bar gap |
+| 14px | Avatar–text gap; card head padding bottom; client row padding |
+| 16px | Card body padding (vertical); card gap (grid); QA bar padding (horizontal) |
+| 18px | Card body padding (horizontal); card head padding (horizontal) |
+| 20px | Card head padding top |
+| 24px | KPI card padding (horizontal) |
+| 28px | Activity icon circle diameter |
+| 32px | Header mobile padding |
+| 40px | Client avatar diameter; nav item height |
+
+---
+
+## 4. Component Specifications
+
+### Card Container
+```css
+.card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: calc(var(--radius) * 1.4);  /* ≈ 14px */
+  box-shadow: var(--c-shadow);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.card:last-child { margin-bottom: 0; }
+```
+
+### Card Header (section title bar)
+```css
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+.card-head h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--c-muted);
+  font-family: var(--font-sans);
+}
+.card-head-icon { color: var(--c-muted); }  /* SVG icon, 13×13px, strokeWidth 2.5 */
+```
+
+### Card Body
+```css
+.card-body { padding: 16px 18px; }
+```
+
+---
+
+### KPI Card
+- **Grid:** 4 equal columns with `gap: 12px`
+- **Internal layout:** `display: flex; align-items: center; gap: 14px`
+- **Padding:** `16px 18px`
+- **Border-radius:** `calc(var(--radius) * 1.4)` (same as .card)
+- **Hover:** subtle green gradient overlay via `::before` pseudo-element (opacity 0 → 1)
+
+```css
+.kpi-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: calc(var(--radius) * 1.4);
+  padding: 16px 18px;
+  box-shadow: var(--c-shadow);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, oklch(0.98 0.01 163) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.kpi-card:hover::before { opacity: 1; }
+
+.kpi-label {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--c-muted);
+  margin-top: 3px;
+  font-family: var(--font-mono);
+}
+```
+
+**KPI icon circles:** `width: 40px; height: 40px; border-radius: 50%`. Background is an `18%` opacity tint of the relevant accent color.
+
+---
+
+### Circular Progress
+- **SVG-based**, `rotate(-90deg)` transform
+- Track ring: `stroke: var(--c-border)`
+- Fill ring: `stroke: var(--c-green)`, `stroke-linecap: round`
+- Animation: `stroke-dashoffset` transitions with `1s cubic-bezier(.4, 0, .2, 1)`, triggered on mount with a 120ms delay
+
+---
+
+### Status Badge (page-level, e.g. "Active")
+```css
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;     /* full pill */
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  font-family: var(--font-sans);
+}
+/* Active variant */
+.status-badge--active {
+  background: var(--c-green-lt);
+  color: var(--c-green);
+}
+.status-badge--active::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+```
+
+---
+
+### Tag Pills
+```css
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--c-subtle);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+}
+.tag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-green);  /* or project color */
+}
+```
+
+---
+
+### Client Card Row
+```css
+.client-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--c-subtle);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.client-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+  font-family: var(--font-serif);
+  flex-shrink: 0;
+}
+```
+
+**Last-contact warning badge:**
+```css
+.last-contact-badge {
+  font-size: 11px;
+  color: var(--c-amber);
+  background: oklch(0.98 0.04 65);
+  border: 1px solid oklch(0.90 0.06 65);
+  border-radius: 20px;
+  padding: 2px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+```
+
+---
+
+### Buttons
+
+**Default (ghost/outline):**
+```css
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border: 1px solid var(--c-border);
+  background: var(--c-card);
+  color: var(--c-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.btn:hover {
+  background: var(--c-subtle);
+  box-shadow: var(--c-shadow);
+}
+```
+
+**Primary (filled green):**
+```css
+.btn-primary {
+  background: var(--c-green);
+  color: white;
+  border-color: transparent;
+}
+.btn-primary:hover {
+  background: var(--c-green-hover);
+  box-shadow: 0 2px 8px oklch(0.60 0.13 163 / 30%);
+}
+```
+
+**Destructive:**
+```css
+.btn-danger {
+  color: var(--c-red);
+  border-color: oklch(0.92 0.01 27);
+}
+.btn-danger:hover { background: oklch(0.98 0.01 27); }
+```
+
+**Small (client actions):**  `padding: 5px 12px; font-size: 12px`
+
+---
+
+### Metric Grid (2-column inside cards)
+```css
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.metric {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+/* Odd items get right border + padding */
+.metric:nth-child(odd):not(:last-child) {
+  padding-right: 16px;
+  border-right: 1px solid var(--c-border);
+}
+.metric:nth-child(even) { padding-left: 16px; }
+/* Remove bottom border from last row */
+.metric:nth-last-child(-n+2) { border-bottom: none; padding-bottom: 0; }
+
+.metric-label {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.metric-value {
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  margin-top: 3px;
+}
+.metric-sub {
+  font-size: 11px;
+  color: var(--c-muted);
+  margin-top: 2px;
+}
+```
+
+---
+
+### Progress Bar (profit margin / project completion)
+```css
+.progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-border);
+  margin-top: 8px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--c-green);
+  transition: width 1.2s cubic-bezier(.4, 0, .2, 1);
+}
+```
+
+---
+
+### Mini Gantt Bar
+```css
+/* Track */
+.gantt-track {
+  position: relative;
+  height: 8px;
+  background: var(--c-border);
+  border-radius: 4px;
+}
+/* Progress fill */
+.gantt-fill {
+  height: 100%;
+  background: var(--c-green);
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(.4, 0, .2, 1);
+}
+/* Today marker */
+.gantt-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-green);
+  border: 2px solid white;
+  box-shadow: 0 0 0 3px oklch(0.60 0.13 163 / 25%);
+}
+/* Date labels */
+.gantt-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--c-muted);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+.gantt-today-label { color: var(--c-green); font-weight: 600; }
+```
+
+---
+
+### Activity Row
+```css
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.activity-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.activity-text { flex: 1; font-size: 13px; }
+.activity-date {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+```
+
+**Activity icon circles:** `width: 28px; height: 28px; border-radius: 50%`
+
+| Activity type | Icon color | Background tint |
+|---|---|---|
+| `invoice` | `#6366f1` (indigo) | `#6366f118` |
+| `task` | `var(--c-green)` | green at 18% |
+| `file` | `#f59e0b` (amber) | `#f59e0b18` |
+| `time` | `#3b82f6` (blue) | `#3b82f618` |
+
+---
+
+### Quick Actions Bar
+```css
+.qa-bar {
+  display: flex;
+  gap: 10px;
+  padding: 16px 18px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-subtle);
+}
+```
+Uses the same `.btn` and `.btn-primary` styles above.
+
+---
+
+### Tabs
+```css
+.tabs {
+  display: flex;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--c-border);
+  margin-top: 20px;
+}
+.tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.tab.active {
+  color: var(--c-text);
+  border-bottom-color: var(--c-green);
+}
+.tab:hover:not(.active) { color: var(--c-text); }
+```
+
+---
+
+### Page Header
+```css
+.page-header { padding: 28px 32px 0; }
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.page-subtitle {
+  color: var(--c-muted);
+  font-size: 14px;
+  margin-top: 4px;
+  font-weight: 300;
+}
+.page-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.page-meta-item {
+  font-size: 12px;
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+}
+.page-meta-item strong {
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.page-meta-dot { color: var(--c-border); }
+```
+
+---
+
+## 5. Color Semantics — Days Left
+
+The "days left" indicator changes color based on urgency:
+
+```js
+function daysColor(daysLeft) {
+  if (daysLeft > 14) return 'var(--c-green)';
+  if (daysLeft >= 7) return 'var(--c-amber)';
+  return 'var(--c-red)';
+}
+```
+
+Icon circle background uses the same color at 18% opacity: `${daysColor(d)}18` (hex) or set alpha via `oklch(... / 18%)`.
+
+---
+
+## 6. Animation Principles
+
+All animations use `cubic-bezier(.4, 0, .2, 1)` (standard ease-in-out).
+
+| Element | Property | Duration | Delay |
+|---|---|---|---|
+| Page header | `opacity` + `translateY(10px)` | 400ms | 0ms |
+| KPI row | `opacity` + `translateY(12px)` | 500ms | 100ms |
+| Two-col grid | `opacity` + `translateY(14px)` | 500ms | 200ms |
+| Bottom section | `opacity` + `translateY(14px)` | 500ms | 350ms |
+| Activity rows | `opacity` + `translateX(-6px)` | 400ms | 350ms + `i × 70ms` |
+| Circular progress | `stroke-dashoffset` | 1000ms | 120ms |
+| Profit bar fill | `width` | 1200ms | mount |
+| Gantt fill | `width` | 1000ms | mount |
+| KPI hover overlay | `opacity` | 200ms | — |
+| Button hover | `background`, `box-shadow` | 150ms | — |
+| Tab hover | `color` | 150ms | — |
+
+All enter animations are triggered by adding an `.in` class after a 50ms `setTimeout` on mount.
+
+---
+
+## 7. Icons
+
+- **Style:** Line/outline SVG, `strokeWidth: 2` (card head icons use `2.5`)
+- **Card head icon size:** 13 × 13px
+- **KPI icon size:** 18 × 18px, inside a 40px circle
+- **Activity icon size:** 14 × 14px, inside a 28px circle
+- **Button/inline icon size:** 14–16px
+- No icon library required — inline SVG path data used throughout. Compatible with Lucide or Heroicons (outline) as drop-in equivalents.
+
+---
+
+## 8. Navigation Structure
+
+```
+Sidebar (--sidebar background: oklch(0.985 0 0))
+├── Logo / Brand ("Freelance OS")
+├── Main Navigation
+│   ├── Dashboard        ← active: --c-green indicator
+│   ├── Projects
+│   ├── Clients
+│   ├── Invoices
+│   ├── Time & Earnings
+│   └── Portfolio
+├── AI Tools
+│   ├── AI Proposal
+│   ├── Invoice Creator
+│   └── Project Estimator
+└── User Profile Footer
+    ├── Avatar (40px circle, --c-green bg)
+    └── Email address (12px, --c-muted)
+```
+
+---
+
+## 9. Responsive Breakpoints
+
+```css
+/* Tablet: stack KPI to 2-col, collapse main grid */
+@media (max-width: 900px) {
+  .kpi-row   { grid-template-columns: 1fr 1fr; }
+  .main-grid { grid-template-columns: 1fr; }
+  .po-content, .page-header { padding-inline: 16px; }
+  .tabs { padding-inline: 16px; }
+}
+
+/* Mobile: single-column KPI */
+@media (max-width: 540px) {
+  .kpi-row { grid-template-columns: 1fr; }
+}
+```
+
+---
+
+## 10. Data Visualization
+
+### Circular Progress (SVG)
+- Rendered with two `<circle>` elements on an SVG canvas
+- Canvas rotated `-90deg` so fill starts from the top
+- Track stroke: `var(--c-border)`; fill stroke: `var(--c-green)`
+- Stroke linecap: `round`
+- Animated via `stroke-dashoffset` on mount
+
+### Sparkline (Time Burn — 7-day)
+- 7 vertical bars, `height: 36px` container, `align-items: flex-end`
+- Each bar: `flex: 1`, `border-radius: 2px 2px 0 0`, `opacity: 0.3`
+- Empty state: `background: var(--c-border)`, `height: 4px` fixed
+- Hover: `opacity: 0.8`
+- Active bars: `background: var(--c-green)`
+
+### Mini Gantt
+- Single horizontal track (see component spec above)
+- Date labels in `--font-mono`, 11px
+- Today marker: 14px circle with `box-shadow: 0 0 0 3px oklch(0.60 0.13 163 / 25%)`
+
+### Financial Health Metric — Profit Margin Bar
+- 4px progress bar under the profit margin metric value
+- Animates `width` from `0%` → actual `%` on mount
+- Green if `profit_margin > 30`, amber otherwise
+
+---
+
+## 11. Figma Source
+
+Original design file: `oow0ZWoewI9dOc124rVmjK` (Freelance OS)
+Live UI reference: `ProjectOverview.jsx`

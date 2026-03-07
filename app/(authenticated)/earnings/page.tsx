@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function Earnings() {
     return (
@@ -24,4 +25,9 @@ export default function EarningsPage() {
             <Earnings />
         </Suspense>
     );
+}
+
+export const metadata: Metadata = {
+    title: "Earnings",
+    description: "View and manage your earnings.",
 }

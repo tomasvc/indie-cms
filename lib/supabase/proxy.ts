@@ -72,5 +72,34 @@ export async function updateSession(request: NextRequest) {
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
+  // Redirect authenticated users who have not completed onboarding to /onboarding.
+  // Use getUser() so we have a reliable user.id; only redirect when we successfully
+  // read the profile and onboarding is not completed. On profile query error, allow
+  // the request through so users are not stuck.
+  if (request.nextUrl.pathname !== "/onboarding") {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    if (authUser?.id) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("onboarding_completed_at")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+
+      const completed =
+        !profileError && Boolean(profile?.onboarding_completed_at);
+      if (!profileError && !completed) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/onboarding";
+        const redirectResponse = NextResponse.redirect(url);
+        supabaseResponse.cookies.getAll().forEach((cookie) =>
+          redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+        );
+        return redirectResponse;
+      }
+    }
+  }
+
   return supabaseResponse;
 }

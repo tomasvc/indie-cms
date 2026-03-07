@@ -6,25 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Client } from "@/types";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(value);
-}
-
-function formatDate(dateStr: string) {
-    if (!dateStr) return "—";
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    }).format(date);
-}
+import { formatMoney, formatDate } from "@/lib/helpers/format";
 
 interface ClientsListProps {
     clients: Client[];
@@ -61,21 +43,21 @@ export function ClientsList({ clients }: ClientsListProps) {
                                 {client.status.replace("_", " ")}
                             </Badge>
                         </CardHeader>
-                        <CardContent className="space-y-3 pt-0">
+                        <CardContent className="space-y-3 pt-4">
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-                                <span>{formatCurrency(client.total_billed)}</span>
-                                <span>Last contact {formatDate(client.last_contact)}</span>
+                                <span>{formatMoney(client.total_billed ?? 0, "USD")}</span>
+                                <span>Last contact {formatDate(client.last_contact ?? "", "MMM d, yyyy")}</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Progress
                                     value={client.total_billed}
                                     className={cn(
                                         "h-2 flex-1",
-                                        client.total_billed >= 100 && "[--progress-background:var(--primary)]"
+                                        client.total_billed && client.total_billed >= 100 && "[--progress-background:var(--primary)]"
                                     )}
                                 />
                                 <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-                                    {formatCurrency(client.total_billed)}
+                                    {formatMoney(client.total_billed ?? 0, "USD")}
                                 </span>
                             </div>
                         </CardContent>

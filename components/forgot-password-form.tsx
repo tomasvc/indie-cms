@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
+import { Typography } from "./ui/typography";
 
 export function ForgotPasswordForm({
   className,
@@ -49,8 +48,10 @@ export function ForgotPasswordForm({
       {success ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+            <Typography variant="cardTitle">Check Your Email</Typography>
+            <Typography variant="cardSectionTitle" as="p" className="mt-1">
+              Password reset instructions sent
+            </Typography>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
@@ -62,11 +63,11 @@ export function ForgotPasswordForm({
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>
+            <Typography variant="cardTitle">Reset Your Password</Typography>
+            <Typography variant="cardSectionTitle" as="p" className="mt-1">
               Type in your email and we&apos;ll send you a link to reset your
               password
-            </CardDescription>
+            </Typography>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClientsView } from "./(components)/clients-view";
 import { CreateClientDialog } from "./(components)/create-client-dialog";
 import { ClientsPageFallback } from "./(components)/clients-fallback";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function Clients() {
     const supabase = await createClient();
@@ -13,7 +14,7 @@ async function Clients() {
     const clients = data ?? [];
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 animate-fadein">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold">Clients</h1>
@@ -36,4 +37,9 @@ export default function ClientsPage() {
             <Clients />
         </Suspense>
     );
+}
+
+export const metadata: Metadata = {
+    title: "Clients",
+    description: "View and manage your clients.",
 }

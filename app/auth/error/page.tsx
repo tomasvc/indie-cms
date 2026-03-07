@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Suspense } from "react";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function ErrorContent({
   searchParams,
@@ -48,4 +49,9 @@ export default function Page({
       </div>
     </div>
   );
+}
+
+export const metadata: Metadata = {
+  title: "Error",
+  description: "An error occurred",
 }

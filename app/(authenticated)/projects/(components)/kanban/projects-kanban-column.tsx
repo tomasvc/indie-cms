@@ -10,18 +10,9 @@ interface KanbanColumnProps {
   label: string;
   count: number;
   projects: Project[];
-  formatCurrency: (value: number) => string;
-  formatDate: (dateStr: string) => string;
 }
 
-export function KanbanColumn({
-  id,
-  label,
-  count,
-  projects,
-  formatCurrency,
-  formatDate,
-}: KanbanColumnProps) {
+export function KanbanColumn({ id, label, count, projects }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
@@ -35,23 +26,13 @@ export function KanbanColumn({
         <span className="text-sm font-medium">{label}</span>
         <span className="text-muted-foreground text-xs">{count}</span>
       </div>
-      <div
-        ref={setNodeRef}
-        className="flex min-h-[120px] flex-col gap-2 p-2"
-      >
+      <div ref={setNodeRef} className="flex min-h-[120px] flex-col gap-2 p-2">
         {projects.length === 0 ? (
           <p className="flex flex-1 items-center justify-center py-6 text-center text-muted-foreground text-xs">
             No projects
           </p>
         ) : (
-          projects.map((project) => (
-            <KanbanCard
-              key={project.id}
-              project={project}
-              formatCurrency={formatCurrency}
-              formatDate={formatDate}
-            />
-          ))
+          projects.map((project) => <KanbanCard key={project.id} project={project} />)
         )}
       </div>
     </div>

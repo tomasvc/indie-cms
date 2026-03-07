@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getInvoices } from "@/lib/actions/invoices";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CreateInvoiceDialog } from "@/components/create-invoice-dialog";
+import { CreateInvoiceDialog } from "@/app/(authenticated)/invoices/(components)/create-invoice-dialog";
 import { InvoicesTable } from "./(components)/invoices-table";
 import { getProjects } from "@/lib/actions/projects";
 import { getClients } from "@/lib/actions/clients";
@@ -18,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function InvoicesPage() {
     const supabase = await createClient();
@@ -54,7 +55,7 @@ async function InvoicesPage() {
                     />
                 </div>
             </div>
-            <InvoicesTable invoices={invoices} />
+            <InvoicesTable invoices={invoices} projects={projects} clients={clients} />
         </div>
     )
 }
@@ -108,3 +109,8 @@ const Fallback = () => {
         </div>
     );
 };
+
+export const metadata: Metadata = {
+    title: "Invoices",
+    description: "View and manage your invoices.",
+}

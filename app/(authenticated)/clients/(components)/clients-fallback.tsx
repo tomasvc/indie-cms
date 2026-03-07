@@ -28,7 +28,7 @@ function ClientsListFallback() {
               </div>
               <Skeleton className="h-5 w-16 rounded-full shrink-0" />
             </CardHeader>
-            <CardContent className="space-y-3 pt-0">
+            <CardContent className="space-y-3 pt-4">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <Skeleton className="h-3 w-16" />
                 <Skeleton className="h-3 w-28" />

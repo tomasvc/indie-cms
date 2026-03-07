@@ -63,7 +63,7 @@ function mockInvoice(userId: string, projectId: string, clientId: string) {
     user_id: userId,
     project_id: projectId,
     client_id: clientId,
-    number: `INV-${faker.string.numeric(6)}`,
+    code: `INV-${faker.string.numeric(6)}`,
     amount: faker.number.float({ min: 500, max: 15000, fractionDigits: 2 }),
     status,
     due_date: dueDate.toISOString().split("T")[0],

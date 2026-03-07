@@ -11,7 +11,10 @@ function Card({
     <div
       data-slot="card"
       data-size={size}
-      className={cn("ring-foreground/10 bg-card text-card-foreground gap-4 overflow-hidden rounded-lg py-4 text-xs/relaxed ring-1 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 *:[img:first-child]:rounded-t-lg *:[img:last-child]:rounded-b-lg group/card flex flex-col", className)}
+      className={cn(
+        "bg-card text-card-foreground border border-border rounded-[calc(var(--radius)*1.4)] shadow-[var(--c-shadow)] overflow-hidden gap-0 text-sm font-sans has-[>img:first-child]:pt-0 data-[size=sm]:gap-0 *:[img:first-child]:rounded-t-[calc(var(--radius)*1.4)] *:[img:last-child]:rounded-b-[calc(var(--radius)*1.4)] group/card flex flex-col",
+        className
+      )}
       {...props}
     />
   )
@@ -22,7 +25,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "gap-1 rounded-t-lg px-4 group-data-[size=sm]/card:px-3 [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3 group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]",
+        "gap-0.5 rounded-t-[calc(var(--radius)*1.4)] px-[18px] pt-3.5 pb-3 border-b border-border group-data-[size=sm]/card:px-3 [.border-b]:pb-3 group-data-[size=sm]/card:[.border-b]:pb-3 group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]",
         className
       )}
       {...props}
@@ -34,7 +37,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("text-sm font-medium", className)}
+      className={cn("text-[11px] font-medium uppercase tracking-[0.9px] text-foreground font-sans", className)}
       {...props}
     />
   )
@@ -44,7 +47,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-muted-foreground text-xs/relaxed", className)}
+      className={cn("text-muted-foreground text-[13px] leading-relaxed font-sans", className)}
       {...props}
     />
   )
@@ -67,7 +70,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-4 group-data-[size=sm]/card:px-3", className)}
+      className={cn("px-[18px] py-4 group-data-[size=sm]/card:px-3 group-data-[size=sm]/card:py-3", className)}
       {...props}
     />
   )
@@ -77,7 +80,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("rounded-b-lg px-4 group-data-[size=sm]/card:px-3 [.border-t]:pt-4 group-data-[size=sm]/card:[.border-t]:pt-3 flex items-center", className)}
+      className={cn("rounded-b-[calc(var(--radius)*1.4)] px-4 group-data-[size=sm]/card:px-3 [.border-t]:pt-3 pb-3 group-data-[size=sm]/card:[.border-t]:pt-3 flex items-center border-t border-border bg-muted/50", className)}
       {...props}
     />
   )

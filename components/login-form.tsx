@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Typography } from "./ui/typography";
 
 export function LoginForm({
   className,
@@ -51,10 +52,10 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6 !z-50", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
+          <Typography variant="cardTitle">Login</Typography>
+          <Typography variant="cardSectionTitle" as="p" className="mt-1">
             Enter your email below to login to your account
-          </CardDescription>
+          </Typography>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>

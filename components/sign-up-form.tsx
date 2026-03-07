@@ -6,15 +6,14 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Typography } from "./ui/typography";
 
 export function SignUpForm({
   className,
@@ -49,7 +48,7 @@ export function SignUpForm({
             full_name: fullName,
             username: email,
           },
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
         },
       });
       if (error) throw error;
@@ -65,14 +64,16 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <Typography variant="cardTitle">Sign up</Typography>
+          <Typography variant="cardSectionTitle" as="p" className="mt-1">
+            Create a new account
+          </Typography>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-                <Label htmlFor="email">Full Name</Label>
+              <div className="grid gap-2">
+                <Label htmlFor="full-name">Full Name</Label>
                 <Input
                   id="full-name"
                   type="text"

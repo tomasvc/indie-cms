@@ -48,10 +48,10 @@ export default async function ProtectedLayout({
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                     >
                         <div className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md shrink-0">
-                            <span className="text-xs font-semibold leading-none tracking-tight">IN</span>
+                            <span className="text-xs font-semibold leading-none tracking-tight">OS</span>
                         </div>
                         <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-                            Indie CMS
+                            Freelance OS
                         </span>
                     </Link>
                 </SidebarHeader>
@@ -75,7 +75,7 @@ export default async function ProtectedLayout({
                     <div className="flex h-14 items-center justify-between px-4 sm:px-6">
                         <div className="flex items-center gap-2">
                             <SidebarTrigger />
-                            <p className="text-sm font-medium">Indie CMS</p>
+                            <p className="text-sm font-medium">Freelance OS</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <ThemeSwitcher />
@@ -83,7 +83,7 @@ export default async function ProtectedLayout({
                     </div>
                 </header>
 
-                <div className="flex-1 p-4 sm:p-6">{children}</div>
+                <div className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">{children}</div>
             </SidebarInset>
         </SidebarProvider>
     );

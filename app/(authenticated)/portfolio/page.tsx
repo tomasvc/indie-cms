@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function Portfolio() {
     return (
@@ -24,4 +25,9 @@ export default function PortfolioPage() {
             <Portfolio />
         </Suspense>
     );
+}
+
+export const metadata: Metadata = {
+    title: "Portfolio",
+    description: "View and manage your portfolio.",
 }

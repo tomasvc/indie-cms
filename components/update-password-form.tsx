@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Typography } from "./ui/typography";
 
 export function UpdatePasswordForm({
   className,
@@ -46,10 +47,10 @@ export function UpdatePasswordForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-          <CardDescription>
+          <Typography variant="cardTitle">Update Your Password</Typography>
+          <Typography variant="cardSectionTitle" as="p" className="mt-1">
             Please enter your new password below.
-          </CardDescription>
+          </Typography>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleForgotPassword}>

@@ -12,7 +12,7 @@ async function fetchProjects(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('projects')
-        .select('id, title, status, progress, value, due_date, client_id')
+        .select('id, title, status, progress, value, due_date, client_id, created_at, updated_at')
         .eq('user_id', userId)
         .order('due_date', { ascending: true })
 
@@ -25,7 +25,7 @@ async function fetchInvoices(userId: string) {
 
     const { data, error } = await supabase
         .from('invoices')
-        .select('id, user_id, project_id, client_id, number, amount, status, due_date, issue_date, paid_date, pdf_url, created_at, updated_at')
+        .select('id, user_id, project_id, client_id, code, amount, status, due_date, issue_date, paid_date, pdf_url, created_at, updated_at')
         .eq('user_id', userId)
         .order('issue_date', { ascending: false })
 
@@ -49,7 +49,7 @@ async function fetchTasks(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('tasks')
-        .select('id, project_id, title, description, status, due_date, completed_date, is_overdue, projects!inner(user_id)')
+        .select('id, project_id, title, description, status, due_date, completed_date, is_overdue, created_at, projects!inner(user_id)')
         .eq('projects.user_id', userId)
         .order('created_at', { ascending: true })
 
@@ -61,7 +61,7 @@ async function fetchPortfolio(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('portfolio')
-        .select('id, title, slug, description, thumbnail_url, live_url, view_count')
+        .select('id, title, slug, description, thumbnail_url, live_url, view_count, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: true })
 
