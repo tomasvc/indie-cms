@@ -5,6 +5,8 @@ import { Client, Project as ProjectType } from "@/types";
 import { EditProjectPage } from "../(components)/edit-project-page";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditProject({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     let project: ProjectType | null = null;

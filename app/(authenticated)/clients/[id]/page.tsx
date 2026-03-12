@@ -2,8 +2,9 @@ import { getClient } from "@/lib/actions/clients";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ClientDetailFallback } from "./(components)/client-detail-fallback";
-import { getProject } from "@/lib/actions/projects";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
+
+export const dynamic = 'force-dynamic';
 
 async function Client({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
