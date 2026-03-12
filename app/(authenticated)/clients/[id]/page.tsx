@@ -1,12 +1,14 @@
 import { getClient } from "@/lib/actions/clients";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import { ClientDetailFallback } from "./(components)/client-detail-fallback";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
+const getCachedClient = cache(getClient);
+
 async function Client({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const client = await getClient(id);
+    const client = await getCachedClient(id);
     if (!client) {
         notFound();
     }
@@ -31,7 +33,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const id = (await params).id
 
-    const client = await getClient(id)
+    const client = await getCachedClient(id)
     if (!client) notFound();
 
     return {

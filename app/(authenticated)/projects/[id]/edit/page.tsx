@@ -1,10 +1,12 @@
 import { getProject } from "@/lib/actions/projects";
-import { getClients } from "@/lib/actions/clients";
+import { getClient, getClients } from "@/lib/actions/clients";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Client, Project as ProjectType } from "@/types";
 import { EditProjectPage } from "../(components)/edit-project-page";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
-import { Suspense } from "react";
+
+const getCachedProject = cache(getProject);
 
 export default async function EditProject({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -12,7 +14,7 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
     let clients: Client[] = [];
 
     try {
-        project = await getProject(id);
+        project = await getCachedProject(id);
         if (!project) notFound();
     } catch {
         notFound();
@@ -21,11 +23,7 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
     clients = await getClients();
     if (!clients) notFound();
 
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <EditProjectPage project={project} clients={clients} />
-        </Suspense>
-    )
+    return <EditProjectPage project={project} clients={clients} />;
 }
 
 export async function generateMetadata(
@@ -33,7 +31,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const id = (await params).id
 
-    const project = await getProject(id)
+    const project = await getCachedProject(id)
     if (!project) notFound();
 
     return {
