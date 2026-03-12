@@ -90,10 +90,12 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         <Typography variant="labelUppercase" as="span">Value:</Typography>{" "}
                         <Typography variant="metadataStrong" as="span">{Intl.NumberFormat("en-US", { style: "currency", currency: project.currency || "USD" }).format(project.value)}</Typography>
                     </span>
-                    <span className="text-muted-foreground">
-                        <Typography variant="labelUppercase" as="span">Due:</Typography>{" "}
-                        <Typography variant="metadataStrong" as="span">{formatDate(project.due_date ?? "", "MMM d, yyyy")}</Typography>
-                    </span>
+                    {project.due_date && (
+                        <span className="text-muted-foreground">
+                            <Typography variant="labelUppercase" as="span">Due:</Typography>{" "}
+                            <Typography variant="metadataStrong" as="span">{formatDate(project.due_date, "MMM d, yyyy")}</Typography>
+                        </span>
+                    )}
                 </div>
             </div>
             <Tabs defaultValue="overview" className="flex flex-col gap-4">
