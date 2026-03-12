@@ -6,8 +6,6 @@ import { ProjectsPageFallback } from "./(components)/projects-fallback";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Metadata, ResolvingMetadata } from "next/dist/lib/metadata/types/metadata-interface";
-import { getProject } from "@/lib/actions/projects";
-import { notFound } from "next/navigation";
 
 async function Projects() {
     const supabase = await createClient();

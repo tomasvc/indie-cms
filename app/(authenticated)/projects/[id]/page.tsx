@@ -12,13 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { StarIcon, PencilIcon } from "lucide-react";
 import { formatDate, format, subDays } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Client, Project as ProjectType } from "@/types";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
 import Link from "next/link";
 import { getClients } from "@/lib/actions/clients";
 import { ProjectDetailFallback } from "./(components)/project-detail-fallback";
 import { Typography } from "@/components/ui/typography";
-import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function Project({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

@@ -1,11 +1,10 @@
 import { getProject } from "@/lib/actions/projects";
-import { getClient, getClients } from "@/lib/actions/clients";
+import { getClients } from "@/lib/actions/clients";
 import { notFound } from "next/navigation";
 import { Client, Project as ProjectType } from "@/types";
 import { EditProjectPage } from "../(components)/edit-project-page";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
-
-export const dynamic = 'force-dynamic';
+import { Suspense } from "react";
 
 export default async function EditProject({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -22,7 +21,11 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
     clients = await getClients();
     if (!clients) notFound();
 
-    return <EditProjectPage project={project} clients={clients} />;
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <EditProjectPage project={project} clients={clients} />
+        </Suspense>
+    )
 }
 
 export async function generateMetadata(
