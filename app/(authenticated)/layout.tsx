@@ -15,6 +15,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 async function SidebarUser() {
     const supabase = await createClient();
@@ -39,6 +40,8 @@ export default async function ProtectedLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const demo = (await cookies()).get("demo")?.value === "true";
+
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
@@ -83,8 +86,27 @@ export default async function ProtectedLayout({
                     </div>
                 </header>
 
-                <div className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">{children}</div>
+                <div className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+                    {demo && (
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 mb-4">
+                            <p className="text-sm text-red-500">
+                                This is a demo account. Some features may be limited.
+                            </p>
+                        </div>
+                    )}
+                    {children}
+                </div>
             </SidebarInset>
         </SidebarProvider>
     );
 }
+
+export const SuspendedProtectedLayout = async () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ProtectedLayout>
+                <div>Loading...</div>
+            </ProtectedLayout>
+        </Suspense>
+    );
+};

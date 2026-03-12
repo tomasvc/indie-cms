@@ -70,7 +70,9 @@ export async function RecentActivity({ coreData }: RecentActivityProps) {
                         ))}
                     </ul>
                 ) : (
-                    <Typography variant="body" color="muted" as="span">No recent activity</Typography>
+                    <div className="p-5">
+                        <Typography variant="body" color="muted" as="span">No recent activity</Typography>
+                    </div>
                 )}
             </CardContent>
         </Card>

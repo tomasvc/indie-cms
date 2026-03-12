@@ -103,6 +103,14 @@ export function LoginForm({
                 Sign up
               </Link>
             </div>
+            <div className="mt-4 text-center text-sm">
+              <Link
+                href="/auth/demo"
+                className="underline underline-offset-4"
+              >
+                Demo Account
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

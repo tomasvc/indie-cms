@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Typography } from "../../../../components/ui/typography"
 import { Table, TableCell, TableBody, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
 import { format, isAfter, parseISO } from "date-fns";
+import { Invoice } from "@/types";
 
 type OverdueInvoicesProps = {
     data: DashboardCoreData;
