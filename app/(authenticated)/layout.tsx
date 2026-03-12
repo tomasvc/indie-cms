@@ -36,13 +36,23 @@ async function SidebarUser() {
     return <NavUser user={{ email, full_name }} demo={demo} />;
 }
 
-export default async function ProtectedLayout({
+async function DemoBanner() {
+    const demo = (await cookies()).get("demo")?.value === "true";
+    if (!demo) return null;
+    return (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 mb-4">
+            <p className="text-sm text-red-500">
+                This is a demo account. Some features may be limited.
+            </p>
+        </div>
+    );
+}
+
+export default function ProtectedLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const demo = (await cookies()).get("demo")?.value === "true";
-
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
@@ -88,13 +98,9 @@ export default async function ProtectedLayout({
                 </header>
 
                 <div className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
-                    {demo && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 mb-4">
-                            <p className="text-sm text-red-500">
-                                This is a demo account. Some features may be limited.
-                            </p>
-                        </div>
-                    )}
+                    <Suspense fallback={null}>
+                        <DemoBanner />
+                    </Suspense>
                     {children}
                 </div>
             </SidebarInset>
