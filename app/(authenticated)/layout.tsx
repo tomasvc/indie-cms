@@ -20,6 +20,7 @@ import { cookies } from "next/headers";
 async function SidebarUser() {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
+    const demo = (await cookies()).get("demo")?.value === "true";
 
     const claims = data?.claims as unknown as User | undefined;
     if (!claims?.user_metadata) {
@@ -32,7 +33,7 @@ async function SidebarUser() {
         "";
     const full_name = claims.user_metadata?.full_name ?? "";
 
-    return <NavUser user={{ email, full_name }} />;
+    return <NavUser user={{ email, full_name }} demo={demo} />;
 }
 
 export default async function ProtectedLayout({

@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
-        email: process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!,
-        password: process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!,
+        email: process.env.DEMO_USER_EMAIL!,
+        password: process.env.DEMO_USER_PASSWORD!,
     });
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
