@@ -3,19 +3,11 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Typography } from "./ui/typography";
 
 export function LoginForm({
   className,
@@ -23,6 +15,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -39,7 +32,6 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
       router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -49,71 +41,141 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 !z-50", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <Typography variant="cardTitle">Login</Typography>
-          <Typography variant="cardSectionTitle" as="p" className="mt-1">
-            Enter your email below to login to your account
-          </Typography>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              <Link
-                href="/auth/demo"
-                className="underline underline-offset-4"
-              >
-                Demo Account
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className={cn("flex flex-col gap-8", className)} {...props}>
+      <div>
+        <h2
+          className="text-2xl font-semibold text-foreground font-sans tracking-tight"
+        >
+          Welcome back
+        </h2>
+        <p
+          className="mt-1 text-sm text-muted-foreground font-sans tracking-tight"
+        >
+          Sign in to your Freelance OS account
+        </p>
+      </div>
+
+      <form onSubmit={handleLogin} className="flex flex-col gap-5">
+        <div className="grid gap-1.5">
+          <Label
+            htmlFor="email"
+            className="text-sm font-medium"
+          >
+            Email address
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-11"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor="password"
+              className="text-sm font-medium"
+            >
+              Password
+            </Label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full h-11 text-sm font-medium"
+          disabled={isLoading}
+        >
+          {isLoading ? "Signing in…" : "Sign in"}
+        </Button>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-1 border-t border-border" />
+          <span
+            className="text-xs text-muted-foreground"
+          >
+            or
+          </span>
+          <div className="flex-1 border-t border-border" />
+        </div>
+
+        <Link href="/auth/demo" className="block">
+          <button
+            type="button"
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            <span
+              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "oklch(0.92 0.05 163)", color: "oklch(0.45 0.13 163)" }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 8 16 12 12 16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            </span>
+            Try the demo account
+          </button>
+        </Link>
+
+        <p
+          className="text-center text-sm text-muted-foreground"
+        >
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/auth/sign-up"
+            className="font-medium hover:underline underline-offset-4 transition-colors"
+            style={{ color: "var(--c-green, var(--primary))" }}
+          >
+            Sign up free
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }
