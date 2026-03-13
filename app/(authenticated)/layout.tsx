@@ -1,6 +1,7 @@
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { NavUser } from "@/components/nav-user";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { DismissableDemoBanner } from "@/components/demo-banner";
 import {
     Sidebar,
     SidebarContent,
@@ -39,13 +40,7 @@ async function SidebarUser() {
 async function DemoBanner() {
     const demo = (await cookies()).get("demo")?.value === "true";
     if (!demo) return null;
-    return (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 mb-4">
-            <p className="text-sm text-red-500">
-                This is a demo account. Some features may be limited.
-            </p>
-        </div>
-    );
+    return <DismissableDemoBanner />;
 }
 
 export default function ProtectedLayout({
