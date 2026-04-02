@@ -2,12 +2,12 @@ import { Suspense } from "react";
 import { getInvoices } from "@/lib/actions/invoices";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CreateInvoiceDialog } from "@/app/(authenticated)/invoices/(components)/create-invoice-dialog";
 import { InvoicesTable } from "./(components)/invoices-table";
 import { getProjects } from "@/lib/actions/projects";
 import { getClients } from "@/lib/actions/clients";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
+import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import {
@@ -43,16 +43,12 @@ async function InvoicesPage() {
                     </p>
                 </div>
                 <div>
-                    <CreateInvoiceDialog
-                        trigger={
-                            <Button size="lg" variant="default" >
-                                <PlusIcon className="size-3 mb-0.5" />
-                                New Invoice
-                            </Button>
-                        }
-                        projects={projects}
-                        clients={clients}
-                    />
+                    <Button asChild size="lg">
+                        <Link href="/invoices/new">
+                            <PlusIcon className="size-3 mb-0.5" />
+                            New Invoice
+                        </Link>
+                    </Button>
                 </div>
             </div>
             <InvoicesTable invoices={invoices} projects={projects} clients={clients} />

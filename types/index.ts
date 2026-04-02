@@ -67,6 +67,7 @@ interface Invoice {
     pdf_url?: string;
     payment_method?: 'bank_transfer' | 'stripe' | 'paypal' | 'cash' | 'other';
     reminder_count?: number;
+    notes?: string;
     created_at: string;
     updated_at: string;
 }
@@ -79,6 +80,7 @@ interface LineItem {
     unit_price: number;
     total: number;
     tax_rate?: number;
+    unit?: string;
     created_at: string;
     updated_at: string;
 }

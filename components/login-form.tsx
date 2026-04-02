@@ -145,9 +145,11 @@ export function LoginForm({
         </div>
 
         <Link href="/auth/demo" className="block">
-          <button
+          <Button
             type="button"
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            variant="secondary"
+            className="w-full h-11"
+            disabled={isLoading}
           >
             <span
               className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
@@ -160,7 +162,7 @@ export function LoginForm({
               </svg>
             </span>
             Try the demo account
-          </button>
+          </Button>
         </Link>
 
         <p

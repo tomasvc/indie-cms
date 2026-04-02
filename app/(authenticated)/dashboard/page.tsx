@@ -13,10 +13,16 @@ import { RecentActivity } from "@/app/(authenticated)/dashboard/(components)/rec
 import { OverdueInvoices } from "@/app/(authenticated)/dashboard/(components)/overdue-invoices";
 import { DashboardFallback } from "@/app/(authenticated)/dashboard/(components)/dashboard-fallback";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
+import { getProfile } from "@/lib/actions/settings";
 
 async function Dashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser()
+  const profile = await getProfile();
+
+  if (!profile) {
+    redirect('/settings')
+  }
 
   if (!user) {
     redirect('/auth/login')
@@ -29,13 +35,13 @@ async function Dashboard() {
 
   return (
     <div className="flex-1 w-full flex flex-col gap-3 animate-fadein">
-      <TopStats data={coreData} />
-      <div className="grid grid-cols-4 gap-3">
+      <TopStats data={coreData} profile={profile} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-y-3 gap-x-0 lg:gap-x-3">
         <Financials data={coreData} />
         <Workload data={coreData} userId={user.id} />
         <QuickActions />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-y-3 gap-x-0 xl:gap-x-3">
         <RecentActivity coreData={coreData} />
         <OverdueInvoices data={coreData} />
       </div>

@@ -3,11 +3,19 @@ import { DollarSign, Eye, FileCheck } from "lucide-react";
 import { Card } from "../../../../components/ui/card";
 import { Typography } from "../../../../components/ui/typography";
 import { getTopStatsData } from "@/lib/dashboard/top-stats";
+import { Profile } from "@/types";
 
-function formatCurrency(value: number): string {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
-    return Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+function getCurrencySymbol(currency: string): string {
+    return Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 })
+        .formatToParts(0)
+        .find((p) => p.type === "currency")?.value ?? currency;
+}
+
+function formatCurrency(value: number, currency: string): string {
+    const sym = getCurrencySymbol(currency);
+    if (value >= 1_000_000) return `${sym}${(value / 1_000_000).toFixed(2)}M`;
+    if (value >= 1000) return `${sym}${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
+    return Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
 }
 
 function formatPercentChange(current: number, previous: number): string {
@@ -19,9 +27,10 @@ function formatPercentChange(current: number, previous: number): string {
 
 type TopStatsProps = {
     data: DashboardCoreData;
+    profile: Profile;
 };
 
-export function TopStats({ data }: TopStatsProps) {
+export function TopStats({ data, profile }: TopStatsProps) {
     const projects = data.projects;
     if (!projects || projects.length === 0) {
         return <Typography variant="body" color="muted">No projects found</Typography>;
@@ -33,9 +42,9 @@ export function TopStats({ data }: TopStatsProps) {
         data.portfolio
     );
 
-    const revenueMTD = formatCurrency(stats.monthlyEarnings);
+    const revenueMTD = formatCurrency(stats.monthlyEarnings, profile.currency);
     const revenueChange = formatPercentChange(stats.monthlyEarnings, stats.previousMonthEarnings);
-    const profitFormatted = formatCurrency(stats.profit);
+    const profitFormatted = formatCurrency(stats.profit, profile.currency);
     const profitChange =
         stats.previousMonthEarnings > 0
             ? formatPercentChange(stats.profit, stats.previousMonthEarnings)
@@ -62,7 +71,7 @@ export function TopStats({ data }: TopStatsProps) {
             id: crypto.randomUUID(),
             name: "Unbilled",
             icon: DollarSign,
-            value: formatCurrency(stats.unbilled),
+            value: formatCurrency(stats.unbilled, profile.currency),
             subvalue: "0%",
             subValueText: "unbilled",
         },
@@ -70,7 +79,7 @@ export function TopStats({ data }: TopStatsProps) {
             id: crypto.randomUUID(),
             name: "30d Forecast",
             icon: DollarSign,
-            value: formatCurrency(stats.forecast30d),
+            value: formatCurrency(stats.forecast30d, profile.currency),
             subvalue: stats.forecastCount,
             subValueText: "vs last month",
         },
@@ -93,7 +102,7 @@ export function TopStats({ data }: TopStatsProps) {
     ];
 
     return (
-        <Card className="grid grid-cols-5 gap-0 rounded-lg divide-x p-0">
+        <Card className="grid grid-cols-2 lg:grid-cols-5 gap-0 rounded-lg divide-y divide-x p-0">
             {sections.map((s) => {
                 const Icon = s.icon;
 
