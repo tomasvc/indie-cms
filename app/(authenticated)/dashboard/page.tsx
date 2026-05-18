@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { TopStats } from "@/app/(authenticated)/dashboard/(components)/top-stats";
 import { Financials } from "@/app/(authenticated)/dashboard/(components)/financials";
 
-import { getDashboardCoreData } from "@/lib/queries/dashboard";
+import { getDashboardCoreData } from "@/lib/data/dashboard";
 import { getMockDashboardCoreData } from "@/lib/mock";
 import { Workload } from "@/app/(authenticated)/dashboard/(components)/workload";
 import { QuickActions } from "@/app/(authenticated)/dashboard/(components)/quick-actions";
@@ -13,7 +13,7 @@ import { RecentActivity } from "@/app/(authenticated)/dashboard/(components)/rec
 import { OverdueInvoices } from "@/app/(authenticated)/dashboard/(components)/overdue-invoices";
 import { DashboardFallback } from "@/app/(authenticated)/dashboard/(components)/dashboard-fallback";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
-import { getProfile } from "@/lib/actions/settings";
+import { getProfile } from "@/lib/data/settings";
 
 async function Dashboard() {
   const supabase = await createClient();

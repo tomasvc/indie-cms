@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 import { Suspense } from "react";
-import { getProfile } from "@/lib/actions/settings";
+import { getProfile } from "@/lib/data/settings";
 import { SettingsForm } from "./(components)/settings-form";
 import { Typography } from "@/components/ui/typography";
 

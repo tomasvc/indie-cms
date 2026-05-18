@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 export function SignUpForm({
   className,
@@ -20,6 +20,7 @@ export function SignUpForm({
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, setTransition] = useTransition();
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -193,25 +194,29 @@ export function SignUpForm({
           <div className="flex-1 border-t border-border" />
         </div>
 
-        <Link href="/auth/demo" className="block">
-          <button
-            type="button"
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            <span
-              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "oklch(0.92 0.05 163)", color: "oklch(0.45 0.13 163)" }}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 8 16 12 12 16" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
-            </span>
-            Try the demo account
-          </button>
-        </Link>
+        <Button
+          onClick={() => setTransition(() => router.push('/auth/demo'))}
+          type="button"
+          variant="secondary"
+          className="w-full h-11"
+          disabled={isLoading || isPending}
+        >
+          {isPending ? "Starting demo..." : 
+            <>
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(0.92 0.05 163)", color: "oklch(0.45 0.13 163)" }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 8 16 12 12 16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+              </span>
+              Try the demo account
+            </>
+          }
+        </Button>
 
         <p
           className="text-center text-sm text-muted-foreground"

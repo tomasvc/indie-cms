@@ -1,5 +1,5 @@
-import { getClients } from "@/lib/actions/clients";
-import { getProjects } from "@/lib/actions/projects";
+import { getClients } from "@/lib/data/clients";
+import { getProjects } from "@/lib/data/projects";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CreateInvoicePage } from "../(components)/create-invoice-page";

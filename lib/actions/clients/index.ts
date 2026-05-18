@@ -5,21 +5,6 @@ import { ClientStatus } from "@/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export async function getClient(id: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.from('clients').select('*').eq('id', id).maybeSingle();
-    if (error) throw error;
-    return data;
-}
-
-export async function getClients() {
-    const supabase = await createClient();
-    const { data: user } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from('clients').select('*').eq('user_id', user.user?.id);
-    if (error) throw error;
-    return data;
-}
-
 export async function handleCreateClient(formData: FormData) {
     const name = formData.get('name') as string;
     const company = formData.get('company') as string;

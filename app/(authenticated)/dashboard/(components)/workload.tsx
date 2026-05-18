@@ -1,4 +1,4 @@
-import { DashboardCoreData } from "@/lib/queries/dashboard";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Typography } from "@/components/ui/typography";

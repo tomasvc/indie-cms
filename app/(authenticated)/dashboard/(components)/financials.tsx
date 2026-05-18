@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { DashboardCoreData } from "@/lib/queries/dashboard";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Typography } from "../../../../components/ui/typography";
 import { DollarSignIcon, CircleAlertIcon, ClockIcon, UsersIcon, ChevronDownIcon, PercentIcon, InfoIcon } from "lucide-react";

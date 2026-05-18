@@ -1,4 +1,4 @@
-import { getClients } from "@/lib/actions/clients";
+import { getClients } from "@/lib/data/clients";
 import { notFound } from "next/navigation";
 import { Client } from "@/types";
 import { CreateProjectPage } from "../(components)/create-project-page";

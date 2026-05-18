@@ -1,4 +1,4 @@
-import type { DashboardCoreData } from "@/lib/queries/dashboard";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { DollarSign, Eye, FileCheck } from "lucide-react";
 import { Card } from "../../../../components/ui/card";
 import { Typography } from "../../../../components/ui/typography";

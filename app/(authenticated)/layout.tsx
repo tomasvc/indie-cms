@@ -102,13 +102,3 @@ export default function ProtectedLayout({
         </SidebarProvider>
     );
 }
-
-export const SuspendedProtectedLayout = async () => {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <ProtectedLayout>
-                <div>Loading...</div>
-            </ProtectedLayout>
-        </Suspense>
-    );
-};

@@ -1,5 +1,5 @@
-import { getProject } from "@/lib/actions/projects";
-import { getClient, getClients } from "@/lib/actions/clients";
+import { getProject } from "@/lib/data/projects";
+import { getClient, getClients } from "@/lib/data/clients";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Client, Project as ProjectType } from "@/types";

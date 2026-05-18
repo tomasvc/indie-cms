@@ -1,4 +1,4 @@
-import { getClient } from "@/lib/actions/clients";
+import { getClient } from "@/lib/data/clients";
 import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
 import { ClientDetailFallback } from "./(components)/client-detail-fallback";

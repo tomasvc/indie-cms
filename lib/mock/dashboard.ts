@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { DashboardCoreData } from "@/lib/queries/dashboard";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 
 const PROJECT_STATUSES = ["active", "on_hold", "completed", "cancelled"] as const;
 const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue"] as const;

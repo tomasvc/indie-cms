@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { getInvoices } from "@/lib/actions/invoices";
+import { getInvoices } from "@/lib/data/invoices";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InvoicesTable } from "./(components)/invoices-table";
-import { getProjects } from "@/lib/actions/projects";
-import { getClients } from "@/lib/actions/clients";
+import { getProjects } from "@/lib/data/projects";
+import { getClients } from "@/lib/data/clients";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";

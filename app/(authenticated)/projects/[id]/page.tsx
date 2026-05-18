@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getProject } from "@/lib/actions/projects";
+import { getProject } from "@/lib/data/projects";
 import { handleDeleteProject } from "@/lib/actions/projects";
-import { getTasksForProject } from "@/lib/actions/tasks";
-import { getTimeEntriesForProject } from "@/lib/actions/time-entries";
+import { getTasksForProject } from "@/lib/data/tasks";
+import { getTimeEntriesForProject } from "@/lib/data/time-entries";
 import { ProjectOverview } from "./(components)/project-overview";
 import { ProjectTasks } from "./(components)/project-tasks";
 import { ProjectTime } from "./(components)/project-time";
@@ -14,7 +14,7 @@ import { formatDate, format, subDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
 import Link from "next/link";
-import { getClients } from "@/lib/actions/clients";
+import { getClients } from "@/lib/data/clients";
 import { ProjectDetailFallback } from "./(components)/project-detail-fallback";
 import { Typography } from "@/components/ui/typography";
 

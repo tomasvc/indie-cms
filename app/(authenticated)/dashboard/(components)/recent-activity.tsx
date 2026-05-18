@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { getRecentActivity, type ActivityItem } from "@/lib/dashboard/recent-activity";
-import { DashboardCoreData } from "@/lib/queries/dashboard";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { FileTextIcon } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -14,9 +14,9 @@ interface RecentActivityProps {
 
 const ACTION_PHRASES: Record<ActivityItem["action"], string> = {
     "missed contact": "missesd its contact date",
-    completed: "been completed",
-    updated: "been updated",
-    created: "been created"
+    completed: "completed",
+    updated: "updated",
+    created: "created"
 }
 
 const ICONS: Record<ActivityItem["type"], React.ReactNode> = {
@@ -46,13 +46,13 @@ export async function RecentActivity({ coreData }: RecentActivityProps) {
                                         <div className="flex items-center gap-2 bg-muted rounded-lg p-3">
                                             {ICONS[item.type] || <BriefcaseBusinessIcon className="size-4 shrink-0 text-muted-foreground" />}
                                         </div>
-                                        <div className="flex flex-col">
+                                        <div className="flex flex-col -gap-2">
                                             <Typography
                                                 variant="body"
                                                 as="span"
                                                 className="flex-1"
                                             >
-                                                {`${item.title} has ${ACTION_PHRASES[item.action]}`}
+                                                {`${item.title} ${ACTION_PHRASES[item.action]}`}
                                             </Typography>
                                             {item.projectTitle && (
                                                 <Typography variant="bodySmall" color="muted" as="span">

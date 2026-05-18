@@ -1,5 +1,5 @@
 import { createScopedAnimate } from "framer-motion";
-import type { DashboardCoreData } from "../queries/dashboard"
+import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { isAfter } from "date-fns";
 
 export type ActivityItem = {

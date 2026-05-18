@@ -1,5 +1,5 @@
-import { getProjects } from "@/lib/actions/projects";
-import { getTasks } from "@/lib/actions/tasks";
+import { getProjects } from "@/lib/data/projects";
+import { getTasks } from "@/lib/data/tasks";
 import { format, differenceInDays } from "date-fns";
 import { FlagSolidIcon, FlagOutlineIcon } from "./icons";
 import { cn } from "@/lib/utils";
