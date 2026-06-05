@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Typography } from "../../../../components/ui/typography";
-import { DollarSignIcon, CircleAlertIcon, ClockIcon, UsersIcon, ChevronDownIcon, PercentIcon, InfoIcon } from "lucide-react";
+import { DollarSignIcon, CircleAlertIcon, ClockIcon, UsersIcon, ChevronDownIcon, PercentIcon, InfoIcon, ChartPieIcon } from "lucide-react";
 import { getFinancialSummary, getRepeatBusinessData, getClientRevenueBreakdown } from "@/lib/dashboard/financials";
 import type { Invoice } from "@/types";
 import { type ChartConfig } from "@/components/ui/chart";
@@ -134,7 +134,15 @@ export function Financials({ data }: FinancialsProps) {
                         aria-hidden={!repeatChartExpanded}
                     >
                         <div>
-                            <FinancialsChart chartData={repeatChartData} chartConfig={chartConfig} />
+                            {repeatChartData.length > 1 && repeatChartData[0].value > 0 ? (
+                                <FinancialsChart chartData={repeatChartData} chartConfig={chartConfig} />
+                            ) : (
+                                <div className="flex flex-col gap-1 items-center justify-center text-center h-full border rounded-lg px-4 py-6 mt-2 -mb-2 border-dashed">
+                                    <ChartPieIcon className="w-4 h-4 text-muted-foreground mb-1" />
+                                    <Typography variant="body" color="default" as="p" className="text-sm">No data available</Typography>
+                                    <Typography variant="body" color="muted" as="p">Data about your repeat business rate will be available once you have more than one invoice.</Typography>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

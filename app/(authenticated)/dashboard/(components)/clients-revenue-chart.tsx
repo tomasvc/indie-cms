@@ -47,7 +47,7 @@ function SegmentLabel(props: {
     <text
       x={x}
       y={y}
-      fill="white"
+      fill="black"
       textAnchor="middle"
       dominantBaseline="central"
       fontSize={fontSize}
@@ -135,18 +135,18 @@ export function ClientsRevenueChart({
 
       {/* Center text sits just above the flat baseline in the donut hole */}
       <div
-        className="absolute top-[6rem] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+        className="absolute top-[6.7rem] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
         style={{ bottom: WARNING_HEIGHT + Math.floor(innerR * 0.12) }}
       >
         <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-medium leading-none">
           Total
         </span>
-        <span className="text-xl text-foreground font-bold leading-tight tabular-nums">{totalClients}</span>
+        <span className="text-xl text-foreground font-bold leading-tight tabular-nums mt-1">{totalClients}</span>
       </div>
 
       {/* Warning row sits below the chart SVG */}
       <div
-        className="absolute top-[8.5rem] left-1/2 -translate-x-1/2 flex items-center justify-center"
+        className="absolute top-[9.5rem] left-1/2 -translate-x-1/2 flex items-center justify-center"
         style={{ bottom: 4, height: WARNING_HEIGHT - 4 }}
       >
         {warnings.length > 0 ? (

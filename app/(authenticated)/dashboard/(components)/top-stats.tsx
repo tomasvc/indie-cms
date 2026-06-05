@@ -102,7 +102,7 @@ export function TopStats({ data, profile }: TopStatsProps) {
     ];
 
     return (
-        <Card className="grid grid-cols-2 lg:grid-cols-5 gap-0 rounded-lg divide-y divide-x p-0">
+        <Card className="grid grid-cols-2 lg:grid-cols-5 gap-0 rounded-lg divide-x p-0">
             {sections.map((s) => {
                 const Icon = s.icon;
 
