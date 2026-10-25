@@ -9,9 +9,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  BriefcaseBusiness,
-  Clock,
-  FileText,
   Folder,
   Home,
   Receipt,

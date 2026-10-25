@@ -6,9 +6,17 @@ import { Project } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { KeyboardEvent } from "react";
 
 interface ProjectsTableProps {
     projects: Project[];
+}
+
+function openRow(event: KeyboardEvent<HTMLTableRowElement>, open: () => void) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    open();
 }
 
 export function ProjectsTable({ projects }: ProjectsTableProps) {
@@ -28,10 +36,18 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {projects.map((project) => (
-                        <TableRow key={project.id} onClick={() => router.push(`/projects/${project.id}`)} className="cursor-pointer hover:bg-muted">
+                    {projects.map((project) => {
+                        const href = `/projects/${project.id}`;
+                        return (
+                        <TableRow
+                            key={project.id}
+                            tabIndex={0}
+                            className="cursor-pointer hover:bg-muted focus-visible:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                            onClick={() => router.push(href)}
+                            onKeyDown={(event) => openRow(event, () => router.push(href))}
+                        >
                             <TableCell className="pl-4">
-                                <Link href={`/projects/${project.id}`} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
+                                <Link href={href} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
                                     {project.title}
                                 </Link>
                             </TableCell>
@@ -42,7 +58,8 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                             <TableCell>{project.due_date}</TableCell>
                             <TableCell className="pr-4">{project.completed_date}</TableCell>
                         </TableRow>
-                    ))}
+                        );
+                    })}
                 </TableBody>
             </Table>
         </Card>

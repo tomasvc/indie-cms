@@ -5,6 +5,7 @@ import { Invoice } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { KeyboardEvent } from "react";
 import { BanknoteIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, Undo2Icon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,13 @@ const STATUS_BADGE: Record<InvoiceDisplayStatus, React.ComponentProps<typeof Bad
 };
 
 type PendingDialog = { kind: "paid" | "unpaid" | "delete"; invoice: Invoice } | null;
+
+function openRow(event: KeyboardEvent<HTMLTableRowElement>, open: () => void) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    open();
+}
 
 export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
     const router = useRouter();
@@ -48,14 +56,17 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                             const status = displayStatus(invoice);
                             const isPaid = invoice.status === "paid";
                             const canMarkPaid = invoice.status === "draft" || invoice.status === "sent";
+                            const href = `/invoices/${invoice.id}/edit`;
                             return (
                                 <TableRow
                                     key={invoice.id}
-                                    className="group cursor-pointer hover:bg-muted"
-                                    onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
+                                    tabIndex={0}
+                                    className="group cursor-pointer hover:bg-muted focus-visible:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                                    onClick={() => router.push(href)}
+                                    onKeyDown={(event) => openRow(event, () => router.push(href))}
                                 >
                                     <TableCell className="pl-4 font-mono">
-                                        <Link href={`/invoices/${invoice.id}/edit`} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
+                                        <Link href={href} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
                                             INV-{invoice.code}
                                         </Link>
                                     </TableCell>
@@ -66,7 +77,7 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                                     <TableCell>{formatDate(invoice.due_date, "MMM d, yyyy")}</TableCell>
                                     <TableCell>{formatDate(invoice.issue_date, "MMM d, yyyy")}</TableCell>
                                     <TableCell>{formatDate(invoice.paid_date, "MMM d, yyyy")}</TableCell>
-                                    <TableCell className="text-right px-1 pr-4" style={{ width: "1%" }} onClick={e => e.stopPropagation()}>
+                                    <TableCell className="text-right px-1 pr-4" style={{ width: "1%" }} onClick={(event) => event.stopPropagation()}>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
