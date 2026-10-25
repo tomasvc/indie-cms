@@ -10,9 +10,10 @@ import { formatMoney, formatDate } from "@/lib/helpers/format";
 
 interface ClientsListProps {
     clients: Client[];
+    currency: string;
 }
 
-export function ClientsList({ clients }: ClientsListProps) {
+export function ClientsList({ clients, currency }: ClientsListProps) {
     const router = useRouter();
 
     if (clients.length === 0) {
@@ -45,7 +46,7 @@ export function ClientsList({ clients }: ClientsListProps) {
                         </CardHeader>
                         <CardContent className="space-y-3 pt-4">
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-                                <span>{formatMoney(client.total_billed ?? 0, "USD")}</span>
+                                <span>{formatMoney(client.total_billed ?? 0, currency)}</span>
                                 <span>Last contact {formatDate(client.last_contact ?? "", "MMM d, yyyy")}</span>
                             </div>
                             <div className="flex items-center gap-3">
@@ -57,7 +58,7 @@ export function ClientsList({ clients }: ClientsListProps) {
                                     )}
                                 />
                                 <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-                                    {formatMoney(client.total_billed ?? 0, "USD")}
+                                    {formatMoney(client.total_billed ?? 0, currency)}
                                 </span>
                             </div>
                         </CardContent>

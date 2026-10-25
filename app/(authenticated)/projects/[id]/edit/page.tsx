@@ -1,5 +1,6 @@
 import { getProject } from "@/lib/data/projects";
-import { getClient, getClients } from "@/lib/data/clients";
+import { getProfile } from "@/lib/data/settings";
+import { getClients } from "@/lib/data/clients";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Client, Project as ProjectType } from "@/types";
@@ -23,7 +24,8 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
     clients = await getClients();
     if (!clients) notFound();
 
-    return <EditProjectPage project={project} clients={clients} />;
+    const profile = await getProfile();
+    return <EditProjectPage project={project} clients={clients} businessCurrency={profile?.currency || "USD"} />;
 }
 
 export async function generateMetadata(

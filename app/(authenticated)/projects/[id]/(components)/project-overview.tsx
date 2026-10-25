@@ -99,7 +99,7 @@ export function ProjectOverview({
     sparklineHours?: number[];
     sparklineData?: SparklineDay[];
 }) {
-    const currency = project.currency || "USD";
+    const currency = project.currency;
     const dueDate = project.due_date ? parseISO(project.due_date) : null;
     const startDate = project.start_date ? parseISO(project.start_date) : null;
     const today = new Date();

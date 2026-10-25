@@ -1,10 +1,8 @@
 import { format, isValid, parseISO, differenceInDays } from "date-fns";
+import { formatMoney as formatMoneyAmount } from "@/lib/money";
 
-export function formatMoney(value: number, currency: string) {
-    return Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: currency || "USD",
-    }).format(value);
+export function formatMoney(value: number, currency: string, locale?: string) {
+    return formatMoneyAmount(value, currency, locale);
 }
 
 export function formatDate(dateStr: string | undefined | null, fmt: string) {

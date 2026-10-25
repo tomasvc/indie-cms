@@ -12,7 +12,7 @@ async function fetchProjects(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("projects")
-        .select("id, title, status, progress, value, due_date, client_id, created_at, updated_at")
+        .select("id, title, status, progress, value, currency, due_date, client_id, created_at, updated_at")
         .eq("user_id", userId)
         .order("due_date", { ascending: true });
 
@@ -49,7 +49,7 @@ async function fetchTasks(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("tasks")
-        .select("id, project_id, title, description, status, due_date, completed_date, is_overdue, created_at, projects!inner(user_id)")
+        .select("id, project_id, title, description, status, priority, due_date, completed_date, is_overdue, created_at, projects!inner(user_id)")
         .eq("projects.user_id", userId)
         .order("created_at", { ascending: true });
 

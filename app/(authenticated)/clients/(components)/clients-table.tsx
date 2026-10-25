@@ -9,9 +9,10 @@ import { formatMoney, formatDate } from "@/lib/helpers/format";
 
 interface ClientsTableProps {
     clients: Client[];
+    currency: string;
 }
 
-export function ClientsTable({ clients }: ClientsTableProps) {
+export function ClientsTable({ clients, currency }: ClientsTableProps) {
     const router = useRouter();
     return (
         <Card className="p-0">
@@ -35,7 +36,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                             <TableCell>{client.company}</TableCell>
                             <TableCell>{client.email}</TableCell>
                             <TableCell><Badge variant="outline" className="capitalize">{client.status}</Badge></TableCell>
-                            <TableCell>{formatMoney(client.total_billed ?? 0, "USD")}</TableCell>
+                            <TableCell>{formatMoney(client.total_billed ?? 0, currency)}</TableCell>
                             <TableCell>{formatDate(client.last_contact ?? "", "MMM d, yyyy")}</TableCell>
                             <TableCell>{formatDate(client.created_at, "MMM d, yyyy")}</TableCell>
                             <TableCell className="pr-4">{formatDate(client.updated_at, "MMM d, yyyy")}</TableCell>

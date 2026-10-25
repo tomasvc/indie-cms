@@ -1,4 +1,5 @@
 import { getClients } from "@/lib/data/clients";
+import { getProfile } from "@/lib/data/settings";
 import { notFound } from "next/navigation";
 import { Client } from "@/types";
 import { CreateProjectPage } from "../(components)/create-project-page";
@@ -16,7 +17,7 @@ export default async function NewProjectPage() {
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <CreateProjectPage clients={clients} />
+            <CreateProjectPage clients={clients} currency={(await getProfile())?.currency || "USD"} />
         </Suspense>
     )
 }

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { CURRENCY_CODES } from "@/lib/constants/profile";
 import { amount, id, isOnOrAfter, optionalText, requiredDate, requiredId } from "./common";
 
 /** Stored statuses. "Overdue" is derived from a sent invoice's due date; see lib/helpers/invoices.ts. */
 export const INVOICE_STATUSES = ["draft", "sent", "paid", "void"] as const;
 /** Statuses the invoice form can set. "paid" is only set by the payment actions. */
 export const EDITABLE_INVOICE_STATUSES = ["draft", "sent", "void"] as const;
-export const INVOICE_CURRENCIES = ["USD", "GBP", "EUR"] as const;
+export const INVOICE_CURRENCIES = CURRENCY_CODES;
 export const LINE_ITEM_UNITS = ["hrs", "days", "flat", "items", "words", "pages"] as const;
 export const DISCOUNT_TYPES = ["percent", "flat"] as const;
 export const PAYMENT_METHODS = ["bank_transfer", "stripe", "paypal", "cash", "other"] as const;

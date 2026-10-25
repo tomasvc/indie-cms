@@ -7,18 +7,28 @@ import { getActiveProjects, getOverdueTasks, getUpcomingDeadlines } from "@/lib/
 import { Project, Task } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { Tasks } from "./tasks";
 import { UpcomingDeadlines } from "./upcoming-deadlines";
+import { daysBetween, todayISO } from "@/lib/money";
+import { formatDate } from "@/lib/helpers/format";
+import { FlagOutlineIcon, FlagSolidIcon } from "./icons";
+import { cn } from "@/lib/utils";
 
 type WorkloadProps = {
     data: DashboardCoreData;
-    userId: string;
 };
 
-export function Workload({ data, userId }: WorkloadProps) {
+export function Workload({ data }: WorkloadProps) {
+    const today = todayISO();
+    const projectTitle = new Map(data.projects.map((project) => [project.id, project.title]));
     const activeProjects = getActiveProjects(data.projects as Array<Project>);
-    const overdueTasks = getOverdueTasks(data.tasks as unknown as Array<Task>);
-    const upcomingDeadlines = getUpcomingDeadlines(data.tasks as unknown as Array<Task>);
+    const overdueTasks = getOverdueTasks(data.tasks as unknown as Array<Task>, today);
+    const upcomingDeadlines = getUpcomingDeadlines(data.tasks as unknown as Array<Task>, today).map((task) => ({
+        id: task.id,
+        title: task.title,
+        project_id: task.project_id,
+        projectTitle: projectTitle.get(task.project_id) ?? "Project",
+        due_date: task.due_date,
+    }));
 
     return (
         <Card className="col-span-2">
@@ -64,12 +74,39 @@ export function Workload({ data, userId }: WorkloadProps) {
                         <AlertTriangleIcon className="w-3 h-3 text-muted-foreground" />
                         <Typography variant="cardSectionTitle" as="span">Overdue tasks</Typography>
                     </div>
-                    <div className="flex flex-col gap-1">
-                        {overdueTasks.length > 0 ?
-                            <Tasks userId={userId} />
-                            : (
-                                <Typography variant="body" color="muted" as="p">No overdue tasks</Typography>
-                            )}
+                    <div className="flex flex-col gap-2">
+                        {overdueTasks.length > 0 ? overdueTasks.map((task) => {
+                            const days = Math.abs(daysBetween(task.due_date, today));
+                            return (
+                                <div key={task.id} className="group relative flex items-center gap-2">
+                                    <div className="absolute -inset-x-1.5 -inset-y-1 rounded-lg transition-colors group-hover:bg-muted/50 pointer-events-none" />
+                                    <Link href={`/projects/${task.project_id}`} className="absolute -inset-x-1.5 -inset-y-1 rounded-lg z-20" aria-label={task.title} />
+                                    <div className={cn("relative z-10 rounded-lg p-3 w-fit", task.priority === "high" ? "bg-destructive/10" : "bg-muted")}>
+                                        {task.priority === "high" ? <FlagSolidIcon className="w-4 h-4 text-destructive" />
+                                            : task.priority === "medium" ? <FlagSolidIcon className="w-4 h-4 text-muted-foreground" />
+                                                : <FlagOutlineIcon className="w-4 h-4 text-muted-foreground" />}
+                                    </div>
+                                    <div className="relative z-10 flex justify-between w-full">
+                                        <div className="flex flex-col">
+                                            <Typography variant="body" as="p">{task.title}</Typography>
+                                            <Typography variant="bodySmall" color="muted" as="span">
+                                                {projectTitle.get(task.project_id) ?? "Project"}
+                                            </Typography>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <Typography variant="bodySmall" color="muted" as="span">
+                                                Due: {formatDate(task.due_date, "MMM d, yyyy")}
+                                            </Typography>
+                                            <Typography variant="bodySmall" color="destructive" as="span">
+                                                {days === 1 ? "1 day overdue" : `${days} days overdue`}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <Typography variant="body" color="muted" as="p">No overdue tasks</Typography>
+                        )}
                     </div>
                 </div>
                 <div className="pt-4">

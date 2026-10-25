@@ -38,6 +38,7 @@
     "app/(authenticated)/invoices/(components)/invoices-table"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "lib/money.test.ts"
   ]
 }

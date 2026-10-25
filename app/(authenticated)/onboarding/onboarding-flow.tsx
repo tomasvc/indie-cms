@@ -17,7 +17,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { completeOnboarding } from "@/lib/actions/onboarding";
 import { errorsFor as fieldErrorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
-import { TIMEZONE_OPTIONS } from "@/lib/constants/profile";
+import { CURRENCY_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/constants/profile";
 import { onboardingSchema, type OnboardingValues } from "@/lib/schemas/settings";
 import { Sparkles } from "lucide-react";
 
@@ -25,7 +25,7 @@ const STEPS = 3;
 
 export function OnboardingFlow() {
     const [step, setStep] = useState(1);
-    const [details, setDetails] = useState<OnboardingValues>({ company_name: "", timezone: "" });
+    const [details, setDetails] = useState<OnboardingValues>({ company_name: "", timezone: "", currency: "USD" });
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isCompleting, setIsCompleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -151,6 +151,25 @@ export function OnboardingFlow() {
                                     </SelectContent>
                                 </Select>
                                 <FieldError errors={errorsFor("timezone")} />
+                            </Field>
+                            <Field className="gap-2" data-invalid={!!errorsFor("currency")}>
+                                <FieldLabel htmlFor="currency">Business currency</FieldLabel>
+                                <Select
+                                    value={details.currency}
+                                    onValueChange={(currency) => setDetails((d) => ({ ...d, currency: currency as OnboardingValues["currency"] }))}
+                                >
+                                    <SelectTrigger id="currency" className="w-full" aria-invalid={!!errorsFor("currency")}>
+                                        <SelectValue placeholder="Select currency" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {CURRENCY_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError errors={errorsFor("currency")} />
                             </Field>
                         </CardContent>
                         <CardFooter className="flex justify-between gap-2">

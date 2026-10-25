@@ -13,7 +13,7 @@ const DEFAULT_VALUES: ProjectFormValues = {
     status: "proposal",
     priority: "medium",
     progress: 0,
-    currency: "GBP",
+    currency: "USD",
     profitMargin: 57,
     value: 0,
     budget: 0,
@@ -25,10 +25,11 @@ const DEFAULT_VALUES: ProjectFormValues = {
     clientId: "",
 };
 
-export function CreateProjectPage({ clients }: { clients: Client[] }) {
+export function CreateProjectPage({ clients, currency }: { clients: Client[]; currency: string }) {
     return (
         <ProjectFormLayout
-            defaultValues={DEFAULT_VALUES}
+            defaultValues={{ ...DEFAULT_VALUES, currency }}
+            businessCurrency={currency}
             clients={clients}
             onSubmit={handleCreateProject}
             cancelHref="/projects"

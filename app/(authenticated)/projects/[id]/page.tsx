@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { StarIcon, PencilIcon } from "lucide-react";
 import { formatDate, format, subDays } from "date-fns";
+import { formatMoney } from "@/lib/helpers/format";
 import { Button } from "@/components/ui/button";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
 import Link from "next/link";
@@ -97,7 +98,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                     </span>
                     <span className="text-muted-foreground">
                         <Typography variant="labelUppercase" as="span">Value:</Typography>{" "}
-                        <Typography variant="metadataStrong" as="span">{Intl.NumberFormat("en-US", { style: "currency", currency: project.currency || "USD" }).format(project.value)}</Typography>
+                        <Typography variant="metadataStrong" as="span">{formatMoney(project.value, project.currency)}</Typography>
                     </span>
                     {project.due_date && (
                         <span className="text-muted-foreground">
@@ -132,7 +133,7 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         projectId={id}
                         timeEntries={timeEntries}
                         tasks={tasks}
-                        currency={project.currency ?? "USD"}
+                        currency={project.currency}
                         defaultHourlyRate={0}
                     />
                 </TabsContent>

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/data/settings";
 import { ClientsView } from "./(components)/clients-view";
 import { CreateClientDialog } from "./(components)/create-client-dialog";
 import { ClientsPageFallback } from "./(components)/clients-fallback";
@@ -26,7 +27,7 @@ async function Clients() {
                     <CreateClientDialog />
                 </div>
             </div>
-            <ClientsView clients={clients} />
+            <ClientsView clients={clients} currency={(await getProfile())?.currency || "USD"} />
         </div>
     )
 }

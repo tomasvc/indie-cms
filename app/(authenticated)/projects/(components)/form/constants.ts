@@ -1,4 +1,5 @@
 import { CalendarIcon, CheckIcon, ClockIcon, DollarSignIcon, LineChartIcon, UserIcon } from "lucide-react";
+import { CURRENCY_CODES } from "@/lib/constants/profile";
 import type { ProjectStatus } from "@/types";
 import type { ProjectFormValues, SectionId } from "./types";
 
@@ -78,7 +79,7 @@ export const PRIORITY_OPTIONS = [
     { value: "high", label: "High" },
 ] as const;
 
-export const CURRENCIES = ["GBP", "USD", "EUR"];
+export const CURRENCIES = CURRENCY_CODES;
 
 export const PROJECT_COLORS = [
     "#22c55e",

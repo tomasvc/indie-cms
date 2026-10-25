@@ -12,6 +12,11 @@ export function isBilled(invoice: Pick<Invoice, "status">) {
     return invoice.status === "sent" || invoice.status === "paid";
 }
 
+/** Money received. A sent invoice is outstanding, not revenue. */
+export function isRevenue(invoice: Pick<Invoice, "status">) {
+    return invoice.status === "paid";
+}
+
 /** Sent to the client and not yet paid. */
 export function isOutstanding(invoice: Pick<Invoice, "status">) {
     return invoice.status === "sent";

@@ -29,7 +29,7 @@ export function KanbanCardContent({
       </CardHeader>
       <CardContent className="space-y-1.5 pt-0">
         <div className="flex items-center justify-between text-muted-foreground text-xs">
-          <span>{formatMoney(project.value ?? 0, project.currency || "USD")}</span>
+          <span>{formatMoney(project.value ?? 0, project.currency)}</span>
           <span>Due {formatDate(project.due_date ?? "", "MMM d, yyyy")}</span>
         </div>
         <div className="flex items-center gap-2">

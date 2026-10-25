@@ -32,6 +32,7 @@ import {
 } from "@/lib/schemas/invoice";
 import { PlusIcon, XIcon, InfoIcon, CheckIcon } from "lucide-react";
 import { formatMoney } from "@/lib/helpers/format";
+import { currencySymbol } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const FORM_ID = "invoice-form";
@@ -41,8 +42,6 @@ const STATUS_OPTIONS: { value: InvoiceFormValues["status"]; label: string }[] = 
     { value: "sent", label: "Sent" },
     { value: "void", label: "Void" },
 ];
-
-const CURRENCY_SYMBOLS: Record<InvoiceFormValues["currency"], string> = { USD: "$", GBP: "£", EUR: "€" };
 
 const newLineItem = (): LineItemValues => ({ description: "", quantity: 1, unit: "hrs", unitPrice: 0 });
 
@@ -91,17 +90,19 @@ export function InvoiceFormPage({
     clients,
     invoice,
     defaultCode = "",
+    defaultCurrency = "USD",
 }: {
     projects: Project[];
     clients: Client[];
     invoice?: InvoiceWithLineItems;
     defaultCode?: string;
+    defaultCurrency?: string;
 }) {
     const isEdit = !!invoice;
     const [isPending, startTransition] = useTransition();
     const form = useForm<InvoiceFormValues>({
         resolver: zodResolver(invoiceCreateSchema),
-        defaultValues: invoice ? toFormValues(invoice) : { ...DEFAULT_VALUES, code: defaultCode },
+        defaultValues: invoice ? toFormValues(invoice) : { ...DEFAULT_VALUES, code: defaultCode, currency: oneOf(INVOICE_CURRENCIES, defaultCurrency, "USD") },
     });
     const { register, control, formState: { errors } } = form;
     const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
@@ -341,7 +342,7 @@ export function InvoiceFormPage({
                                                 )}
                                             >
                                                 <span className="text-muted-foreground pl-2.5 text-sm shrink-0">
-                                                    {CURRENCY_SYMBOLS[currency]}
+                                                    {currencySymbol(currency)}
                                                 </span>
                                                 <Input
                                                     type="number"

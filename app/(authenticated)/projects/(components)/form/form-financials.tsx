@@ -8,10 +8,9 @@ import { useState } from "react"
 import { CURRENCIES } from "./constants"
 import type { ProjectFormValues } from "./types"
 
-const DEFAULT_CURRENCY = "GBP";
 const finite = (n: number) => (Number.isFinite(n) ? n : 0);
 
-export const FormFinancials = () => {
+export const FormFinancials = ({ businessCurrency }: { businessCurrency: string }) => {
     const { register, setValue, control, formState: { errors } } = useFormContext<ProjectFormValues>();
     const [currency, value, budget, profitMargin] = useWatch({ control, name: ["currency", "value", "budget", "profitMargin"] });
     const [matchDefaultCurrency, setMatchDefaultCurrency] = useState(false);
@@ -49,7 +48,7 @@ export const FormFinancials = () => {
                             onCheckedChange={(checked) => {
                                 const isChecked = checked === true;
                                 setMatchDefaultCurrency(isChecked);
-                                if (isChecked) setValue("currency", DEFAULT_CURRENCY, { shouldDirty: true, shouldValidate: true });
+                                if (isChecked) setValue("currency", businessCurrency, { shouldDirty: true, shouldValidate: true });
                             }}
                         />
                     </Field>

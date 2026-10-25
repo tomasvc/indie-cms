@@ -9,9 +9,10 @@ import { getFinancialSummary, getRepeatBusinessData, getClientRevenueBreakdown }
 import type { Invoice } from "@/types";
 import { type ChartConfig } from "@/components/ui/chart";
 import dynamic from "next/dynamic";
-import { formatMoney } from "@/lib/helpers/format";
+import { formatMoneyByCurrency } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { Profile } from "@/types";
 
 const FinancialsChart = dynamic(
     () => import("./financials-chart").then((m) => m.FinancialsChart),
@@ -25,25 +26,31 @@ const ClientsRevenueChart = dynamic(
 
 type FinancialsProps = {
     data: DashboardCoreData;
+    profile: Profile;
 };
 
-export function Financials({ data }: FinancialsProps) {
+export function Financials({ data, profile }: FinancialsProps) {
     const [repeatChartExpanded, setRepeatChartExpanded] = useState(true);
     const [clientsRevenueExpanded, setClientsRevenueExpanded] = useState(false);
     const [clientsRevenueAnimKey, setClientsRevenueAnimKey] = useState(0);
 
     const financialSummary = getFinancialSummary(data.invoices as unknown as Invoice[]);
     const { monthlyEarnings, previousMonthEarnings, outstanding, unpaidCount, avgDaysToPay } = financialSummary;
+    const locale = profile.language || "en";
+    const money = (totals: Parameters<typeof formatMoneyByCurrency>[0]) =>
+        formatMoneyByCurrency(totals, locale, profile.currency);
 
-    const { chartData: repeatChartData } = getRepeatBusinessData(
+    const { chartData: repeatChartData, currency: repeatCurrency, otherCurrencies: repeatOthers } = getRepeatBusinessData(
         data.clients,
         data.invoices as unknown as Invoice[]
     );
 
-    const { pieData: revenuePieData, totalClients, warnings: revenueWarnings } = getClientRevenueBreakdown(
+    const { pieData: revenuePieData, totalClients, warnings: revenueWarnings, currency: revenueCurrency, otherCurrencies: revenueOthers } = getClientRevenueBreakdown(
         data.clients,
         data.invoices as unknown as Invoice[]
     );
+    const otherRevenue = formatMoneyByCurrency(revenueOthers, locale, profile.currency);
+    const otherRepeat = formatMoneyByCurrency(repeatOthers, locale, profile.currency);
 
     const chartConfig = {
         value: {
@@ -65,12 +72,9 @@ export function Financials({ data }: FinancialsProps) {
                         </div>
                         <div>
                             <Typography variant="overline" as="p">This month earned</Typography>
-                            <Typography variant="metricValue" as="p">{formatMoney(monthlyEarnings, "USD")}</Typography>
+                            <Typography variant="metricValue" as="p">{money(monthlyEarnings)}</Typography>
                             <Typography variant="kpiSub" as="p">
-                                vs {previousMonthEarnings >= 1000
-                                    ? `${formatMoney(previousMonthEarnings / 1000, "USD")}K`
-                                    : formatMoney(previousMonthEarnings, "USD")
-                                } last month
+                                vs {money(previousMonthEarnings)} last month
                             </Typography>
                         </div>
                     </div>
@@ -80,7 +84,7 @@ export function Financials({ data }: FinancialsProps) {
                         </div>
                         <div>
                             <Typography variant="overline" as="p">Outstanding</Typography>
-                            <Typography variant="metricValue" as="p">{formatMoney(outstanding, "USD")}</Typography>
+                            <Typography variant="metricValue" as="p">{money(outstanding)}</Typography>
                             <Typography variant="kpiSub" as="p">{unpaidCount} unpaid {unpaidCount === 1 ? "invoice" : "invoices"}</Typography>
                         </div>
                     </div>
@@ -106,12 +110,13 @@ export function Financials({ data }: FinancialsProps) {
                                             <InfoIcon className="w-3 h-3 text-muted-foreground cursor-default shrink-0" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-56">
-                                            The share of total revenue coming from active clients who have paid more than one invoice. A higher rate means stronger client retention.
+                                            The share of paid revenue, in {repeatCurrency ?? "one currency"}, from active clients with more than one paid invoice.
                                         </TooltipContent>
                                     </Tooltip>
                                 </Typography>
                                 <Typography variant="body" color="muted" as="p" className="text-xs">
-                                    Based on available invoices
+                                    {repeatCurrency ? `Paid invoices in ${repeatCurrency}` : "Based on paid invoices"}
+                                    {Object.values(repeatOthers).some((amount) => amount > 0) ? `. Also paid: ${otherRepeat}` : ""}
                                 </Typography>
                             </div>
                         </div>
@@ -159,12 +164,13 @@ export function Financials({ data }: FinancialsProps) {
                                             <InfoIcon className="w-3 h-3 text-muted-foreground cursor-default shrink-0" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-56">
-                                            All-time revenue split across your clients. Use this to spot unhealthy concentration — warnings appear automatically when a single client dominates your income.
+                                            Paid revenue in {revenueCurrency ?? "one currency"}, split across clients. Other currencies are listed separately and are not added in.
                                         </TooltipContent>
                                     </Tooltip>
                                 </Typography>
                                 <Typography variant="body" color="muted" as="p" className="text-xs">
-                                    See your biggest and smallest clients.
+                                    {revenueCurrency ? `Paid invoices in ${revenueCurrency}` : "Paid invoices"}
+                                    {Object.values(revenueOthers).some((amount) => amount > 0) ? `. Also paid: ${otherRevenue}` : ""}
                                 </Typography>
                             </div>
                         </div>

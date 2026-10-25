@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isTaskOverdue } from "@/lib/helpers/tasks";
 import { useRouter } from "next/navigation";
 import {
     Card,
@@ -228,7 +229,7 @@ export function ProjectTasks({
                                     <span className="text-muted-foreground text-xs whitespace-nowrap">
                                         Due {formatDueDate(task.due_date)}
                                     </span>
-                                    {task.is_overdue && task.status !== "done" && (
+                                    {isTaskOverdue(task) && (
                                         <Badge variant="destructive">Overdue</Badge>
                                     )}
                                 </div>

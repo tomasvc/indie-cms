@@ -11,9 +11,10 @@ const CLIENTS_VIEW_KEY = "clients-view";
 
 interface ClientsViewProps {
     clients: Client[];
+    currency: string;
 }
 
-export function ClientsView({ clients }: ClientsViewProps) {
+export function ClientsView({ clients, currency }: ClientsViewProps) {
     const [state, setState] = useState<"list" | "table">("list");
 
     useEffect(() => {
@@ -36,10 +37,10 @@ export function ClientsView({ clients }: ClientsViewProps) {
                 <TabsTrigger value="table">Table</TabsTrigger>
             </TabsList>
             <TabsContent value="list">
-                <ClientsList clients={clients} />
+                <ClientsList clients={clients} currency={currency} />
             </TabsContent>
             <TabsContent value="table">
-                <ClientsTable clients={clients} />
+                <ClientsTable clients={clients} currency={currency} />
             </TabsContent>
         </Tabs>
     )

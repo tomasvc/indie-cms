@@ -1,3 +1,5 @@
+import { todayISO } from "@/lib/money";
+import { isTaskOverdue, isTaskUpcoming } from "@/lib/helpers/tasks";
 import { Project, Task } from "@/types";
 
 export function getActiveProjects(
@@ -14,7 +16,6 @@ export function getActiveProjects(
     }
 
     const firstThree = filtered.slice(0, 3);
-
     const others = filtered.slice(3);
 
     const totalOtherValue = others.reduce(
@@ -47,14 +48,12 @@ export function getActiveProjects(
     return [...firstThree, othersProject];
 }
 
-export function getOverdueTasks(tasks: Array<Task> | null): Array<Task> {
-    return tasks?.filter((task) => task.is_overdue) ?? [];
+export function getOverdueTasks(tasks: Array<Task> | null, today = todayISO()) {
+    return (tasks ?? []).filter((task) => isTaskOverdue(task, today));
 }
 
-export function getUpcomingDeadlines(tasks: Array<Task> | null): Array<Task> {
-    return (
-        tasks?.filter(
-            (task) => task.due_date && new Date(task.due_date) < new Date()
-        ) ?? []
-    );
+export function getUpcomingDeadlines(tasks: Array<Task> | null, today = todayISO()) {
+    return (tasks ?? [])
+        .filter((task) => isTaskUpcoming(task, today, 14))
+        .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.title.localeCompare(b.title));
 }

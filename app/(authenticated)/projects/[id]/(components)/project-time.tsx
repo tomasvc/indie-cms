@@ -45,13 +45,13 @@ export function ProjectTime({
     projectId,
     timeEntries,
     tasks = [],
-    currency = "USD",
+    currency,
     defaultHourlyRate = 0,
 }: {
     projectId: string;
     timeEntries: TimeEntry[];
     tasks?: Task[];
-    currency?: string;
+    currency: string;
     defaultHourlyRate?: number;
 }) {
     const {

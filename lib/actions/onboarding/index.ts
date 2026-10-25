@@ -42,6 +42,7 @@ export async function completeOnboarding(input: OnboardingValues | null): Promis
                     "",
                 ...(details?.company_name && { company_name: details.company_name }),
                 ...(details?.timezone && { timezone: details.timezone }),
+                ...(details?.currency && { currency: details.currency }),
                 onboarding_completed_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             },

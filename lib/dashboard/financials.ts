@@ -1,94 +1,57 @@
 import type { Client, Invoice } from "@/types";
-import { invoiceTotal, isBilled, isOutstanding } from "@/lib/helpers/invoices";
+import { invoiceTotal, isOutstanding, isRevenue } from "@/lib/helpers/invoices";
+import {
+    currencyOf,
+    daysBetween,
+    dominantCurrency,
+    exceptCurrency,
+    isOnOrBetween,
+    monthRange,
+    sumByCurrency,
+    todayISO,
+    type MoneyByCurrency,
+} from "@/lib/money";
 
 export { invoiceTotal };
-
-function invoiceSubtotal(inv: Invoice | { subtotal?: number }): number {
-    const n = Number((inv as Invoice).subtotal);
-    return Number.isFinite(n) ? n : 0;
-}
+export type { MoneyByCurrency };
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 
 export type FinancialSummary = {
-    monthlyEarnings: number;
-    previousMonthEarnings: number;
-    outstanding: number;
+    monthlyEarnings: MoneyByCurrency;
+    previousMonthEarnings: MoneyByCurrency;
+    outstanding: MoneyByCurrency;
     unpaidCount: number;
     avgDaysToPay: number | null;
-    profit: number;
 };
 
-// -----------------------------------------------------------------------------
-// Date boundaries (current and previous month)
-// -----------------------------------------------------------------------------
+const amountOf = (invoice: Invoice) => invoiceTotal(invoice);
 
-const now = new Date();
-const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+export function getFinancialSummary(invoices: Array<Invoice> | null, today = todayISO()): FinancialSummary {
+    const list = invoices ?? [];
+    const { start, end, previousStart, previousEnd } = monthRange(today);
+    const paid = list.filter(isRevenue);
 
-// -----------------------------------------------------------------------------
-// Core financial summary
-// -----------------------------------------------------------------------------
+    const previousMonthInvoices = paid.filter((invoice) =>
+        isOnOrBetween(invoice.paid_date, previousStart, previousEnd)
+    );
+    const thisMonthInvoices = paid.filter((invoice) => isOnOrBetween(invoice.paid_date, start, end));
+    const outstandingInvoices = list.filter(isOutstanding);
+    const paidWithIssueDate = paid.filter((invoice) => invoice.paid_date && invoice.issue_date);
 
-export function getFinancialSummary(invoices: Array<Invoice> | null): FinancialSummary {
-    const list = (invoices ?? []).filter(isBilled);
-
-    const previousMonthInvoices = list.filter(invoice => {
-        const paid = invoice.paid_date == null ? null : new Date(invoice.paid_date);
-        return paid != null && paid >= startOfPreviousMonth && paid <= endOfPreviousMonth;
-    });
-
-    const previousMonthEarnings = previousMonthInvoices?.reduce(
-        (acc, invoice) => acc + invoiceTotal(invoice),
-        0
-    ) ?? 0;
-    const thisMonthInvoices = list.filter(invoice => {
-        const paid = invoice.paid_date == null ? null : new Date(invoice.paid_date);
-        return paid != null && paid >= startOfMonth && paid <= endOfMonth;
-    });
-
-    const profit = thisMonthInvoices?.reduce(
-        (acc, invoice) => acc + (invoiceTotal(invoice) - invoiceSubtotal(invoice)),
-        0
-    ) ?? 0;
-
-    const monthlyEarnings = thisMonthInvoices?.reduce(
-        (acc, invoice) => acc + invoiceTotal(invoice),
-        0
-    ) ?? 0;
-
-    const outstanding = list.filter(isOutstanding).reduce(
-        (acc, invoice) => acc + invoiceTotal(invoice),
+    const totalDays = paidWithIssueDate.reduce(
+        (acc, invoice) => acc + daysBetween(invoice.paid_date!, invoice.issue_date!),
         0
     );
-
-    const paidInvoices = list.filter(
-        (inv) => inv.status === "paid" && inv.paid_date != null && inv.issue_date != null
-    );
-
-    const unpaidInvoices = list.filter(isOutstanding);
-
-    const totalDays = paidInvoices.reduce((acc, inv) => {
-        const paid = new Date(inv.paid_date!);
-        const issued = new Date(inv.issue_date!);
-        const days = Math.round((paid.getTime() - issued.getTime()) / (1000 * 60 * 60 * 24));
-        return acc + days;
-    }, 0);
-
-    const avgDaysToPay = paidInvoices.length > 0 ? totalDays / paidInvoices.length : null;
 
     return {
-        monthlyEarnings,
-        previousMonthEarnings,
-        outstanding,
-        unpaidCount: unpaidInvoices.length,
-        avgDaysToPay,
-        profit,
+        monthlyEarnings: sumByCurrency(thisMonthInvoices, amountOf, currencyOf),
+        previousMonthEarnings: sumByCurrency(previousMonthInvoices, amountOf, currencyOf),
+        outstanding: sumByCurrency(outstandingInvoices, amountOf, currencyOf),
+        unpaidCount: outstandingInvoices.length,
+        avgDaysToPay: paidWithIssueDate.length > 0 ? totalDays / paidWithIssueDate.length : null,
     };
 }
 
@@ -98,31 +61,28 @@ export function getFinancialSummary(invoices: Array<Invoice> | null): FinancialS
 
 export function getClientFinancialBreakdown(
     clients: Array<Client> | null,
-    invoices: Array<Invoice> | null
-): Array<{ id: string; name: string; total_billed: number; count?: number }> {
-    const thisMonthInvoices = (invoices ?? []).filter((inv) => {
-        const paid = inv.paid_date == null ? null : new Date(inv.paid_date);
-        return paid != null && paid >= startOfMonth && paid <= endOfMonth;
-    });
-    const thisMonthEarningsByClientId = thisMonthInvoices.reduce<Record<string, number>>((acc, inv) => {
+    invoices: Array<Invoice> | null,
+    today = todayISO()
+): Array<{ id: string; name: string; totals: MoneyByCurrency; count?: number }> {
+    const { start, end } = monthRange(today);
+    const thisMonthInvoices = (invoices ?? []).filter(
+        (inv) => isRevenue(inv) && isOnOrBetween(inv.paid_date, start, end)
+    );
+    const thisMonthEarningsByClientId = thisMonthInvoices.reduce<Record<string, MoneyByCurrency>>((acc, inv) => {
         const id = inv.client_id;
-        acc[id] = (acc[id] ?? 0) + invoiceTotal(inv);
+        const currency = currencyOf(inv);
+        const bucket = acc[id] ?? {};
+        bucket[currency] = (bucket[currency] ?? 0) + invoiceTotal(inv);
+        acc[id] = bucket;
         return acc;
     }, {});
 
-    const clientsWithMonthlyEarnings = (clients ?? [])
-        .map((c) => ({ id: c.id, name: c.name, total_billed: thisMonthEarningsByClientId[c.id] ?? 0 }))
-        .filter((c) => c.total_billed > 0)
-        .sort((a, b) => b.total_billed - a.total_billed);
+    const totalOf = (totals: MoneyByCurrency) => Object.values(totals).reduce((sum, amount) => sum + amount, 0);
 
-    const topThreeClients = clientsWithMonthlyEarnings.slice(0, 3);
-    const otherClients = clientsWithMonthlyEarnings.slice(3);
-    const otherClientsTotalBilled = otherClients.reduce((acc, client) => acc + client.total_billed, 0);
-
-    return [
-        ...topThreeClients,
-        { id: "other", name: "Others", total_billed: otherClientsTotalBilled, count: otherClients.length }
-    ];
+    return (clients ?? [])
+        .map((client) => ({ id: client.id, name: client.name, totals: thisMonthEarningsByClientId[client.id] ?? {} }))
+        .filter((client) => totalOf(client.totals) > 0)
+        .sort((a, b) => totalOf(b.totals) - totalOf(a.totals));
 }
 
 // -----------------------------------------------------------------------------
@@ -138,13 +98,23 @@ export type RepeatBusinessChartItem = {
 export function getRepeatBusinessData(
     clients: Array<Client> | null,
     invoices: Array<Invoice> | null
-): { overallPercent: number; chartData: RepeatBusinessChartItem[] } {
-    const invList = (invoices ?? []).filter(isBilled);
+): { overallPercent: number; chartData: RepeatBusinessChartItem[]; currency: string | null; otherCurrencies: MoneyByCurrency } {
+    const paid = (invoices ?? []).filter(isRevenue);
+    const paidTotals = sumByCurrency(paid, amountOf, currencyOf);
+    const currency = dominantCurrency(paidTotals);
+    const otherCurrencies = exceptCurrency(paidTotals, currency);
+    const invList = currency ? paid.filter((invoice) => currencyOf(invoice) === currency) : [];
     const clientList = clients ?? [];
+    const pack = (overallPercent: number, chartData: RepeatBusinessChartItem[]) => ({
+        overallPercent,
+        chartData,
+        currency,
+        otherCurrencies,
+    });
 
     const totalRevenue = invList.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
     if (totalRevenue <= 0) {
-        return { overallPercent: 0, chartData: [{ name: "Overall", value: 0, isOverall: true }] };
+        return pack(0, [{ name: "Overall", value: 0, isOverall: true }]);
     }
 
     const activeClientIds = new Set(
@@ -211,12 +181,12 @@ export function getRepeatBusinessData(
                     isOverall: false,
                 });
             }
-            return { overallPercent: overallFallback, chartData };
+            return pack(overallFallback, chartData);
         }
     }
 
     if (repeatRevenue <= 0) {
-        return { overallPercent, chartData };
+        return pack(overallPercent, chartData);
     }
 
     const repeatClientsWithRevenue = clientIdsForRepeat
@@ -247,7 +217,7 @@ export function getRepeatBusinessData(
         });
     }
 
-    return { overallPercent, chartData };
+    return pack(overallPercent, chartData);
 }
 
 // -----------------------------------------------------------------------------
@@ -274,9 +244,16 @@ export function getClientRevenueBreakdown(
     pieData: ClientRevenueSegment[];
     totalClients: number;
     totalRevenue: number;
+    currency: string | null;
+    otherCurrencies: MoneyByCurrency;
     warnings: RevenueWarning[];
 } {
-    const invList = (invoices ?? []).filter(isBilled);
+    const all = invoices ?? [];
+    const paid = all.filter(isRevenue);
+    const paidTotals = sumByCurrency(paid, amountOf, currencyOf);
+    const currency = dominantCurrency(paidTotals);
+    const otherCurrencies = exceptCurrency(paidTotals, currency);
+    const invList = currency ? paid.filter((invoice) => currencyOf(invoice) === currency) : [];
     const clientList = clients ?? [];
 
     const totalRevenue = invList.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
@@ -304,15 +281,7 @@ export function getClientRevenueBreakdown(
     const warnings: RevenueWarning[] = [];
     const pieData: ClientRevenueSegment[] = [];
 
-    if (totalRevenue <= 0) {
-        return {
-            pieData: [],
-            totalClients: clientList.length,
-            totalRevenue: 0,
-            warnings: [],
-        };
-    }
-
+    if (totalRevenue > 0) {
     for (const c of clientsWithRevenue) {
         const percent = (c.revenue / totalRevenue) * 100;
         pieData.push({ name: c.name.toUpperCase(), value: c.revenue, percent: Math.round(percent) });
@@ -351,9 +320,13 @@ export function getClientRevenueBreakdown(
             });
         }
     }
+    }
 
-    // Overdue concentration: one client holds >60% of all unpaid invoice value
-    const unpaidInvoices = invList.filter(isOutstanding);
+    // Outstanding concentration, in the same currency as the revenue chart.
+    const outstandingCurrency = currency ?? dominantCurrency(sumByCurrency(all.filter(isOutstanding), amountOf, currencyOf));
+    const unpaidInvoices = outstandingCurrency
+        ? all.filter((invoice) => isOutstanding(invoice) && currencyOf(invoice) === outstandingCurrency)
+        : [];
     const totalOutstanding = unpaidInvoices.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
     if (totalOutstanding > 0) {
         const outstandingByClient: Record<string, number> = {};
@@ -379,6 +352,8 @@ export function getClientRevenueBreakdown(
         pieData,
         totalClients: clientList.length,
         totalRevenue,
+        currency,
+        otherCurrencies,
         warnings,
     };
 }

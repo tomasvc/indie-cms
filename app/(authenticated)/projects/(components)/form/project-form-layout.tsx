@@ -46,6 +46,7 @@ type ProjectFormLayoutProps = {
     submitLabel: string;
     pendingLabel: string;
     submitIcon: LucideIcon;
+    businessCurrency: string;
 };
 
 export function ProjectFormLayout({
@@ -60,6 +61,7 @@ export function ProjectFormLayout({
     submitLabel,
     pendingLabel,
     submitIcon: SubmitIcon,
+    businessCurrency,
 }: ProjectFormLayoutProps) {
     const [activeSection, setActiveSection] = useState<SectionId>("basics");
     const [isPending, startTransition] = useTransition();
@@ -175,7 +177,7 @@ export function ProjectFormLayout({
                         <div className="flex-1 overflow-auto p-6">
                             {activeSection === "basics" && <FormBasics />}
                             {activeSection === "status" && <FormStatusProgress />}
-                            {activeSection === "financials" && <FormFinancials />}
+                            {activeSection === "financials" && <FormFinancials businessCurrency={businessCurrency} />}
                             {activeSection === "time" && <FormTime />}
                             {activeSection === "timeline" && <FormTimeline />}
                             {activeSection === "client" && <FormClient clients={clients} />}

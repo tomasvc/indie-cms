@@ -5,8 +5,8 @@ export function DashboardFallback() {
     return (
         <div className="flex-1 w-full flex flex-col gap-3 animate-fadein">
             {/* Top stats bar skeleton - matches TopStats Card layout */}
-            <Card className="grid grid-cols-6 gap-0 rounded-lg divide-x p-0">
-                {[...Array(6)].map((_, i) => (
+            <Card className="grid grid-cols-2 lg:grid-cols-4 gap-0 rounded-lg divide-x p-0">
+                {[...Array(4)].map((_, i) => (
                     <div key={i} className="flex flex-col gap-1 p-4">
                         <div className="flex justify-between items-center">
                             <Skeleton className="h-3 w-24" />

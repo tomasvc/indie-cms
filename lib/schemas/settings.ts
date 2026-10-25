@@ -35,6 +35,7 @@ export const notificationPreferencesSchema = z.object({
 export const onboardingSchema = z.object({
     company_name: optionalText("Company name", 120),
     timezone: timezoneSchema,
+    currency: z.enum(CURRENCY_CODES, { error: "Choose a currency" }),
 });
 
 export type OnboardingValues = z.infer<typeof onboardingSchema>;

@@ -7,7 +7,7 @@ import { ProjectFormLayout, type ProjectFormValues } from "../../(components)/fo
 
 const toDateInput = (value: string | null | undefined) => value?.slice(0, 10) ?? "";
 
-function toFormValues(project: Project): ProjectFormValues {
+function toFormValues(project: Project, businessCurrency: string): ProjectFormValues {
     return {
         title: project.title ?? "",
         description: project.description ?? "",
@@ -17,7 +17,7 @@ function toFormValues(project: Project): ProjectFormValues {
         status: project.status ?? "active",
         priority: project.priority ?? "medium",
         progress: project.progress ?? 0,
-        currency: project.currency || "GBP",
+        currency: project.currency || businessCurrency,
         profitMargin: project.profit_margin ?? 0,
         value: project.value ?? 0,
         budget: project.budget ?? 0,
@@ -33,13 +33,15 @@ function toFormValues(project: Project): ProjectFormValues {
 export function EditProjectPage({
     project,
     clients,
+    businessCurrency,
 }: {
     project: Project;
     clients: Client[];
+    businessCurrency: string;
 }) {
     return (
         <ProjectFormLayout
-            defaultValues={toFormValues(project)}
+            defaultValues={toFormValues(project, businessCurrency)}
             clients={clients}
             onSubmit={(values) => handleUpdateProject(project.id, values)}
             cancelHref={`/projects/${project.id}`}
@@ -50,6 +52,7 @@ export function EditProjectPage({
             submitLabel="Save changes"
             pendingLabel="Saving..."
             submitIcon={SaveIcon}
+            businessCurrency={businessCurrency}
         />
     );
 }

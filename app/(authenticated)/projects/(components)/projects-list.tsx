@@ -45,7 +45,7 @@ export function ProjectsList({ projects }: ProjectsListProps) {
                         </CardHeader>
                         <CardContent className="space-y-3 pt-4">
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-                                <span>{formatMoney(project.value ?? 0, project.currency || "USD")}</span>
+                                <span>{formatMoney(project.value ?? 0, project.currency)}</span>
                                 <span>Due {formatDate(project.due_date ?? "", "MMM d, yyyy")}</span>
                             </div>
                             <div className="flex items-center gap-3">

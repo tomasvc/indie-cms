@@ -37,8 +37,8 @@ async function Dashboard() {
     <div className="flex-1 w-full flex flex-col gap-3 animate-fadein">
       <TopStats data={coreData} profile={profile} />
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-y-3 gap-x-0 lg:gap-x-3">
-        <Financials data={coreData} />
-        <Workload data={coreData} userId={user.id} />
+        <Financials data={coreData} profile={profile} />
+        <Workload data={coreData} />
         <QuickActions />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-y-3 gap-x-0 xl:gap-x-3">
