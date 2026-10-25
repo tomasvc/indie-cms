@@ -81,16 +81,16 @@ export type Database = {
       }
       invoices: {
         Row: {
-          amount: number
           client_id: string | null
-          code: string | null
+          code: string
           created_at: string | null
-          currency: string | null
+          currency: string
           discount_amount: number | null
+          discount_type: string
+          discount_value: number
           due_date: string
           id: string
           issue_date: string | null
-          line_items: Json | null
           notes: string | null
           paid_date: string | null
           payment_method: string | null
@@ -98,23 +98,23 @@ export type Database = {
           project_id: string | null
           reminder_count: number | null
           status: string
-          subtotal: number | null
-          total: number | null
+          subtotal: number
+          total: number
           transaction_id: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          amount: number
           client_id?: string | null
-          code?: string | null
+          code: string
           created_at?: string | null
-          currency?: string | null
+          currency: string
           discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number
           due_date: string
           id?: string
           issue_date?: string | null
-          line_items?: Json | null
           notes?: string | null
           paid_date?: string | null
           payment_method?: string | null
@@ -122,23 +122,23 @@ export type Database = {
           project_id?: string | null
           reminder_count?: number | null
           status: string
-          subtotal?: number | null
-          total?: number | null
+          subtotal: number
+          total: number
           transaction_id?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          amount?: number
           client_id?: string | null
-          code?: string | null
+          code?: string
           created_at?: string | null
-          currency?: string | null
+          currency?: string
           discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number
           due_date?: string
           id?: string
           issue_date?: string | null
-          line_items?: Json | null
           notes?: string | null
           paid_date?: string | null
           payment_method?: string | null
@@ -146,8 +146,8 @@ export type Database = {
           project_id?: string | null
           reminder_count?: number | null
           status?: string
-          subtotal?: number | null
-          total?: number | null
+          subtotal?: number
+          total?: number
           transaction_id?: string | null
           updated_at?: string | null
           user_id?: string
@@ -182,6 +182,7 @@ export type Database = {
           description: string | null
           id: string
           invoice_id: string
+          position: number
           quantity: number
           tax_rate: number | null
           total: number
@@ -194,6 +195,7 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_id: string
+          position?: number
           quantity?: number
           tax_rate?: number | null
           total: number
@@ -206,6 +208,7 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_id?: string
+          position?: number
           quantity?: number
           tax_rate?: number | null
           total?: number
@@ -228,6 +231,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          is_public: boolean
           live_url: string | null
           slug: string | null
           thumbnail_url: string | null
@@ -239,6 +243,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           live_url?: string | null
           slug?: string | null
           thumbnail_url?: string | null
@@ -250,6 +255,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           live_url?: string | null
           slug?: string | null
           thumbnail_url?: string | null
@@ -545,6 +551,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "time_entries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "time_entries_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -565,7 +578,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_invoice: {
+        Args: { p_invoice: Json; p_line_items: Json }
+        Returns: string
+      }
+      invoice_totals: {
+        Args: {
+          p_discount_type: string
+          p_discount_value: number
+          p_line_items: Json
+        }
+        Returns: {
+          discount_amount: number
+          subtotal: number
+          total: number
+        }[]
+      }
+      replace_invoice_line_items: {
+        Args: { p_invoice_id: string; p_line_items: Json }
+        Returns: undefined
+      }
+      update_invoice: {
+        Args: { p_id: string; p_invoice: Json; p_line_items: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       client_status: "lead" | "active" | "archived"
