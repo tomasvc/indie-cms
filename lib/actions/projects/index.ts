@@ -59,7 +59,16 @@ export async function handleCreateProject(formData: FormData) {
 export async function handleDeleteProject(formData: FormData) {
     const id = formData.get('id') as string;
     const supabase = await createClient();
-    const { data, error } = await supabase.from('projects').delete().eq('id', id);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase.from('projects')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
     if (error) throw error;
     revalidatePath('/projects');
     redirect('/projects');
@@ -67,7 +76,12 @@ export async function handleDeleteProject(formData: FormData) {
 
 export async function updateProjectStatus(projectId: string, status: string) {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('projects').update({ status }).eq('id', projectId);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase.from('projects').update({ status }).eq('id', projectId)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
     if (error) throw error;
     revalidatePath(`/projects`);
@@ -114,7 +128,14 @@ export async function handleUpdateProject(formData: FormData) {
     if (color !== undefined) update.color = color;
     if (progress !== undefined) update.progress = progress;
 
-    const { error } = await supabase.from('projects').update(update).eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+        .from('projects').update(update).eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
     if (error) throw error;
     revalidatePath(`/projects`);
     redirect(`/projects/${id}`);

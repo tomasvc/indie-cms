@@ -36,7 +36,15 @@ export async function handleUpdateClient(formData: FormData) {
     const status = (formData.get('status') as ClientStatus) || 'lead';
 
     const supabase = await createClient();
-    const { data, error } = await supabase.from('clients').update({ name, company, email, status }).eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+        .from('clients')
+        .update({ name, company, email, status })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
     if (error) throw error;
     revalidatePath(`/clients/${id}`);
@@ -46,7 +54,16 @@ export async function handleUpdateClient(formData: FormData) {
 export async function handleDeleteClient(formData: FormData) {
     const id = formData.get('id') as string;
     const supabase = await createClient();
-    const { data, error } = await supabase.from('clients').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
     if (error) throw error;
     revalidatePath('/clients');
     redirect('/clients');

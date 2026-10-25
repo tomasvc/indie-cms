@@ -95,7 +95,7 @@ export async function updateSession(request: NextRequest) {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("onboarding_completed_at")
-        .eq("user_id", authUser.id)
+        .eq("id", authUser.id)
         .maybeSingle();
 
       const completed =

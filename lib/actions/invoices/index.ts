@@ -125,8 +125,8 @@ export async function updateInvoice(formData: FormData) {
     if (!issue_date) throw new Error('Please enter an issue date.');
 
     const supabase = await createClient();
-    const { data: user } = await supabase.auth.getUser();
-    if (!user?.user?.id) throw new Error('Unauthorized.');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
 
     const { error } = await supabase
         .from('invoices')
@@ -143,7 +143,7 @@ export async function updateInvoice(formData: FormData) {
             updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', user.user.id);
+        .eq('user_id', user.id);
 
     if (error) throw error;
     revalidatePath('/invoices');
@@ -152,7 +152,16 @@ export async function updateInvoice(formData: FormData) {
 
 export async function deleteInvoice(id: string) {
     const supabase = await createClient();
-    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
     if (error) throw error;
     revalidatePath('/invoices');
     redirect('/invoices');

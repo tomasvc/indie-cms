@@ -59,7 +59,15 @@ export async function updateTimeEntry(formData: FormData) {
     if (approved === "true" || approved === "on") update.approved = true;
     else if (approved === "false" || approved === "off") update.approved = false;
 
-    const { error } = await supabase.from("time_entries").update(update).eq("id", id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase.from("time_entries")
+        .update(update)
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
     if (error) throw error;
     revalidatePath(`/projects/${project_id}`);
 }
@@ -68,7 +76,14 @@ export async function deleteTimeEntry(formData: FormData) {
     const id = formData.get("id") as string;
     const project_id = formData.get("project_id") as string;
     const supabase = await createClient();
-    const { error } = await supabase.from("time_entries").delete().eq("id", id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase.from("time_entries")
+        .delete().eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
     if (error) throw error;
     revalidatePath(`/projects/${project_id}`);
 }
