@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -16,6 +16,7 @@ import { Project, ProjectStatus } from "@/types";
 import { KanbanColumn } from "./kanban/projects-kanban-column";
 import { KanbanCard } from "./kanban/projects-kanban-card";
 import { KanbanCardOverlay } from "./kanban/projects-kanban-card-overlay";
+import type { ActionState } from "@/lib/forms/action-state";
 
 const KANBAN_COLUMNS = [
     { id: "proposal", label: "Proposal" },
@@ -30,15 +31,24 @@ const KNOWN_STATUSES: Set<string> = new Set(KANBAN_COLUMNS.map((c) => c.id));
 
 interface ProjectsKanbanProps {
     projects: Project[];
-    onStatusChange?: (projectId: string, newStatus: string) => void;
+    onStatusChange?: (projectId: string, newStatus: string) => Promise<ActionState>;
 }
 
 export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps) {
     const [localProjects, setLocalProjects] = useState<Project[]>(projects);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [moveError, setMoveError] = useState<string | null>(null);
+    const savingIds = useRef(new Set<string>());
 
     useEffect(() => {
-        setLocalProjects(projects);
+        setLocalProjects((current) => {
+            if (savingIds.current.size === 0) return projects;
+            return projects.map((project) =>
+                savingIds.current.has(project.id)
+                    ? current.find((item) => item.id === project.id) ?? project
+                    : project
+            );
+        });
     }, [projects]);
 
     const columnsWithProjects = KANBAN_COLUMNS.map((col) => ({
@@ -52,7 +62,7 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
         setActiveId(String(event.active.id));
     }
 
-    function handleDragEnd(event: DragEndEvent) {
+    async function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         setActiveId(null);
         if (!over) return;
@@ -62,14 +72,33 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
         if (!KNOWN_STATUSES.has(newStatus)) return;
 
         const project = localProjects.find((p) => p.id === projectId);
-        if (!project || project.status === newStatus) return;
+        if (!project || project.status === newStatus || savingIds.current.has(projectId)) return;
 
+        const previousStatus = project.status;
+        savingIds.current.add(projectId);
+        setMoveError(null);
         setLocalProjects((prev) =>
             prev.map((p) =>
                 p.id === projectId ? { ...p, status: newStatus as ProjectStatus } : p
             )
         );
-        onStatusChange?.(projectId, newStatus);
+
+        let result: ActionState = { ok: true };
+        try {
+            result = (await onStatusChange?.(projectId, newStatus)) ?? { ok: true };
+        } catch (error) {
+            console.error(error);
+            result = { error: "Couldn't move this project. Please try again." };
+        } finally {
+            savingIds.current.delete(projectId);
+        }
+
+        if (result.error) {
+            setLocalProjects((prev) =>
+                prev.map((p) => (p.id === projectId ? { ...p, status: previousStatus } : p))
+            );
+            setMoveError(result.error);
+        }
     }
 
     const sensors = useSensors(
@@ -79,6 +108,9 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            {moveError && (
+                <p className="mb-3 text-sm text-destructive" role="alert">{moveError}</p>
+            )}
             <div className="flex gap-4 overflow-x-auto pb-2">
                 {columnsWithProjects.map((col) => (
                     <KanbanColumn

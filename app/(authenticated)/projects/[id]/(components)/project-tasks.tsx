@@ -59,6 +59,7 @@ export function ProjectTasks({
     const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const filteredTasks =
         statusFilter === "all"
@@ -71,20 +72,27 @@ export function ProjectTasks({
 
     async function handleDelete(id: string) {
         setIsSubmitting(true);
-        try {
-            const formData = new FormData();
-            formData.set("id", id);
-            formData.set("project_id", projectId);
-            await deleteTask(formData);
-            setDeleteTaskId(null);
-            router.refresh();
-        } finally {
-            setIsSubmitting(false);
+        setActionError(null);
+        const formData = new FormData();
+        formData.set("id", id);
+        formData.set("project_id", projectId);
+        const result = await deleteTask(formData);
+        setIsSubmitting(false);
+        if (result.error) {
+            setActionError(result.error);
+            return;
         }
+        setDeleteTaskId(null);
+        router.refresh();
     }
 
     async function handleStatusChange(task: Task, newStatus: TaskStatus) {
-        await updateTaskStatus(task.id, projectId, newStatus);
+        setActionError(null);
+        const result = await updateTaskStatus(task.id, projectId, newStatus);
+        if (result.error) {
+            setActionError(result.error);
+            return;
+        }
         router.refresh();
     }
 
@@ -148,6 +156,10 @@ export function ProjectTasks({
                         Done ({doneCount})
                     </Button>
                 </div>
+
+                {actionError && !deleteTaskId && (
+                    <p className="mb-3 text-sm text-destructive" role="alert">{actionError}</p>
+                )}
 
                 {filteredTasks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[200px] border border-dashed border-muted rounded-lg bg-muted/40 text-center p-6">
@@ -266,7 +278,12 @@ export function ProjectTasks({
                 </Dialog>
 
                 {/* Delete confirmation */}
-                <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+                <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteTaskId(null);
+                        setActionError(null);
+                    }
+                }}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete task</AlertDialogTitle>
@@ -274,6 +291,7 @@ export function ProjectTasks({
                                 This action cannot be undone. The task will be permanently removed.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
+                        {actionError && <p className="text-sm text-destructive" role="alert">{actionError}</p>}
                         <AlertDialogFooter>
                             <AlertDialogCancel onClick={() => setDeleteTaskId(null)}>
                                 Cancel

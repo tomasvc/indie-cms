@@ -112,16 +112,22 @@ export async function handleArchiveProject(_prev: ActionState, formData: FormDat
     redirect("/projects");
 }
 
-export async function updateProjectStatus(projectId: string, status: string) {
-    const parsedId = idSchema("Project").parse(projectId);
-    const parsedStatus = projectStatusSchema.parse(status);
-    const { supabase, user } = await requireUser();
+export async function updateProjectStatus(projectId: string, status: string): Promise<ActionState> {
+    const parsedId = idSchema("Project").safeParse(projectId);
+    if (!parsedId.success) return { error: "This project couldn't be found." };
+    const parsedStatus = projectStatusSchema.safeParse(status);
+    if (!parsedStatus.success) return { error: "That status isn't available." };
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "You need to sign in again." };
 
     const { error } = await supabase.from("projects")
-        .update({ status: parsedStatus })
-        .eq("id", parsedId)
+        .update({ status: parsedStatus.data })
+        .eq("id", parsedId.data)
         .eq("user_id", user.id);
 
-    if (error) throw error;
+    if (error) return databaseError(error, "Couldn't move this project. Please try again.");
     revalidatePath("/projects");
+    return { ok: true };
 }

@@ -2,8 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import type { TaskStatus } from "@/types";
 import { databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
+import { id } from "@/lib/schemas/common";
 import { taskCreateSchema, taskStatusSchema, taskUpdateSchema } from "@/lib/schemas/task";
 
 const today = () => new Date().toISOString().split("T")[0];
@@ -49,22 +51,36 @@ export async function updateTask(_prev: ActionState, formData: FormData): Promis
     return { ok: true };
 }
 
-export async function deleteTask(formData: FormData) {
-    const id = formData.get("id") as string;
-    const project_id = formData.get("project_id") as string;
+const taskDeleteSchema = z.object({
+    id: id("Task"),
+    project_id: id("Project"),
+});
+
+export async function deleteTask(formData: FormData): Promise<ActionState> {
+    const parsed = taskDeleteSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return { error: "This task couldn't be found." };
+
     const supabase = await createClient();
-    const { error } = await supabase.from("tasks").delete().eq("id", id);
-    if (error) throw error;
-    revalidatePath(`/projects/${project_id}`);
+    const { error } = await supabase.from("tasks").delete().eq("id", parsed.data.id);
+    if (error) return databaseError(error, "Couldn't delete this task. Please try again.");
+    revalidatePath(`/projects/${parsed.data.project_id}`);
+    return { ok: true };
 }
 
-export async function updateTaskStatus(taskId: string, projectId: string, status: TaskStatus) {
-    const parsedStatus = taskStatusSchema.parse(status);
+export async function updateTaskStatus(taskId: string, projectId: string, status: TaskStatus): Promise<ActionState> {
+    const parsed = z.object({
+        taskId: id("Task"),
+        projectId: id("Project"),
+        status: taskStatusSchema,
+    }).safeParse({ taskId, projectId, status });
+    if (!parsed.success) return validationError(parsed.error);
+
     const supabase = await createClient();
     const { error } = await supabase
         .from("tasks")
-        .update({ status: parsedStatus, completed_date: parsedStatus === "done" ? today() : null })
-        .eq("id", taskId);
-    if (error) throw error;
-    revalidatePath(`/projects/${projectId}`);
+        .update({ status: parsed.data.status, completed_date: parsed.data.status === "done" ? today() : null })
+        .eq("id", parsed.data.taskId);
+    if (error) return databaseError(error, "Couldn't update this task. Please try again.");
+    revalidatePath(`/projects/${parsed.data.projectId}`);
+    return { ok: true };
 }

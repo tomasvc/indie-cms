@@ -31,11 +31,7 @@ export function ProjectsView({ projects }: ProjectsViewProps) {
     }, []);
 
     const handleStatusChange = useCallback(async (projectId: string, status: string) => {
-        try {
-            await updateProjectStatus(projectId, status);
-        } catch (error) {
-            console.error(error);
-        }
+        return updateProjectStatus(projectId, status);
     }, []);
 
     return (
