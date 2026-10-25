@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Client } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatMoney, formatDate } from "@/lib/helpers/format";
 
@@ -32,7 +33,11 @@ export function ClientsTable({ clients, currency }: ClientsTableProps) {
                 <TableBody>
                     {clients.map((client) => (
                         <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer hover:bg-muted">
-                            <TableCell className="pl-4">{client.name}</TableCell>
+                            <TableCell className="pl-4">
+                                <Link href={`/clients/${client.id}`} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
+                                    {client.name}
+                                </Link>
+                            </TableCell>
                             <TableCell>{client.company}</TableCell>
                             <TableCell>{client.email}</TableCell>
                             <TableCell><Badge variant="outline" className="capitalize">{client.status}</Badge></TableCell>

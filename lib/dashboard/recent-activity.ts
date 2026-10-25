@@ -1,4 +1,3 @@
-import { createScopedAnimate } from "framer-motion";
 import type { DashboardCoreData } from "@/lib/data/dashboard";
 import { isAfter } from "date-fns";
 
@@ -28,7 +27,7 @@ export function getRecentActivity(coreData: DashboardCoreData, limit = 15): Acti
             action: isCreated ? "created" : "updated",
             title: proj.title,
             timestamp,
-            href: `/projects${proj.id}`
+            href: `/projects/${proj.id}`
         })
     }
 

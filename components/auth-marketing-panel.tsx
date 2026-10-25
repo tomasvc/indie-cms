@@ -137,47 +137,6 @@ export function AuthMarketingPanel() {
             </li>
           ))}
         </ul>
-
-        <div
-          className="mt-10 rounded-2xl p-5"
-          style={{ background: "var(--auth-card-bg)" }}
-        >
-          <div
-            className="text-3xl font-bold mb-2 leading-none tracking-tight"
-            style={{ color: "var(--auth-accent-solid)", fontFamily: "var(--font-serif)" }}
-          >
-            &ldquo;&rdquo;
-          </div>
-          <p
-            className="text-sm italic leading-relaxed mb-4"
-            style={{ color: "rgba(255,255,255,0.7)", fontFamily: "var(--font-sans)" }}
-          >
-            &ldquo;Finally a tool built for how freelancers actually work — not adapted
-            from agency software.&rdquo;
-          </p>
-          <div className="flex items-center gap-3">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-primary"
-              style={{ background: "var(--auth-accent-solid)" }}
-            >
-              S
-            </div>
-            <div>
-              <p
-                className="text-sm font-semibold text-white"
-                style={{ fontFamily: "var(--font-sans)" }}
-              >
-                Sarah K.
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-sans)" }}
-              >
-                Independent Brand Designer
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

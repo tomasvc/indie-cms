@@ -2,6 +2,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 
+/** Set after a profile read confirms onboarding, so later navigations skip that query. */
+export const ONBOARDING_DONE_COOKIE = "onboarding_done";
+
+const ONBOARDING_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  maxAge: 60 * 60 * 24 * 365,
+};
+
+function copyCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie.name, cookie.value, cookie);
+  });
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -45,17 +62,17 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
   const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
 
   // Marketing links use ?demo=true. The cookie is no longer a login.
   const wantsDemo = request.nextUrl.searchParams.get("demo") === "true";
-  if (wantsDemo && !user && request.nextUrl.pathname !== "/auth/demo") {
+  if (wantsDemo && !userId && request.nextUrl.pathname !== "/auth/demo") {
     return NextResponse.redirect(new URL("/auth/demo", request.url));
   }
 
   if (
     request.nextUrl.pathname !== "/" &&
-    !user &&
+    !userId &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth")
   ) {
@@ -77,32 +94,26 @@ export async function updateSession(request: NextRequest) {
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
-  // Redirect authenticated users who have not completed onboarding to /onboarding.
-  // Use getUser() so we have a reliable user.id; only redirect when we successfully
-  // read the profile and onboarding is not completed. On profile query error, allow
-  // the request through so users are not stuck.
-  if (request.nextUrl.pathname !== "/onboarding") {
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    if (authUser?.id) {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("onboarding_completed_at")
-        .eq("id", authUser.id)
-        .maybeSingle();
+  // Onboarding is checked from the claim's user id. A matching cookie means we
+  // already confirmed completion, so signed-in navigation does not query profiles.
+  // A profile error still lets the request through so a blip cannot trap the user.
+  const pathname = request.nextUrl.pathname;
+  const alreadyConfirmed = request.cookies.get(ONBOARDING_DONE_COOKIE)?.value === userId;
+  if (userId && pathname !== "/onboarding" && !pathname.startsWith("/auth") && !alreadyConfirmed) {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", userId)
+      .maybeSingle();
 
-      const completed =
-        !profileError && Boolean(profile?.onboarding_completed_at);
-      if (!profileError && !completed) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/onboarding";
-        const redirectResponse = NextResponse.redirect(url);
-        supabaseResponse.cookies.getAll().forEach((cookie) =>
-          redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
-        );
-        return redirectResponse;
-      }
+    if (!profileError && profile?.onboarding_completed_at) {
+      supabaseResponse.cookies.set(ONBOARDING_DONE_COOKIE, userId, ONBOARDING_COOKIE_OPTIONS);
+    } else if (!profileError) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/onboarding";
+      const redirectResponse = NextResponse.redirect(url);
+      copyCookies(supabaseResponse, redirectResponse);
+      return redirectResponse;
     }
   }
 

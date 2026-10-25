@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Project } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface ProjectsTableProps {
@@ -29,7 +30,11 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                 <TableBody>
                     {projects.map((project) => (
                         <TableRow key={project.id} onClick={() => router.push(`/projects/${project.id}`)} className="cursor-pointer hover:bg-muted">
-                            <TableCell className="pl-4">{project.title}</TableCell>
+                            <TableCell className="pl-4">
+                                <Link href={`/projects/${project.id}`} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
+                                    {project.title}
+                                </Link>
+                            </TableCell>
                             <TableCell><Badge variant="outline" className="capitalize">{project.status}</Badge></TableCell>
                             <TableCell>{project.progress}</TableCell>
                             <TableCell>{project.value}</TableCell>

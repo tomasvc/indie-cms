@@ -6,7 +6,6 @@ import { TopStats } from "@/app/(authenticated)/dashboard/(components)/top-stats
 import { Financials } from "@/app/(authenticated)/dashboard/(components)/financials";
 
 import { getDashboardCoreData } from "@/lib/data/dashboard";
-import { getMockDashboardCoreData } from "@/lib/mock";
 import { Workload } from "@/app/(authenticated)/dashboard/(components)/workload";
 import { QuickActions } from "@/app/(authenticated)/dashboard/(components)/quick-actions";
 import { RecentActivity } from "@/app/(authenticated)/dashboard/(components)/recent-activity";
@@ -30,7 +29,7 @@ async function Dashboard() {
 
   const coreData =
     process.env.NEXT_PUBLIC_USE_MOCK_DASHBOARD === "true"
-      ? getMockDashboardCoreData(user.id)
+      ? (await import("@/lib/mock")).getMockDashboardCoreData(user.id)
       : await getDashboardCoreData(user.id);
 
   return (

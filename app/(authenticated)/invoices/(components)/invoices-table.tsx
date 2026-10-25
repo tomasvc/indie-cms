@@ -54,7 +54,11 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                                     className="group cursor-pointer hover:bg-muted"
                                     onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
                                 >
-                                    <TableCell className="pl-4 font-mono">INV-{invoice.code}</TableCell>
+                                    <TableCell className="pl-4 font-mono">
+                                        <Link href={`/invoices/${invoice.id}/edit`} className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>
+                                            INV-{invoice.code}
+                                        </Link>
+                                    </TableCell>
                                     <TableCell>
                                         <Badge variant={STATUS_BADGE[status]} className="capitalize">{status}</Badge>
                                     </TableCell>
@@ -66,8 +70,7 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    tabIndex={-1}
-                                                    className="flex items-center p-1 mr-2 hover:bg-accent rounded focus:outline-none"
+                                                    className="flex items-center p-1 mr-2 hover:bg-accent rounded outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                     aria-label="Actions"
                                                 >
                                                     <EllipsisVerticalIcon className="w-4 h-4" />
