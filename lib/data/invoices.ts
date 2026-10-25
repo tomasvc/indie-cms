@@ -23,3 +23,19 @@ export async function getInvoice(id: string) {
     if (error) throw error;
     return data;
 }
+
+export async function countInvoicesForProject(projectId: string) {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { count, error } = await supabase
+        .from("invoices")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", projectId)
+        .eq("user_id", user.id);
+
+    if (error) throw error;
+    return count ?? 0;
+}

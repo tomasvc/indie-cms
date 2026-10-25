@@ -51,20 +51,43 @@ export async function handleUpdateClient(formData: FormData) {
     redirect(`/clients/${id}`);
 }
 
-export async function handleDeleteClient(formData: FormData) {
+export type ClientActionState = { error?: string };
+
+const FOREIGN_KEY_VIOLATION = "23503";
+
+export async function handleDeleteClient(_prev: ClientActionState, formData: FormData): Promise<ClientActionState> {
     const id = formData.get('id') as string;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from('clients')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
+        .eq('user_id', user.id);
+
+    if (error?.code === FOREIGN_KEY_VIOLATION) {
+        return { error: "This client has invoices or projects, so it can't be deleted. Archive it instead." };
+    }
     if (error) throw error;
+    revalidatePath('/clients');
+    redirect('/clients');
+}
+
+export async function handleArchiveClient(_prev: ClientActionState, formData: FormData): Promise<ClientActionState> {
+    const id = formData.get('id') as string;
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+        .from('clients')
+        .update({ status: 'archived' })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+    if (error) return { error: "Couldn't archive this client. Please try again." };
     revalidatePath('/clients');
     redirect('/clients');
 }

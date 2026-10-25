@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProject } from "@/lib/data/projects";
-import { handleDeleteProject } from "@/lib/actions/projects";
+import { handleArchiveProject, handleDeleteProject } from "@/lib/actions/projects";
+import { countInvoicesForProject } from "@/lib/data/invoices";
 import { getTasksForProject } from "@/lib/data/tasks";
 import { getTimeEntriesForProject } from "@/lib/data/time-entries";
 import { ProjectOverview } from "./(components)/project-overview";
@@ -20,11 +21,12 @@ import { Typography } from "@/components/ui/typography";
 
 async function Project({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const [project, clients, tasks, timeEntries] = await Promise.all([
+    const [project, clients, tasks, timeEntries, invoiceCount] = await Promise.all([
         getProject(id),
         getClients(),
         getTasksForProject(id),
-        getTimeEntriesForProject(id)
+        getTimeEntriesForProject(id),
+        countInvoicesForProject(id),
     ]);
 
     if (!project || !clients) {
@@ -74,7 +76,14 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                                 Edit
                             </Link>
                         </Button>
-                        <DeleteProjectButton id={id} deleteProject={handleDeleteProject} iconOnly />
+                        <DeleteProjectButton
+                            id={id}
+                            canDelete={invoiceCount === 0 && timeEntries.length === 0}
+                            isArchived={project.status === "archived"}
+                            deleteProject={handleDeleteProject}
+                            archiveProject={handleArchiveProject}
+                            iconOnly
+                        />
                     </div>
                 </div>
                 <div className="flex gap-4 items-center flex-wrap">
