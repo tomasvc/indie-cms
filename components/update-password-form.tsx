@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field";
+import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
+import { updatePasswordSchema } from "@/lib/schemas/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,14 +21,20 @@ export function UpdatePasswordForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    const parsed = updatePasswordSchema.safeParse({ password });
+    setFieldErrors(parsed.success ? {} : toFieldErrors(parsed.error));
+    if (!parsed.success) return;
+
     const supabase = createClient();
     setIsLoading(true);
-    setError(null);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
       if (error) throw error;
       router.push("/dashboard");
     } catch (error: unknown) {
@@ -51,7 +60,7 @@ export function UpdatePasswordForm({
         </p>
       </div>
 
-      <form onSubmit={handleUpdatePassword} className="flex flex-col gap-5">
+      <form onSubmit={handleUpdatePassword} noValidate className="flex flex-col gap-5">
         <div className="grid gap-1.5">
           <Label
             htmlFor="password"
@@ -68,6 +77,7 @@ export function UpdatePasswordForm({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={!!fieldErrors.password}
               className="h-11 pr-10"
             />
             <button
@@ -90,6 +100,7 @@ export function UpdatePasswordForm({
               )}
             </button>
           </div>
+          <FieldError errors={errorsFor(fieldErrors, "password")} />
         </div>
 
         {error && (

@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field";
+import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
+import { loginSchema } from "@/lib/schemas/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -21,17 +24,20 @@ export function LoginForm({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    const parsed = loginSchema.safeParse({ email, password });
+    setFieldErrors(parsed.success ? {} : toFieldErrors(parsed.error));
+    if (!parsed.success) return;
+
     const supabase = createClient();
     setIsLoading(true);
-    setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword(parsed.data);
       if (error) throw error;
       router.push("/dashboard");
     } catch (error: unknown) {
@@ -56,7 +62,7 @@ export function LoginForm({
         </p>
       </div>
 
-      <form onSubmit={handleLogin} className="flex flex-col gap-5">
+      <form onSubmit={handleLogin} noValidate className="flex flex-col gap-5">
         <div className="grid gap-1.5">
           <Label
             htmlFor="email"
@@ -71,8 +77,10 @@ export function LoginForm({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={!!fieldErrors.email}
             className="h-11"
           />
+          <FieldError errors={errorsFor(fieldErrors, "email")} />
         </div>
 
         <div className="grid gap-1.5">
@@ -97,6 +105,7 @@ export function LoginForm({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={!!fieldErrors.password}
               className="h-11 pr-10"
             />
             <button
@@ -119,6 +128,7 @@ export function LoginForm({
               )}
             </button>
           </div>
+          <FieldError errors={errorsFor(fieldErrors, "password")} />
         </div>
 
         {error && (

@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field";
+import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
+import { forgotPasswordSchema } from "@/lib/schemas/auth";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -17,14 +20,20 @@ export function ForgotPasswordForm({
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    const parsed = forgotPasswordSchema.safeParse({ email });
+    setFieldErrors(parsed.success ? {} : toFieldErrors(parsed.error));
+    if (!parsed.success) return;
+
     const supabase = createClient();
     setIsLoading(true);
-    setError(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
         redirectTo: `${window.location.origin}/auth/update-password`,
       });
       if (error) throw error;
@@ -86,7 +95,7 @@ export function ForgotPasswordForm({
         </p>
       </div>
 
-      <form onSubmit={handleForgotPassword} className="flex flex-col gap-5">
+      <form onSubmit={handleForgotPassword} noValidate className="flex flex-col gap-5">
         <div className="grid gap-1.5">
           <Label
             htmlFor="email"
@@ -102,8 +111,10 @@ export function ForgotPasswordForm({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={!!fieldErrors.email}
             className="h-11"
           />
+          <FieldError errors={errorsFor(fieldErrors, "email")} />
         </div>
 
         {error && (

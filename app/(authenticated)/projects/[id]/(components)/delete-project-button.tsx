@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArchiveIcon, TrashIcon } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import type { ProjectActionState } from "@/lib/actions/projects";
+import type { ActionState as ProjectActionState } from "@/lib/forms/action-state";
 
 type ProjectAction = (state: ProjectActionState, formData: FormData) => Promise<ProjectActionState>;
 

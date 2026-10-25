@@ -1,48 +1,62 @@
-import { ProjectForm } from "./types"
-import { FieldGroup, Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { useFormContext, useWatch } from "react-hook-form"
+import { FieldGroup, Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { formatDate } from "@/lib/helpers/format"
-import { differenceInDays, parseISO } from "date-fns"
-import { useState } from "react"
+import { differenceInDays, isValid, parseISO, startOfDay } from "date-fns"
+import type { ProjectFormValues } from "./types"
 
-export const FormTimeline = ({ form, setForm }: { form: ProjectForm, setForm: React.Dispatch<React.SetStateAction<ProjectForm>> }) => {
-    const startDt = form.startDate ? parseISO(form.startDate) : null;
-    const dueDt = form.dueDate ? parseISO(form.dueDate) : null;
-    const daysRemaining = startDt && dueDt ? differenceInDays(dueDt, startDt) : 0;
-    
+const toDate = (value: string) => {
+    const date = value ? parseISO(value) : null;
+    return date && isValid(date) ? date : null;
+};
+
+export const FormTimeline = () => {
+    const { register, control, formState: { errors } } = useFormContext<ProjectFormValues>();
+    const [startDate, dueDate] = useWatch({ control, name: ["startDate", "dueDate"] });
+    const startDt = toDate(startDate);
+    const dueDt = toDate(dueDate);
+    const today = startOfDay(new Date());
+    const daysRemaining = dueDt ? Math.max(0, differenceInDays(dueDt, today)) : 0;
+    const span = startDt && dueDt ? differenceInDays(dueDt, startDt) : 0;
+    const todayPct = startDt && span > 0
+        ? Math.min(100, Math.max(0, (differenceInDays(today, startDt) / span) * 100))
+        : 0;
+
     return (
         <div className="max-w-2xl space-y-6">
             <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
-                    <Field>
-                        <FieldLabel>START DATE</FieldLabel>
+                    <Field data-invalid={!!errors.startDate}>
+                        <FieldLabel htmlFor="project-start-date">START DATE</FieldLabel>
                         <Input
-                            name="start_date"
+                            id="project-start-date"
                             type="date"
-                            value={form.startDate}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((prev: ProjectForm) => ({ ...prev, startDate: e.target.value }))}
+                            {...register("startDate", { deps: ["dueDate", "completedDate"] })}
+                            aria-invalid={!!errors.startDate}
                         />
+                        <FieldError errors={[errors.startDate]} />
                     </Field>
-                    <Field>
-                        <FieldLabel>DUE DATE</FieldLabel>
+                    <Field data-invalid={!!errors.dueDate}>
+                        <FieldLabel htmlFor="project-due-date">DUE DATE</FieldLabel>
                         <Input
-                            name="due_date"
+                            id="project-due-date"
                             type="date"
-                            value={form.dueDate}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((prev: ProjectForm) => ({ ...prev, dueDate: e.target.value }))}
+                            {...register("dueDate")}
+                            aria-invalid={!!errors.dueDate}
                         />
+                        <FieldError errors={[errors.dueDate]} />
                     </Field>
                 </div>
-                <Field>
-                    <FieldLabel>COMPLETED DATE</FieldLabel>
+                <Field data-invalid={!!errors.completedDate}>
+                    <FieldLabel htmlFor="project-completed-date">COMPLETED DATE</FieldLabel>
                     <FieldDescription>Leave blank if the project is still in progress.</FieldDescription>
                     <Input
-                        name="completed_date"
+                        id="project-completed-date"
                         type="date"
-                        value={form.completedDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((prev: ProjectForm) => ({ ...prev, completedDate: e.target.value }))}
-                        placeholder="dd/mm/yyyy"
+                        {...register("completedDate")}
+                        aria-invalid={!!errors.completedDate}
                     />
+                    <FieldError errors={[errors.completedDate]} />
                 </Field>
                 <Field>
                     <FieldLabel>TIMELINE PREVIEW</FieldLabel>
@@ -52,14 +66,14 @@ export const FormTimeline = ({ form, setForm }: { form: ProjectForm, setForm: Re
                                 <div className="relative h-8 flex items-center">
                                     <div className="flex-1 h-1.5 rounded-full bg-muted" />
                                     <span className="absolute left-0 text-[10px] text-muted-foreground" style={{ left: 0 }}>
-                                        {formatDate(form.startDate, "MMM d")}
+                                        {formatDate(startDate, "MMM d")}
                                     </span>
                                     <span className="absolute right-0 text-[10px] text-muted-foreground" style={{ right: 0 }}>
-                                        {formatDate(form.dueDate, "MMM d")}
+                                        {formatDate(dueDate, "MMM d")}
                                     </span>
                                     <span
                                         className="absolute size-2.5 rounded-full bg-primary border-2 border-background"
-                                        style={{ left: "50%", transform: "translateX(-50%)" }}
+                                        style={{ left: `${todayPct}%`, transform: "translateX(-50%)" }}
                                         title="TODAY"
                                     />
                                 </div>

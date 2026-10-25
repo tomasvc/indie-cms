@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Typography } from "@/components/ui/typography";
 import { updateProfile, updateNotificationPreferences, updatePassword } from "@/lib/actions/settings";
+import { applyServerErrors } from "@/lib/forms/apply-server-errors";
+import { useFormAction } from "@/hooks/use-form-action";
+import { CURRENCY_OPTIONS, LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/constants/profile";
+import { profileSchema, type ProfileFormValues } from "@/lib/schemas/settings";
 import type { Profile } from "@/types";
 import {
     UserIcon,
@@ -19,92 +26,18 @@ import {
     CheckCircleIcon,
 } from "lucide-react";
 
-const CURRENCIES = [
-    { value: "USD", label: "USD — US Dollar" },
-    { value: "EUR", label: "EUR — Euro" },
-    { value: "GBP", label: "GBP — British Pound" },
-    { value: "CAD", label: "CAD — Canadian Dollar" },
-    { value: "AUD", label: "AUD — Australian Dollar" },
-    { value: "CHF", label: "CHF — Swiss Franc" },
-    { value: "JPY", label: "JPY — Japanese Yen" },
-    { value: "NOK", label: "NOK — Norwegian Krone" },
-    { value: "SEK", label: "SEK — Swedish Krona" },
-    { value: "DKK", label: "DKK — Danish Krone" },
-    { value: "NZD", label: "NZD — New Zealand Dollar" },
-    { value: "SGD", label: "SGD — Singapore Dollar" },
-    { value: "HKD", label: "HKD — Hong Kong Dollar" },
-    { value: "PLN", label: "PLN — Polish Złoty" },
-    { value: "CZK", label: "CZK — Czech Koruna" },
-    { value: "BRL", label: "BRL — Brazilian Real" },
-    { value: "INR", label: "INR — Indian Rupee" },
-    { value: "MXN", label: "MXN — Mexican Peso" },
-];
-
-const TIMEZONES = [
-    { value: "America/New_York", label: "Eastern Time (ET)" },
-    { value: "America/Chicago", label: "Central Time (CT)" },
-    { value: "America/Denver", label: "Mountain Time (MT)" },
-    { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
-    { value: "America/Anchorage", label: "Alaska Time (AKT)" },
-    { value: "Pacific/Honolulu", label: "Hawaii Time (HT)" },
-    { value: "America/Toronto", label: "Toronto (ET)" },
-    { value: "America/Vancouver", label: "Vancouver (PT)" },
-    { value: "America/Sao_Paulo", label: "São Paulo (BRT)" },
-    { value: "America/Buenos_Aires", label: "Buenos Aires (ART)" },
-    { value: "America/Mexico_City", label: "Mexico City (CST)" },
-    { value: "Europe/London", label: "London (GMT/BST)" },
-    { value: "Europe/Paris", label: "Paris (CET/CEST)" },
-    { value: "Europe/Berlin", label: "Berlin (CET/CEST)" },
-    { value: "Europe/Madrid", label: "Madrid (CET/CEST)" },
-    { value: "Europe/Rome", label: "Rome (CET/CEST)" },
-    { value: "Europe/Amsterdam", label: "Amsterdam (CET/CEST)" },
-    { value: "Europe/Stockholm", label: "Stockholm (CET/CEST)" },
-    { value: "Europe/Oslo", label: "Oslo (CET/CEST)" },
-    { value: "Europe/Zurich", label: "Zurich (CET/CEST)" },
-    { value: "Europe/Warsaw", label: "Warsaw (CET/CEST)" },
-    { value: "Europe/Prague", label: "Prague (CET/CEST)" },
-    { value: "Europe/Lisbon", label: "Lisbon (WET/WEST)" },
-    { value: "Europe/Athens", label: "Athens (EET/EEST)" },
-    { value: "Europe/Helsinki", label: "Helsinki (EET/EEST)" },
-    { value: "Europe/Istanbul", label: "Istanbul (TRT)" },
-    { value: "Europe/Moscow", label: "Moscow (MSK)" },
-    { value: "Asia/Dubai", label: "Dubai (GST)" },
-    { value: "Asia/Kolkata", label: "India (IST)" },
-    { value: "Asia/Dhaka", label: "Dhaka (BST)" },
-    { value: "Asia/Bangkok", label: "Bangkok (ICT)" },
-    { value: "Asia/Singapore", label: "Singapore (SGT)" },
-    { value: "Asia/Hong_Kong", label: "Hong Kong (HKT)" },
-    { value: "Asia/Shanghai", label: "China (CST)" },
-    { value: "Asia/Tokyo", label: "Tokyo (JST)" },
-    { value: "Asia/Seoul", label: "Seoul (KST)" },
-    { value: "Australia/Sydney", label: "Sydney (AEST/AEDT)" },
-    { value: "Australia/Melbourne", label: "Melbourne (AEST/AEDT)" },
-    { value: "Australia/Brisbane", label: "Brisbane (AEST)" },
-    { value: "Australia/Perth", label: "Perth (AWST)" },
-    { value: "Pacific/Auckland", label: "Auckland (NZST/NZDT)" },
-];
-
-const LANGUAGES = [
-    { value: "en", label: "English" },
-    { value: "es", label: "Spanish" },
-    { value: "fr", label: "French" },
-    { value: "de", label: "German" },
-    { value: "pt", label: "Portuguese" },
-    { value: "it", label: "Italian" },
-    { value: "nl", label: "Dutch" },
-    { value: "pl", label: "Polish" },
-    { value: "sv", label: "Swedish" },
-    { value: "no", label: "Norwegian" },
-    { value: "da", label: "Danish" },
-    { value: "fi", label: "Finnish" },
-    { value: "ja", label: "Japanese" },
-    { value: "zh", label: "Chinese" },
-    { value: "ko", label: "Korean" },
-];
-
 type SettingsFormProps = {
     profile: Profile | null;
 };
+
+function useSavedFlash() {
+    const [saved, setSaved] = useState(false);
+    const flash = () => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+    };
+    return [saved, flash] as const;
+}
 
 function SaveFeedback({ saved }: { saved: boolean }) {
     if (!saved) return null;
@@ -116,37 +49,47 @@ function SaveFeedback({ saved }: { saved: boolean }) {
     );
 }
 
+function toProfileValues(profile: Profile | null): ProfileFormValues {
+    return {
+        full_name: profile?.full_name ?? "",
+        username: profile?.username ?? "",
+        company_name: profile?.company_name ?? "",
+        bio: profile?.bio ?? "",
+        address: profile?.address ?? "",
+        avatar_url: profile?.avatar_url ?? "",
+        hourly_rate: profile?.hourly_rate ?? 0,
+        currency: (profile?.currency as ProfileFormValues["currency"]) ?? "USD",
+        tax_id: profile?.tax_id ?? "",
+        timezone: profile?.timezone ?? "",
+        language: profile?.language ?? "",
+    };
+}
+
 function ProfileTab({ profile }: { profile: Profile | null }) {
     const [isPending, startTransition] = useTransition();
-    const [saved, setSaved] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [saved, flashSaved] = useSavedFlash();
 
-    const [currency, setCurrency] = useState(profile?.currency ?? "USD");
-    const [timezone, setTimezone] = useState(profile?.timezone ?? "");
-    const [language, setLanguage] = useState(profile?.language ?? "");
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: toProfileValues(profile),
+    });
+    const { register, control, formState: { errors } } = form;
+    const currency = useWatch({ control, name: "currency" });
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError(null);
-        setSaved(false);
-        const fd = new FormData(e.currentTarget);
-        fd.set("currency", currency);
-        if (timezone) fd.set("timezone", timezone);
-        if (language) fd.set("language", language);
-
+    const onSubmit = form.handleSubmit((values) =>
         startTransition(async () => {
-            try {
-                await updateProfile(fd);
-                setSaved(true);
-                setTimeout(() => setSaved(false), 3000);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to save settings.");
+            const result = await updateProfile(values);
+            if (result.ok) {
+                form.reset(values);
+                flashSaved();
+            } else {
+                applyServerErrors(form.setError, result);
             }
-        });
-    };
+        })
+    );
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
             <Card>
                 <CardHeader className="border-b">
                     <CardTitle>
@@ -160,63 +103,69 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                 </CardHeader>
                 <CardContent className="pt-5 flex flex-col gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="full_name">Full name</Label>
+                        <Field className="gap-1.5" data-invalid={!!errors.full_name}>
+                            <FieldLabel htmlFor="full_name">Full name</FieldLabel>
                             <Input
                                 id="full_name"
-                                name="full_name"
-                                defaultValue={profile?.full_name ?? ""}
+                                {...register("full_name")}
+                                aria-invalid={!!errors.full_name}
                                 placeholder="Jane Smith"
                             />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="username">Username</Label>
+                            <FieldError errors={[errors.full_name]} />
+                        </Field>
+                        <Field className="gap-1.5" data-invalid={!!errors.username}>
+                            <FieldLabel htmlFor="username">Username</FieldLabel>
                             <Input
                                 id="username"
-                                name="username"
-                                defaultValue={profile?.username ?? ""}
+                                {...register("username")}
+                                aria-invalid={!!errors.username}
                                 placeholder="janesmith"
                             />
-                        </div>
+                            <FieldError errors={[errors.username]} />
+                        </Field>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="company_name">Company name</Label>
+                    <Field className="gap-1.5" data-invalid={!!errors.company_name}>
+                        <FieldLabel htmlFor="company_name">Company name</FieldLabel>
                         <Input
                             id="company_name"
-                            name="company_name"
-                            defaultValue={profile?.company_name ?? ""}
+                            {...register("company_name")}
+                            aria-invalid={!!errors.company_name}
                             placeholder="Smith Design Studio"
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="bio">Bio</Label>
+                        <FieldError errors={[errors.company_name]} />
+                    </Field>
+                    <Field className="gap-1.5" data-invalid={!!errors.bio}>
+                        <FieldLabel htmlFor="bio">Bio</FieldLabel>
                         <Textarea
                             id="bio"
-                            name="bio"
-                            defaultValue={profile?.bio ?? ""}
+                            {...register("bio")}
+                            aria-invalid={!!errors.bio}
                             placeholder="A short description about yourself or your work…"
                             rows={3}
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="address">Address</Label>
+                        <FieldError errors={[errors.bio]} />
+                    </Field>
+                    <Field className="gap-1.5" data-invalid={!!errors.address}>
+                        <FieldLabel htmlFor="address">Address</FieldLabel>
                         <Input
                             id="address"
-                            name="address"
-                            defaultValue={profile?.address ?? ""}
+                            {...register("address")}
+                            aria-invalid={!!errors.address}
                             placeholder="123 Main St, New York, NY 10001"
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="avatar_url">Avatar URL</Label>
+                        <FieldError errors={[errors.address]} />
+                    </Field>
+                    <Field className="gap-1.5" data-invalid={!!errors.avatar_url}>
+                        <FieldLabel htmlFor="avatar_url">Avatar URL</FieldLabel>
                         <Input
                             id="avatar_url"
-                            name="avatar_url"
                             type="url"
-                            defaultValue={profile?.avatar_url ?? ""}
+                            {...register("avatar_url")}
+                            aria-invalid={!!errors.avatar_url}
                             placeholder="https://example.com/avatar.jpg"
                         />
-                    </div>
+                        <FieldError errors={[errors.avatar_url]} />
+                    </Field>
                 </CardContent>
             </Card>
 
@@ -233,53 +182,62 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                 </CardHeader>
                 <CardContent className="pt-5 flex flex-col gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="hourly_rate">Default hourly rate</Label>
+                        <Field className="gap-1.5" data-invalid={!!errors.hourly_rate}>
+                            <FieldLabel htmlFor="hourly_rate">Default hourly rate</FieldLabel>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[13px]">
                                     {currency}
                                 </span>
                                 <Input
                                     id="hourly_rate"
-                                    name="hourly_rate"
                                     type="number"
                                     min={0}
                                     step={0.01}
-                                    defaultValue={profile?.hourly_rate ?? 0}
+                                    {...register("hourly_rate", { valueAsNumber: true })}
+                                    aria-invalid={!!errors.hourly_rate}
                                     className="pl-12"
                                 />
                             </div>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="currency">Default currency</Label>
-                            <Select value={currency} onValueChange={setCurrency}>
-                                <SelectTrigger id="currency" className="w-full">
-                                    <SelectValue placeholder="Select currency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {CURRENCIES.map((c) => (
-                                        <SelectItem key={c.value} value={c.value}>
-                                            {c.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            <FieldError errors={[errors.hourly_rate]} />
+                        </Field>
+                        <Controller
+                            control={control}
+                            name="currency"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="currency">Default currency</FieldLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger id="currency" className="w-full" aria-invalid={fieldState.invalid}>
+                                            <SelectValue placeholder="Select currency" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {CURRENCY_OPTIONS.map((c) => (
+                                                <SelectItem key={c.value} value={c.value}>
+                                                    {c.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="tax_id">
+                    <Field className="gap-1.5" data-invalid={!!errors.tax_id}>
+                        <FieldLabel htmlFor="tax_id">
                             Tax ID / VAT number
-                        </Label>
+                        </FieldLabel>
                         <Input
                             id="tax_id"
-                            name="tax_id"
-                            defaultValue={profile?.tax_id ?? ""}
+                            {...register("tax_id")}
+                            aria-invalid={!!errors.tax_id}
                             placeholder="e.g. GB123456789"
                         />
+                        <FieldError errors={[errors.tax_id]} />
                         <p className="text-[12px] text-muted-foreground">
                             Displayed on invoices if provided.
                         </p>
-                    </div>
+                    </Field>
                 </CardContent>
             </Card>
 
@@ -296,45 +254,56 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                 </CardHeader>
                 <CardContent className="pt-5 flex flex-col gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="timezone">Timezone</Label>
-                            <Select value={timezone} onValueChange={setTimezone}>
-                                <SelectTrigger id="timezone" className="w-full">
-                                    <SelectValue placeholder="Select timezone" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {TIMEZONES.map((tz) => (
-                                        <SelectItem key={tz.value} value={tz.value}>
-                                            {tz.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="language">Language</Label>
-                            <Select value={language} onValueChange={setLanguage}>
-                                <SelectTrigger id="language" className="w-full">
-                                    <SelectValue placeholder="Select language" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {LANGUAGES.map((l) => (
-                                        <SelectItem key={l.value} value={l.value}>
-                                            {l.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <Controller
+                            control={control}
+                            name="timezone"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger id="timezone" className="w-full" aria-invalid={fieldState.invalid}>
+                                            <SelectValue placeholder="Select timezone" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {TIMEZONE_OPTIONS.map((tz) => (
+                                                <SelectItem key={tz.value} value={tz.value}>
+                                                    {tz.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name="language"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="language">Language</FieldLabel>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger id="language" className="w-full" aria-invalid={fieldState.invalid}>
+                                            <SelectValue placeholder="Select language" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {LANGUAGE_OPTIONS.map((l) => (
+                                                <SelectItem key={l.value} value={l.value}>
+                                                    {l.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
                     </div>
                 </CardContent>
             </Card>
 
-            {error && (
-                <p className="text-[13px] text-destructive" role="alert">{error}</p>
-            )}
-
             <div className="flex items-center justify-end gap-3">
+                <FieldError className="mr-auto" errors={[errors.root?.server]} />
                 <SaveFeedback saved={saved} />
                 <Button type="submit" disabled={isPending}>
                     {isPending ? "Saving…" : "Save changes"}
@@ -345,38 +314,11 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
 }
 
 function NotificationsTab({ profile }: { profile: Profile | null }) {
-    const [isPending, startTransition] = useTransition();
-    const [saved, setSaved] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const [emailEnabled, setEmailEnabled] = useState(
-        profile?.notification_preferences?.email ?? true
-    );
-    const [invoiceReminders, setInvoiceReminders] = useState(
-        profile?.notification_preferences?.invoice_reminders ?? true
-    );
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError(null);
-        setSaved(false);
-        const fd = new FormData();
-        fd.set("email_notifications", String(emailEnabled));
-        fd.set("invoice_reminders", String(invoiceReminders));
-
-        startTransition(async () => {
-            try {
-                await updateNotificationPreferences(fd);
-                setSaved(true);
-                setTimeout(() => setSaved(false), 3000);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to save settings.");
-            }
-        });
-    };
+    const [saved, flashSaved] = useSavedFlash();
+    const { state, isPending, onSubmit } = useFormAction(updateNotificationPreferences, { onSuccess: flashSaved });
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
             <Card>
                 <CardHeader className="border-b">
                     <CardTitle>
@@ -400,8 +342,8 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
                         </div>
                         <Checkbox
                             id="email_notifications"
-                            checked={emailEnabled}
-                            onCheckedChange={(v) => setEmailEnabled(Boolean(v))}
+                            name="email_notifications"
+                            defaultChecked={profile?.notification_preferences?.email ?? true}
                         />
                     </div>
                     <div className="flex items-start justify-between gap-4 pt-4">
@@ -415,18 +357,15 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
                         </div>
                         <Checkbox
                             id="invoice_reminders"
-                            checked={invoiceReminders}
-                            onCheckedChange={(v) => setInvoiceReminders(Boolean(v))}
+                            name="invoice_reminders"
+                            defaultChecked={profile?.notification_preferences?.invoice_reminders ?? true}
                         />
                     </div>
                 </CardContent>
             </Card>
 
-            {error && (
-                <p className="text-[13px] text-destructive" role="alert">{error}</p>
-            )}
-
             <div className="flex items-center justify-end gap-3">
+                {state.error && <FieldError className="mr-auto">{state.error}</FieldError>}
                 <SaveFeedback saved={saved} />
                 <Button type="submit" disabled={isPending}>
                     {isPending ? "Saving…" : "Save changes"}
@@ -437,34 +376,17 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
 }
 
 function SecurityTab() {
-    const [isPending, startTransition] = useTransition();
-    const [saved, setSaved] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError(null);
-        setSaved(false);
-        const fd = new FormData(e.currentTarget);
-
-        startTransition(async () => {
-            try {
-                const result = await updatePassword(fd);
-                if (result.error) {
-                    setError(result.error);
-                } else {
-                    setSaved(true);
-                    (e.target as HTMLFormElement).reset();
-                    setTimeout(() => setSaved(false), 3000);
-                }
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to update password.");
-            }
-        });
-    };
+    const formRef = useRef<HTMLFormElement>(null);
+    const [saved, flashSaved] = useSavedFlash();
+    const { state, isPending, onSubmit, errors } = useFormAction(updatePassword, {
+        onSuccess: () => {
+            formRef.current?.reset();
+            flashSaved();
+        },
+    });
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
             <Card>
                 <CardHeader className="border-b">
                     <CardTitle>
@@ -477,8 +399,8 @@ function SecurityTab() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-5 flex flex-col gap-4">
-                    <div className="flex flex-col gap-1.5 max-w-sm">
-                        <Label htmlFor="password">New password</Label>
+                    <Field className="gap-1.5 max-w-sm" data-invalid={!!errors("password")}>
+                        <FieldLabel htmlFor="password">New password</FieldLabel>
                         <Input
                             id="password"
                             name="password"
@@ -487,10 +409,12 @@ function SecurityTab() {
                             placeholder="••••••••"
                             minLength={8}
                             required
+                            aria-invalid={!!errors("password")}
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5 max-w-sm">
-                        <Label htmlFor="confirmPassword">Confirm new password</Label>
+                        <FieldError errors={errors("password")} />
+                    </Field>
+                    <Field className="gap-1.5 max-w-sm" data-invalid={!!errors("confirmPassword")}>
+                        <FieldLabel htmlFor="confirmPassword">Confirm new password</FieldLabel>
                         <Input
                             id="confirmPassword"
                             name="confirmPassword"
@@ -499,16 +423,15 @@ function SecurityTab() {
                             placeholder="••••••••"
                             minLength={8}
                             required
+                            aria-invalid={!!errors("confirmPassword")}
                         />
-                    </div>
+                        <FieldError errors={errors("confirmPassword")} />
+                    </Field>
                 </CardContent>
             </Card>
 
-            {error && (
-                <p className="text-[13px] text-destructive" role="alert">{error}</p>
-            )}
-
             <div className="flex items-center justify-end gap-3">
+                {state.error && !state.fieldErrors && <FieldError className="mr-auto">{state.error}</FieldError>}
                 <SaveFeedback saved={saved} />
                 <Button type="submit" disabled={isPending}>
                     {isPending ? "Updating…" : "Update password"}

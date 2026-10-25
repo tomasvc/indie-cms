@@ -13,24 +13,37 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { completeOnboarding } from "@/lib/actions/onboarding";
+import { errorsFor as fieldErrorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
+import { TIMEZONE_OPTIONS } from "@/lib/constants/profile";
+import { onboardingSchema, type OnboardingValues } from "@/lib/schemas/settings";
 import { Sparkles } from "lucide-react";
 
 const STEPS = 3;
 
 export function OnboardingFlow() {
     const [step, setStep] = useState(1);
-    const [companyName, setCompanyName] = useState("");
-    const [timezone, setTimezone] = useState("");
+    const [details, setDetails] = useState<OnboardingValues>({ company_name: "", timezone: "" });
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isCompleting, setIsCompleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleComplete = async () => {
+    const finish = async (input: OnboardingValues | null) => {
         setIsCompleting(true);
         setError(null);
         try {
-            await completeOnboarding();
+            const result = await completeOnboarding(input);
+            if (!result.ok) {
+                setIsCompleting(false);
+                setError(result.error ?? "Something went wrong");
+                if (result.fieldErrors) {
+                    setFieldErrors(result.fieldErrors);
+                    setStep(2);
+                }
+                return;
+            }
             window.location.href = "/dashboard";
         } catch (e) {
             setIsCompleting(false);
@@ -38,17 +51,18 @@ export function OnboardingFlow() {
         }
     };
 
-    const handleSkip = async () => {
-        setIsCompleting(true);
-        setError(null);
-        try {
-            await completeOnboarding();
-            window.location.href = "/dashboard";
-        } catch (e) {
-            setIsCompleting(false);
-            setError(e instanceof Error ? e.message : "Something went wrong");
+    const handleNext = () => {
+        const parsed = onboardingSchema.safeParse(details);
+        if (!parsed.success) {
+            setFieldErrors(toFieldErrors(parsed.error));
+            return;
         }
+        setFieldErrors({});
+        setError(null);
+        setStep(3);
     };
+
+    const errorsFor = (name: keyof OnboardingValues) => fieldErrorsFor(fieldErrors, name);
 
     const progressValue = (step / STEPS) * 100;
 
@@ -108,30 +122,42 @@ export function OnboardingFlow() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="company">Company name</Label>
+                            <Field className="gap-2" data-invalid={!!errorsFor("company_name")}>
+                                <FieldLabel htmlFor="company">Company name</FieldLabel>
                                 <Input
                                     id="company"
                                     placeholder="Acme Inc."
-                                    value={companyName}
-                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    value={details.company_name}
+                                    onChange={(e) => setDetails((d) => ({ ...d, company_name: e.target.value }))}
+                                    aria-invalid={!!errorsFor("company_name")}
                                 />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="timezone">Timezone</Label>
-                                <Input
-                                    id="timezone"
-                                    placeholder="e.g. America/New_York"
-                                    value={timezone}
-                                    onChange={(e) => setTimezone(e.target.value)}
-                                />
-                            </div>
+                                <FieldError errors={errorsFor("company_name")} />
+                            </Field>
+                            <Field className="gap-2" data-invalid={!!errorsFor("timezone")}>
+                                <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
+                                <Select
+                                    value={details.timezone}
+                                    onValueChange={(timezone) => setDetails((d) => ({ ...d, timezone }))}
+                                >
+                                    <SelectTrigger id="timezone" className="w-full" aria-invalid={!!errorsFor("timezone")}>
+                                        <SelectValue placeholder="Select timezone" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {TIMEZONE_OPTIONS.map((tz) => (
+                                            <SelectItem key={tz.value} value={tz.value}>
+                                                {tz.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError errors={errorsFor("timezone")} />
+                            </Field>
                         </CardContent>
                         <CardFooter className="flex justify-between gap-2">
-                            <Button variant="ghost" onClick={handleSkip} disabled={isCompleting}>
+                            <Button variant="ghost" onClick={() => finish(null)} disabled={isCompleting}>
                                 Skip for now
                             </Button>
-                            <Button onClick={() => setStep(3)} size="lg">
+                            <Button onClick={handleNext} size="lg">
                                 Next
                             </Button>
                         </CardFooter>
@@ -155,7 +181,7 @@ export function OnboardingFlow() {
                         </CardHeader>
                         <CardFooter className="flex justify-end gap-2">
                             <Button
-                                onClick={handleComplete}
+                                onClick={() => finish(details)}
                                 size="lg"
                                 disabled={isCompleting}
                             >

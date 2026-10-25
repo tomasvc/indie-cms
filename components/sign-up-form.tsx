@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field";
+import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
+import { signUpSchema } from "@/lib/schemas/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -23,26 +26,26 @@ export function SignUpForm({
   const [isPending, setTransition] = useTransition();
   const router = useRouter();
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    const parsed = signUpSchema.safeParse({ fullName, email, password, confirmPassword: repeatPassword });
+    setFieldErrors(parsed.success ? {} : toFieldErrors(parsed.error));
+    if (!parsed.success) return;
+
     const supabase = createClient();
     setIsLoading(true);
-    setError(null);
-
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: parsed.data.email,
+        password: parsed.data.password,
         options: {
           data: {
-            full_name: fullName,
-            username: email,
+            full_name: parsed.data.fullName,
+            username: parsed.data.email,
           },
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
         },
@@ -72,7 +75,7 @@ export function SignUpForm({
         </p>
       </div>
 
-      <form onSubmit={handleSignUp} className="flex flex-col gap-5">
+      <form onSubmit={handleSignUp} noValidate className="flex flex-col gap-5">
         <div className="grid gap-1.5">
           <Label
             htmlFor="full-name"
@@ -88,8 +91,10 @@ export function SignUpForm({
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            aria-invalid={!!fieldErrors.fullName}
             className="h-11"
           />
+          <FieldError errors={errorsFor(fieldErrors, "fullName")} />
         </div>
 
         <div className="grid gap-1.5">
@@ -107,8 +112,10 @@ export function SignUpForm({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={!!fieldErrors.email}
             className="h-11"
           />
+          <FieldError errors={errorsFor(fieldErrors, "email")} />
         </div>
 
         <div className="grid gap-1.5">
@@ -126,6 +133,7 @@ export function SignUpForm({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={!!fieldErrors.password}
               className="h-11 pr-10"
             />
             <button
@@ -148,6 +156,7 @@ export function SignUpForm({
               )}
             </button>
           </div>
+          <FieldError errors={errorsFor(fieldErrors, "password")} />
         </div>
 
         <div className="grid gap-1.5">
@@ -164,8 +173,10 @@ export function SignUpForm({
             required
             value={repeatPassword}
             onChange={(e) => setRepeatPassword(e.target.value)}
+            aria-invalid={!!fieldErrors.confirmPassword}
             className="h-11"
           />
+          <FieldError errors={errorsFor(fieldErrors, "confirmPassword")} />
         </div>
 
         {error && (

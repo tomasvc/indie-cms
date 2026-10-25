@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import {
     Field,
+    FieldError,
     FieldGroup,
     FieldLabel,
 } from "@/components/ui/field";
@@ -27,25 +28,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Client, Invoice, InvoiceStatus, Project } from "@/types";
+import { Client, Invoice, Project } from "@/types";
 import { updateInvoice } from "@/lib/actions/invoices";
+import { useFormAction } from "@/hooks/use-form-action";
 import { PencilIcon, XIcon } from "lucide-react";
-import { useState } from "react";
-
-type InvoiceWithCode = Invoice & { code?: string; number?: string };
-type InvoiceWithTotal = Invoice & { total?: number; amount?: number };
-
-function getInvoiceNumber(inv: InvoiceWithCode): string {
-    if (inv.code != null && inv.code !== "") return String(inv.code);
-    if ((inv as unknown as Record<string, unknown>).number != null) return String((inv as unknown as Record<string, unknown>).number);
-    return "";
-}
-
-function getInvoiceAmount(inv: InvoiceWithTotal): number | "" {
-    if (typeof inv.total === "number") return inv.total;
-    if (typeof (inv as unknown as Record<string, unknown>).amount === "number") return (inv as unknown as Record<string, unknown>).amount as number;
-    return "";
-}
 
 export function EditInvoiceDialog({
     invoice,
@@ -60,12 +46,12 @@ export function EditInvoiceDialog({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const [projectId, setProjectId] = useState(invoice.project_id);
-    const [clientId, setClientId] = useState(invoice.client_id);
-    const [status, setStatus] = useState<InvoiceStatus>(invoice.status);
+    const { state, isPending, onSubmit, errors } = useFormAction(updateInvoice, {
+        onSuccess: () => onOpenChange(false),
+    });
 
-    const number = getInvoiceNumber(invoice as InvoiceWithCode);
-    const amount = getInvoiceAmount(invoice as InvoiceWithTotal);
+    const code = invoice.code ?? "";
+    const amount = invoice.total ?? "";
     const dueDate = invoice.due_date?.slice(0, 10) ?? "";
     const issueDate = invoice.issue_date?.slice(0, 10) ?? "";
     const paidDate = invoice.paid_date?.slice(0, 10) ?? "";
@@ -73,31 +59,19 @@ export function EditInvoiceDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-                <form
-                    action={updateInvoice}
-                    onSubmit={() => {
-                        onOpenChange(false);
-                    }}
-                >
+                <form onSubmit={onSubmit} noValidate>
                     <input type="hidden" name="id" value={invoice.id} />
-                    <input type="hidden" name="project_id" value={projectId} />
-                    <input type="hidden" name="client_id" value={clientId} />
-                    <input type="hidden" name="status" value={status} />
                     <DialogHeader>
                         <DialogTitle>Edit Invoice</DialogTitle>
                         <DialogDescription>
-                            Update invoice INV-{number || "—"}.
+                            Update invoice INV-{code || "—"}.
                         </DialogDescription>
                     </DialogHeader>
                     <FieldGroup className="my-4">
-                        <Field>
-                            <FieldLabel>Project</FieldLabel>
-                            <Select
-                                name="project_id"
-                                value={projectId}
-                                onValueChange={setProjectId}
-                            >
-                                <SelectTrigger>
+                        <Field data-invalid={!!errors("project_id")}>
+                            <FieldLabel htmlFor="edit-project">Project</FieldLabel>
+                            <Select name="project_id" defaultValue={invoice.project_id}>
+                                <SelectTrigger id="edit-project" aria-invalid={!!errors("project_id")}>
                                     <SelectValue placeholder="Select the project" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -108,15 +82,12 @@ export function EditInvoiceDialog({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <FieldError errors={errors("project_id")} />
                         </Field>
-                        <Field>
-                            <FieldLabel>Client</FieldLabel>
-                            <Select
-                                name="client_id"
-                                value={clientId}
-                                onValueChange={setClientId}
-                            >
-                                <SelectTrigger>
+                        <Field data-invalid={!!errors("client_id")}>
+                            <FieldLabel htmlFor="edit-client">Client</FieldLabel>
+                            <Select name="client_id" defaultValue={invoice.client_id}>
+                                <SelectTrigger id="edit-client" aria-invalid={!!errors("client_id")}>
                                     <SelectValue placeholder="Select the client" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -127,15 +98,12 @@ export function EditInvoiceDialog({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <FieldError errors={errors("client_id")} />
                         </Field>
-                        <Field>
-                            <FieldLabel>Status</FieldLabel>
-                            <Select
-                                name="status"
-                                value={status}
-                                onValueChange={(v) => setStatus(v as InvoiceStatus)}
-                            >
-                                <SelectTrigger>
+                        <Field data-invalid={!!errors("status")}>
+                            <FieldLabel htmlFor="edit-status">Status</FieldLabel>
+                            <Select name="status" defaultValue={invoice.status}>
+                                <SelectTrigger id="edit-status" aria-invalid={!!errors("status")}>
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -146,26 +114,29 @@ export function EditInvoiceDialog({
                                     <SelectItem value="void">Void</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <FieldError errors={errors("status")} />
                         </Field>
                         <div className="grid grid-cols-2 gap-2">
-                            <Field>
-                                <FieldLabel htmlFor="edit-number">Reference Number</FieldLabel>
+                            <Field data-invalid={!!errors("code")}>
+                                <FieldLabel htmlFor="edit-code">Reference Number</FieldLabel>
                                 <InputGroup>
                                     <InputGroupInput
-                                        id="edit-number"
-                                        name="number"
+                                        id="edit-code"
+                                        name="code"
                                         placeholder="Ref. number"
                                         type="text"
                                         maxLength={10}
                                         required
-                                        defaultValue={number}
+                                        defaultValue={code}
+                                        aria-invalid={!!errors("code")}
                                     />
                                     <InputGroupAddon>
                                         <span>INV-</span>
                                     </InputGroupAddon>
                                 </InputGroup>
+                                <FieldError errors={errors("code")} />
                             </Field>
-                            <Field>
+                            <Field data-invalid={!!errors("amount")}>
                                 <FieldLabel htmlFor="edit-amount">Amount</FieldLabel>
                                 <InputGroup>
                                     <InputGroupInput
@@ -177,15 +148,17 @@ export function EditInvoiceDialog({
                                         min={0}
                                         step="any"
                                         defaultValue={amount}
+                                        aria-invalid={!!errors("amount")}
                                     />
                                     <InputGroupAddon>
                                         <span>$</span>
                                     </InputGroupAddon>
                                 </InputGroup>
+                                <FieldError errors={errors("amount")} />
                             </Field>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                            <Field>
+                            <Field data-invalid={!!errors("due_date")}>
                                 <FieldLabel htmlFor="edit-due_date">Due Date</FieldLabel>
                                 <Input
                                     id="edit-due_date"
@@ -193,9 +166,11 @@ export function EditInvoiceDialog({
                                     type="date"
                                     required
                                     defaultValue={dueDate}
+                                    aria-invalid={!!errors("due_date")}
                                 />
+                                <FieldError errors={errors("due_date")} />
                             </Field>
-                            <Field>
+                            <Field data-invalid={!!errors("issue_date")}>
                                 <FieldLabel htmlFor="edit-issue_date">Issue Date</FieldLabel>
                                 <Input
                                     id="edit-issue_date"
@@ -203,19 +178,23 @@ export function EditInvoiceDialog({
                                     type="date"
                                     required
                                     defaultValue={issueDate}
+                                    aria-invalid={!!errors("issue_date")}
                                 />
+                                <FieldError errors={errors("issue_date")} />
                             </Field>
                         </div>
-                        <Field>
+                        <Field data-invalid={!!errors("paid_date")}>
                             <FieldLabel htmlFor="edit-paid_date">Paid Date</FieldLabel>
                             <Input
                                 id="edit-paid_date"
                                 name="paid_date"
                                 type="date"
                                 defaultValue={paidDate}
+                                aria-invalid={!!errors("paid_date")}
                             />
+                            <FieldError errors={errors("paid_date")} />
                         </Field>
-                        <Field>
+                        <Field data-invalid={!!errors("pdf_url")}>
                             <FieldLabel htmlFor="edit-pdf_url">PDF URL</FieldLabel>
                             <Input
                                 id="edit-pdf_url"
@@ -223,8 +202,11 @@ export function EditInvoiceDialog({
                                 type="url"
                                 placeholder="https://..."
                                 defaultValue={invoice.pdf_url ?? ""}
+                                aria-invalid={!!errors("pdf_url")}
                             />
+                            <FieldError errors={errors("pdf_url")} />
                         </Field>
+                        {state.error && !state.fieldErrors && <FieldError>{state.error}</FieldError>}
                     </FieldGroup>
                     <DialogFooter>
                         <Button
@@ -236,9 +218,9 @@ export function EditInvoiceDialog({
                             <XIcon className="size-3 mb-0.5" />
                             Cancel
                         </Button>
-                        <Button type="submit" size="lg" variant="default">
+                        <Button type="submit" size="lg" variant="default" disabled={isPending}>
                             <PencilIcon className="size-3 mb-0.5" />
-                            Save changes
+                            {isPending ? "Saving…" : "Save changes"}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -3,163 +3,125 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
+import { id as idSchema, toNullable } from "@/lib/schemas/common";
+import { projectFormSchema, projectStatusSchema, type ProjectFormValues } from "@/lib/schemas/project";
 
-const toDateOrNull = (s: string) => (s?.trim() ? s : null)
-
-export async function handleCreateProject(formData: FormData) {
-    const id = crypto.randomUUID();
-    const title = (formData.get("title") as string) || "Untitled Project";
-    const description = (formData.get("description") as string) || "";
-    const client_id = (formData.get("client_id") as string) || null;
-    const start_date = toDateOrNull(formData.get("start_date") as string);
-    const due_date = toDateOrNull(formData.get("due_date") as string);
-    const completed_date = toDateOrNull(formData.get("completed_date") as string);
-    const status = (formData.get("status") as string) || "proposal";
-    const progress = formData.get("progress") != null ? Number(formData.get("progress")) : 0;
-    const priority = (formData.get("priority") as string) || "medium";
-    const category = (formData.get("category") as string) || undefined;
-    const color = (formData.get("color") as string) || undefined;
-    const currency = (formData.get("currency") as string) || "GBP";
-    const profit_margin = formData.get("profit_margin") != null ? Number(formData.get("profit_margin")) : 57;
-    const value = formData.get("value") != null ? Number(formData.get("value")) : 0;
-    const budget = formData.get("budget") != null ? Number(formData.get("budget")) : 0;
-    const estimated_hours = formData.get("estimated_hours") != null ? Number(formData.get("estimated_hours")) : 0;
-    const actual_hours = formData.get("actual_hours") != null ? Number(formData.get("actual_hours")) : 0;
-
+async function requireUser() {
     const supabase = await createClient();
-    const { data: user } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    return { supabase, user };
+}
+
+function toProjectRow(values: ProjectFormValues) {
+    return {
+        title: values.title,
+        description: values.description,
+        category: toNullable(values.category),
+        color: values.color,
+        status: values.status,
+        priority: values.priority,
+        progress: values.progress,
+        currency: values.currency,
+        profit_margin: values.profitMargin,
+        value: values.value,
+        budget: values.budget,
+        estimated_hours: values.estimatedHours,
+        actual_hours: values.actualHours,
+        start_date: toNullable(values.startDate),
+        due_date: toNullable(values.dueDate),
+        completed_date: toNullable(values.completedDate),
+        client_id: toNullable(values.clientId),
+    };
+}
+
+export async function handleCreateProject(input: ProjectFormValues): Promise<ActionState> {
+    const parsed = projectFormSchema.safeParse(input);
+    if (!parsed.success) return validationError(parsed.error);
+
+    const { supabase, user } = await requireUser();
+    const id = crypto.randomUUID();
 
     const { error } = await supabase.from("projects").insert({
         id,
-        user_id: user?.user?.id,
-        title,
-        description,
-        client_id,
-        start_date,
-        due_date,
-        completed_date,
-        status,
-        progress,
-        priority,
-        category,
-        color,
-        currency,
-        profit_margin,
-        value,
-        budget,
-        estimated_hours,
-        actual_hours,
+        user_id: user.id,
+        ...toProjectRow(parsed.data),
     });
 
-    if (error) throw error;
+    if (error) return databaseError(error, "Couldn't create this project. Please try again.");
     revalidatePath("/projects");
     redirect(`/projects/${id}`);
 }
 
-export type ProjectActionState = { error?: string };
+export async function handleUpdateProject(id: string, input: ProjectFormValues): Promise<ActionState> {
+    const parsedId = idSchema("Project").safeParse(id);
+    if (!parsedId.success) return { error: "This project couldn't be found." };
 
-const FOREIGN_KEY_VIOLATION = "23503";
+    const parsed = projectFormSchema.safeParse(input);
+    if (!parsed.success) return validationError(parsed.error);
 
-export async function handleDeleteProject(_prev: ProjectActionState, formData: FormData): Promise<ProjectActionState> {
-    const id = formData.get('id') as string;
-    const supabase = await createClient();
+    const { supabase, user } = await requireUser();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    const { error } = await supabase
+        .from("projects")
+        .update(toProjectRow(parsed.data))
+        .eq("id", parsedId.data)
+        .eq("user_id", user.id);
 
-    const { error } = await supabase.from('projects')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-    if (error?.code === FOREIGN_KEY_VIOLATION) {
-        return { error: "This project has invoices or time entries, so it can't be deleted. Archive it instead." };
-    }
-    if (error) throw error;
-    revalidatePath('/projects');
-    redirect('/projects');
+    if (error) return databaseError(error, "Couldn't save your changes. Please try again.");
+    revalidatePath("/projects");
+    redirect(`/projects/${parsedId.data}`);
 }
 
-export async function handleArchiveProject(_prev: ProjectActionState, formData: FormData): Promise<ProjectActionState> {
-    const id = formData.get('id') as string;
-    const supabase = await createClient();
+const projectIdFormSchema = z.object({ id: idSchema("Project") });
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+export async function handleDeleteProject(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = projectIdFormSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return { error: "This project couldn't be found." };
 
-    const { error } = await supabase.from('projects')
-        .update({ status: 'archived' })
-        .eq('id', id)
-        .eq('user_id', user.id);
+    const { supabase, user } = await requireUser();
 
-    if (error) return { error: "Couldn't archive this project. Please try again." };
-    revalidatePath('/projects');
-    redirect('/projects');
+    const { error } = await supabase.from("projects")
+        .delete()
+        .eq("id", parsed.data.id)
+        .eq("user_id", user.id);
+
+    if (error?.code === PG_ERROR.FOREIGN_KEY_VIOLATION) {
+        return { error: "This project has invoices or time entries, so it can't be deleted. Archive it instead." };
+    }
+    if (error) return databaseError(error, "Couldn't delete this project. Please try again.");
+    revalidatePath("/projects");
+    redirect("/projects");
+}
+
+export async function handleArchiveProject(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = projectIdFormSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return { error: "This project couldn't be found." };
+
+    const { supabase, user } = await requireUser();
+
+    const { error } = await supabase.from("projects")
+        .update({ status: "archived" })
+        .eq("id", parsed.data.id)
+        .eq("user_id", user.id);
+
+    if (error) return databaseError(error, "Couldn't archive this project. Please try again.");
+    revalidatePath("/projects");
+    redirect("/projects");
 }
 
 export async function updateProjectStatus(projectId: string, status: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    const parsedId = idSchema("Project").parse(projectId);
+    const parsedStatus = projectStatusSchema.parse(status);
+    const { supabase, user } = await requireUser();
 
-    const { data, error } = await supabase.from('projects').update({ status }).eq('id', projectId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (error) throw error;
-    revalidatePath(`/projects`);
-}
-
-export async function handleUpdateProject(formData: FormData) {
-    const id = formData.get('id') as string;
-    const client_id = (formData.get('client_id') as string) || null;
-    const title = formData.get('title') as string;
-    const description = (formData.get('description') as string) || '';
-    const status = formData.get('status') as string;
-    const value = formData.get('value') != null ? Number(formData.get('value')) : undefined;
-    const budget = formData.get('budget') != null ? Number(formData.get('budget')) : undefined;
-    const currency = (formData.get('currency') as string) || undefined;
-    const profit_margin = formData.get('profit_margin') != null ? Number(formData.get('profit_margin')) : undefined;
-    const estimated_hours = formData.get('estimated_hours') != null ? Number(formData.get('estimated_hours')) : undefined;
-    const actual_hours = formData.get('actual_hours') != null ? Number(formData.get('actual_hours')) : undefined;
-    const priority = (formData.get('priority') as string) || undefined;
-    const category = (formData.get('category') as string) || undefined;
-    const color = (formData.get('color') as string) || undefined;
-    const start_date = toDateOrNull(formData.get('start_date') as string);
-    const due_date = toDateOrNull(formData.get('due_date') as string);
-    const completed_date = toDateOrNull(formData.get('completed_date') as string);
-    const progress = formData.get('progress') != null ? Number(formData.get('progress')) : undefined;
-
-    const supabase = await createClient();
-    const update: Record<string, unknown> = {
-        title,
-        description,
-        client_id,
-        status,
-        start_date,
-        due_date,
-        completed_date,
-    };
-    if (value !== undefined) update.value = value;
-    if (budget !== undefined) update.budget = budget;
-    if (currency !== undefined) update.currency = currency;
-    if (profit_margin !== undefined) update.profit_margin = profit_margin;
-    if (estimated_hours !== undefined) update.estimated_hours = estimated_hours;
-    if (actual_hours !== undefined) update.actual_hours = actual_hours;
-    if (priority !== undefined) update.priority = priority;
-    if (category !== undefined) update.category = category;
-    if (color !== undefined) update.color = color;
-    if (progress !== undefined) update.progress = progress;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
-
-    const { error } = await supabase
-        .from('projects').update(update).eq('id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+    const { error } = await supabase.from("projects")
+        .update({ status: parsedStatus })
+        .eq("id", parsedId)
+        .eq("user_id", user.id);
 
     if (error) throw error;
-    revalidatePath(`/projects`);
-    redirect(`/projects/${id}`);
+    revalidatePath("/projects");
 }

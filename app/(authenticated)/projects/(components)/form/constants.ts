@@ -1,14 +1,6 @@
 import { CalendarIcon, CheckIcon, ClockIcon, DollarSignIcon, LineChartIcon, UserIcon } from "lucide-react";
-import {
-    FormBasics,
-    FormStatusProgress,
-    FormFinancials,
-    FormClient,
-    FormTime,
-    FormTimeline,
-    type ProjectForm, 
-    type ProjectStatus
-} from ".";
+import type { ProjectStatus } from "@/types";
+import type { ProjectFormValues, SectionId } from "./types";
 
 export const SECTIONS = [
     {
@@ -49,26 +41,26 @@ export const SECTIONS = [
     },
 ] as const;
 
-export const FORM_TO_PAYLOAD = {
-    clientId: "client_id",
-    title: "title",
-    description: "description",
+export const FIELD_SECTIONS: Record<keyof ProjectFormValues, SectionId> = {
+    title: "basics",
+    description: "basics",
+    category: "basics",
+    color: "basics",
+    tags: "basics",
     status: "status",
-    progress: "progress",
-    priority: "priority",
-    category: "category",
-    color: "color",
-    tags: "tags",
-    currency: "currency",
-    profitMargin: "profit_margin",
-    value: "value",
-    budget: "budget",
-    estimatedHours: "estimated_hours",
-    actualHours: "actual_hours",
-    startDate: "start_date",
-    dueDate: "due_date",
-    completedDate: "completed_date",
-} as const satisfies Record<keyof ProjectForm, string>;
+    priority: "status",
+    progress: "status",
+    currency: "financials",
+    profitMargin: "financials",
+    value: "financials",
+    budget: "financials",
+    estimatedHours: "time",
+    actualHours: "time",
+    startDate: "timeline",
+    dueDate: "timeline",
+    completedDate: "timeline",
+    clientId: "client",
+};
 
 export const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
     { value: "active", label: "Active" },
@@ -99,12 +91,3 @@ export const PROJECT_COLORS = [
     "#84cc16",
     "#475569",
 ];
-
-export const SECTION_COMPONENTS = {
-    basics: FormBasics,
-    status: FormStatusProgress,
-    financials: FormFinancials,
-    time: FormTime,
-    timeline: FormTimeline,
-    client: FormClient
-} as const;

@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
+import { onboardingSchema, type OnboardingValues } from "@/lib/schemas/settings";
 
 export async function getOnboardingStatus(userId: string): Promise<boolean> {
     const supabase = await createClient();
@@ -15,7 +17,11 @@ export async function getOnboardingStatus(userId: string): Promise<boolean> {
     return Boolean(data?.onboarding_completed_at);
 }
 
-export async function completeOnboarding(): Promise<void> {
+/** Pass `null` when the user skips the details step, so nothing they typed is saved. */
+export async function completeOnboarding(input: OnboardingValues | null): Promise<ActionState> {
+    const parsed = input ? onboardingSchema.safeParse(input) : null;
+    if (parsed && !parsed.success) return validationError(parsed.error);
+
     const supabase = await createClient();
     const {
         data: { user },
@@ -24,6 +30,7 @@ export async function completeOnboarding(): Promise<void> {
         redirect("/auth/login");
     }
 
+    const details = parsed?.data;
     const { error } = await supabase
         .from("profiles")
         .upsert(
@@ -33,14 +40,17 @@ export async function completeOnboarding(): Promise<void> {
                     (user.user_metadata?.full_name as string | undefined) ??
                     user.email ??
                     "",
+                ...(details?.company_name && { company_name: details.company_name }),
+                ...(details?.timezone && { timezone: details.timezone }),
                 onboarding_completed_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             },
             { onConflict: "id" }
         );
 
-    if (error) throw error;
+    if (error) return databaseError(error);
 
     // Redirect is done by the client after success so we avoid the redirect-throw
     // being caught. The client will do a full page load to /dashboard.
+    return { ok: true };
 }

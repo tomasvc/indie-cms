@@ -10,17 +10,11 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -33,42 +27,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-    Field,
-    FieldGroup,
-    FieldLabel,
-    FieldDescription,
-} from "@/components/ui/field";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
 import { Task, TaskStatus } from "@/types";
-import {
-    createTask,
-    updateTask,
-    deleteTask,
-    updateTaskStatus,
-} from "@/lib/actions/tasks";
+import { deleteTask, updateTaskStatus } from "@/lib/actions/tasks";
 import { format, isValid, parseISO } from "date-fns";
 import { PlusIcon, PencilIcon, TrashIcon, ListTodoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-    { value: "todo", label: "To do" },
-    { value: "in_progress", label: "In progress" },
-    { value: "done", label: "Done" },
-];
-
-const PRIORITY_OPTIONS = [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-] as const;
+import { TaskForm } from "./task-form";
 
 function formatDueDate(dateStr: string | undefined | null): string {
     if (!dateStr) return "—";
@@ -93,9 +58,6 @@ export function ProjectTasks({
     const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [addPriority, setAddPriority] = useState<"low" | "medium" | "high">("medium");
-    const [editStatus, setEditStatus] = useState<TaskStatus>("todo");
-    const [editPriority, setEditPriority] = useState<"low" | "medium" | "high">("medium");
 
     const filteredTasks =
         statusFilter === "all"
@@ -105,32 +67,6 @@ export function ProjectTasks({
     const todoCount = tasks.filter((t) => t.status === "todo").length;
     const inProgressCount = tasks.filter((t) => t.status === "in_progress").length;
     const doneCount = tasks.filter((t) => t.status === "done").length;
-
-    async function handleCreate(formData: FormData) {
-        setIsSubmitting(true);
-        try {
-            formData.set("project_id", projectId);
-            await createTask(formData);
-            setAddOpen(false);
-            router.refresh();
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    async function handleUpdate(formData: FormData) {
-        if (!editTask) return;
-        setIsSubmitting(true);
-        try {
-            formData.set("id", editTask.id);
-            formData.set("project_id", projectId);
-            await updateTask(formData);
-            setEditTask(null);
-            router.refresh();
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
 
     async function handleDelete(id: string) {
         setIsSubmitting(true);
@@ -175,65 +111,7 @@ export function ProjectTasks({
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
-                            <form action={handleCreate}>
-                                <input type="hidden" name="project_id" value={projectId} />
-                                <DialogHeader>
-                                    <DialogTitle>New task</DialogTitle>
-                                    <DialogDescription>
-                                        Add a task to this project. Due date is required.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <FieldGroup className="gap-4 py-4">
-                                    <Field>
-                                        <FieldLabel>Title</FieldLabel>
-                                        <Input
-                                            name="title"
-                                            placeholder="e.g. Review design mockups"
-                                            required
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Description</FieldLabel>
-                                        <Textarea
-                                            name="description"
-                                            placeholder="Optional details"
-                                            className="min-h-[80px]"
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Due date</FieldLabel>
-                                        <Input name="due_date" type="date" required />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Priority</FieldLabel>
-                                        <Select name="priority" value={addPriority} onValueChange={(v) => setAddPriority(v as "low" | "medium" | "high")}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Priority" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {PRIORITY_OPTIONS.map((p) => (
-                                                    <SelectItem key={p.value} value={p.value}>
-                                                        {p.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <input type="hidden" name="priority" value={addPriority} />
-                                    </Field>
-                                </FieldGroup>
-                                <DialogFooter>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setAddOpen(false)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={isSubmitting}>
-                                        {isSubmitting ? "Adding…" : "Add task"}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
+                            <TaskForm projectId={projectId} onDone={() => setAddOpen(false)} />
                         </DialogContent>
                     </Dialog>
                 </div>
@@ -358,11 +236,7 @@ export function ProjectTasks({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => {
-                                            setEditTask(task);
-                                            setEditStatus(task.status);
-                                            setEditPriority(task.priority);
-                                        }}
+                                        onClick={() => setEditTask(task)}
                                         aria-label="Edit task"
                                     >
                                         <PencilIcon className="size-3.5" />
@@ -385,91 +259,7 @@ export function ProjectTasks({
                 <Dialog open={!!editTask} onOpenChange={(open) => !open && setEditTask(null)}>
                     <DialogContent>
                         {editTask && (
-                            <form action={handleUpdate}>
-                                <input type="hidden" name="id" value={editTask.id} />
-                                <input type="hidden" name="project_id" value={projectId} />
-                                <input type="hidden" name="status" value={editStatus} />
-                                <input type="hidden" name="priority" value={editPriority} />
-                                <DialogHeader>
-                                    <DialogTitle>Edit task</DialogTitle>
-                                    <DialogDescription>
-                                        Update title, status, due date or priority.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <FieldGroup className="gap-4 py-4">
-                                    <Field>
-                                        <FieldLabel>Title</FieldLabel>
-                                        <Input
-                                            name="title"
-                                            defaultValue={editTask.title}
-                                            required
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Description</FieldLabel>
-                                        <Textarea
-                                            name="description"
-                                            defaultValue={editTask.description}
-                                            className="min-h-[80px]"
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Status</FieldLabel>
-                                        <Select name="status" value={editStatus} onValueChange={(v) => setEditStatus(v as TaskStatus)}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {STATUS_OPTIONS.map((s) => (
-                                                    <SelectItem key={s.value} value={s.value}>
-                                                        {s.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Due date</FieldLabel>
-                                        <Input
-                                            name="due_date"
-                                            type="date"
-                                            defaultValue={
-                                                editTask.due_date
-                                                    ? editTask.due_date.split("T")[0]
-                                                    : ""
-                                            }
-                                            required
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Priority</FieldLabel>
-                                        <Select name="priority" value={editPriority} onValueChange={(v) => setEditPriority(v as "low" | "medium" | "high")}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {PRIORITY_OPTIONS.map((p) => (
-                                                    <SelectItem key={p.value} value={p.value}>
-                                                        {p.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                </FieldGroup>
-                                <DialogFooter>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setEditTask(null)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={isSubmitting}>
-                                        {isSubmitting ? "Saving…" : "Save changes"}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
+                            <TaskForm projectId={projectId} task={editTask} onDone={() => setEditTask(null)} />
                         )}
                     </DialogContent>
                 </Dialog>

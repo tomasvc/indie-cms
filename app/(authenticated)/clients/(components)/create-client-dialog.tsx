@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
+import { FieldGroup, Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { DialogDescription } from "@/components/ui/dialog";
 import { PlusIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { XIcon } from "lucide-react";
 import { useState } from "react";
-import { ClientStatus } from "@/types";
+import { useFormAction } from "@/hooks/use-form-action";
 
 export function CreateClientDialog() {
-    const [status, setStatus] = useState<ClientStatus>('lead');
+    const [open, setOpen] = useState(false);
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="lg" variant="default" >
                     <PlusIcon className="size-3 mb-0.5" />
@@ -23,52 +23,65 @@ export function CreateClientDialog() {
                 </Button>
             </DialogTrigger>
             <DialogContent>
-                <form action={handleCreateClient}>
-                    <DialogHeader>
-                        <DialogTitle>New Client</DialogTitle>
-                        <DialogDescription>Create a new client to get started.</DialogDescription>
-                    </DialogHeader>
-                    <FieldGroup className="my-4">
-                        <Field>
-                            <FieldLabel htmlFor="name">Name</FieldLabel>
-                            <Input id="name" name="name" placeholder="Enter the client name" />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="company">Company</FieldLabel>
-                            <Input id="company" name="company" placeholder="Enter the client company" />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="email">Email</FieldLabel>
-                            <Input type="email" id="email" name="email" placeholder="Enter the client email" />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="status">Status</FieldLabel>
-                            <Select name="status" value="lead" onValueChange={(value: string) => setStatus(value as ClientStatus)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select the client status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="lead">Lead</SelectItem>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="archived">Archived</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    </FieldGroup>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button size="lg" variant="outline" >
-                                <XIcon className="size-3 mb-0.5" />
-                                Cancel
-                            </Button>
-                        </DialogClose>
-                        <Button type="submit" size="lg" variant="default" >
-                            <PlusIcon className="size-3 mb-0.5" />
-                            Create Client
-                        </Button>
-                    </DialogFooter>
-                </form>
+                <CreateClientForm onCreated={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
+    )
+}
+
+function CreateClientForm({ onCreated }: { onCreated: () => void }) {
+    const { state, isPending, onSubmit, errors } = useFormAction(handleCreateClient, { onSuccess: onCreated });
+
+    return (
+        <form onSubmit={onSubmit} noValidate>
+            <DialogHeader>
+                <DialogTitle>New Client</DialogTitle>
+                <DialogDescription>Create a new client to get started.</DialogDescription>
+            </DialogHeader>
+            <FieldGroup className="my-4">
+                <Field data-invalid={!!errors("name")}>
+                    <FieldLabel htmlFor="name">Name</FieldLabel>
+                    <Input id="name" name="name" placeholder="Enter the client name" required aria-invalid={!!errors("name")} />
+                    <FieldError errors={errors("name")} />
+                </Field>
+                <Field data-invalid={!!errors("company")}>
+                    <FieldLabel htmlFor="company">Company</FieldLabel>
+                    <Input id="company" name="company" placeholder="Enter the client company" aria-invalid={!!errors("company")} />
+                    <FieldError errors={errors("company")} />
+                </Field>
+                <Field data-invalid={!!errors("email")}>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input type="email" id="email" name="email" placeholder="Enter the client email" aria-invalid={!!errors("email")} />
+                    <FieldError errors={errors("email")} />
+                </Field>
+                <Field data-invalid={!!errors("status")}>
+                    <FieldLabel htmlFor="status">Status</FieldLabel>
+                    <Select name="status" defaultValue="lead">
+                        <SelectTrigger id="status" aria-invalid={!!errors("status")}>
+                            <SelectValue placeholder="Select the client status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="lead">Lead</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FieldError errors={errors("status")} />
+                </Field>
+                {state.error && !state.fieldErrors && <FieldError>{state.error}</FieldError>}
+            </FieldGroup>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" size="lg" variant="outline" >
+                        <XIcon className="size-3 mb-0.5" />
+                        Cancel
+                    </Button>
+                </DialogClose>
+                <Button type="submit" size="lg" variant="default" disabled={isPending}>
+                    <PlusIcon className="size-3 mb-0.5" />
+                    {isPending ? "Creating…" : "Create Client"}
+                </Button>
+            </DialogFooter>
+        </form>
     )
 }

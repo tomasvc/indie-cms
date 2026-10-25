@@ -3,84 +3,82 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
+import { toNullable } from "@/lib/schemas/common";
+import { changePasswordSchema } from "@/lib/schemas/auth";
+import { notificationPreferencesSchema, profileSchema, type ProfileFormValues } from "@/lib/schemas/settings";
 
-export async function updateProfile(formData: FormData) {
+export async function updateProfile(input: ProfileFormValues): Promise<ActionState> {
+    const parsed = profileSchema.safeParse(input);
+    if (!parsed.success) return validationError(parsed.error);
+    const values = parsed.data;
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/auth/login");
-
-    const full_name = (formData.get("full_name") as string) || "";
-    const username = (formData.get("username") as string) || "";
-    const company_name = (formData.get("company_name") as string) || null;
-    const bio = (formData.get("bio") as string) || null;
-    const address = (formData.get("address") as string) || null;
-    const avatar_url = (formData.get("avatar_url") as string) || null;
-    const hourly_rate = formData.get("hourly_rate") ? Number(formData.get("hourly_rate")) : 0;
-    const currency = (formData.get("currency") as string) || "USD";
-    const tax_id = (formData.get("tax_id") as string) || null;
-    const timezone = (formData.get("timezone") as string) || null;
-    const language = (formData.get("language") as string) || null;
 
     const { error } = await supabase
         .from("profiles")
         .upsert(
             {
                 id: user.id,
-                full_name,
-                username,
-                company_name,
-                bio,
-                address,
-                avatar_url,
-                hourly_rate,
-                currency,
-                tax_id,
-                timezone,
-                language,
+                full_name: values.full_name,
+                username: toNullable(values.username),
+                company_name: toNullable(values.company_name),
+                bio: toNullable(values.bio),
+                address: toNullable(values.address),
+                avatar_url: toNullable(values.avatar_url),
+                hourly_rate: values.hourly_rate,
+                currency: values.currency,
+                tax_id: toNullable(values.tax_id),
+                timezone: toNullable(values.timezone),
+                language: toNullable(values.language),
                 updated_at: new Date().toISOString(),
             },
             { onConflict: "id" }
         );
 
-    if (error) throw new Error(error.message);
+    if (error?.code === PG_ERROR.UNIQUE_VIOLATION) {
+        return {
+            error: "Please fix the highlighted fields.",
+            fieldErrors: { username: ["That username is already taken."] },
+        };
+    }
+    if (error) return databaseError(error, "Couldn't save your settings. Please try again.");
     revalidatePath("/settings");
+    return { ok: true };
 }
 
-export async function updateNotificationPreferences(formData: FormData) {
+export async function updateNotificationPreferences(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = notificationPreferencesSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return validationError(parsed.error);
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/auth/login");
 
-    const notification_preferences = {
-        email: formData.get("email_notifications") === "true",
-        invoice_reminders: formData.get("invoice_reminders") === "true",
-    };
-
     const { error } = await supabase
         .from("profiles")
         .update({
-            notification_preferences,
+            notification_preferences: {
+                email: parsed.data.email_notifications,
+                invoice_reminders: parsed.data.invoice_reminders,
+            },
             updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 
-    if (error) throw new Error(error.message);
+    if (error) return databaseError(error, "Couldn't save your preferences. Please try again.");
     revalidatePath("/settings");
+    return { ok: true };
 }
 
-export async function updatePassword(formData: FormData): Promise<{ error?: string }> {
+export async function updatePassword(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = changePasswordSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return validationError(parsed.error);
+
     const supabase = await createClient();
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
-
-    if (!password || password.length < 8) {
-        return { error: "Password must be at least 8 characters." };
-    }
-    if (password !== confirmPassword) {
-        return { error: "Passwords do not match." };
-    }
-
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
     if (error) return { error: error.message };
-    return {};
+    return { ok: true };
 }
