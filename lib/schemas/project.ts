@@ -23,14 +23,9 @@ export const projectFormSchema = z
             .min(0, "Progress can't be below 0%")
             .max(100, "Progress can't exceed 100%"),
         currency: z.string().regex(/^[A-Z]{3}$/, "Choose a currency"),
-        profitMargin: z
-            .number({ error: "Profit margin must be a number" })
-            .min(0, "Profit margin can't be below 0%")
-            .max(100, "Profit margin can't exceed 100%"),
         value: amount("Project value"),
         budget: amount("Budget"),
         estimatedHours: hours("Estimated hours"),
-        actualHours: hours("Actual hours"),
         startDate: optionalDate("Start date"),
         dueDate: optionalDate("Due date"),
         completedDate: optionalDate("Completed date"),

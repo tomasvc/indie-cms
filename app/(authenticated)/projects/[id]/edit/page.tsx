@@ -1,6 +1,7 @@
 import { getProject } from "@/lib/data/projects";
 import { getProfile } from "@/lib/data/settings";
 import { getClients } from "@/lib/data/clients";
+import { getTimeEntriesForProject } from "@/lib/data/time-entries";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Client, Project as ProjectType } from "@/types";
@@ -21,11 +22,23 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
         notFound();
     }
 
-    clients = await getClients();
+    const [loadedClients, timeEntries, profile] = await Promise.all([
+        getClients(),
+        getTimeEntriesForProject(id),
+        getProfile(),
+    ]);
+    clients = loadedClients;
     if (!clients) notFound();
 
-    const profile = await getProfile();
-    return <EditProjectPage project={project} clients={clients} businessCurrency={profile?.currency || "USD"} />;
+    const loggedHours = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+    return (
+        <EditProjectPage
+            project={project}
+            clients={clients}
+            businessCurrency={profile?.currency || "USD"}
+            loggedHours={loggedHours}
+        />
+    );
 }
 
 export async function generateMetadata(

@@ -47,6 +47,7 @@ type ProjectFormLayoutProps = {
     pendingLabel: string;
     submitIcon: LucideIcon;
     businessCurrency: string;
+    loggedHours?: number;
 };
 
 export function ProjectFormLayout({
@@ -62,6 +63,7 @@ export function ProjectFormLayout({
     pendingLabel,
     submitIcon: SubmitIcon,
     businessCurrency,
+    loggedHours = 0,
 }: ProjectFormLayoutProps) {
     const [activeSection, setActiveSection] = useState<SectionId>("basics");
     const [isPending, startTransition] = useTransition();
@@ -178,7 +180,7 @@ export function ProjectFormLayout({
                             {activeSection === "basics" && <FormBasics />}
                             {activeSection === "status" && <FormStatusProgress />}
                             {activeSection === "financials" && <FormFinancials businessCurrency={businessCurrency} />}
-                            {activeSection === "time" && <FormTime />}
+                            {activeSection === "time" && <FormTime loggedHours={loggedHours} />}
                             {activeSection === "timeline" && <FormTimeline />}
                             {activeSection === "client" && <FormClient clients={clients} />}
                         </div>

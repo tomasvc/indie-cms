@@ -89,6 +89,8 @@ export function ProjectOverview({
     client,
     recentActivity = [],
     unbilledAmount = 0,
+    spent = 0,
+    loggedHours = 0,
     sparklineHours = [],
     sparklineData,
 }: {
@@ -96,6 +98,10 @@ export function ProjectOverview({
     client: Client | null;
     recentActivity?: RecentActivityItem[];
     unbilledAmount?: number;
+    /** Billable time already logged, hours × rate. */
+    spent?: number;
+    /** All logged hours, including non-billable. */
+    loggedHours?: number;
     sparklineHours?: number[];
     sparklineData?: SparklineDay[];
 }) {
@@ -107,7 +113,7 @@ export function ProjectOverview({
 
     const daysLeft =
         dueDate && isValid(dueDate)
-            ? Math.max(0, differenceInDays(dueDate, today))
+            ? differenceInDays(dueDate, today)
             : null;
     const daysLeftColor =
         daysLeft === null
@@ -117,6 +123,14 @@ export function ProjectOverview({
                 : daysLeft >= 7
                     ? "text-amber-600 dark:text-amber-500"
                     : "text-destructive";
+    const daysLeftText =
+        daysLeft === null
+            ? "—"
+            : daysLeft < 0
+                ? `${Math.abs(daysLeft)} ${Math.abs(daysLeft) === 1 ? "day" : "days"} overdue`
+                : daysLeft === 0
+                    ? "Due today"
+                    : `${daysLeft} ${daysLeft === 1 ? "day" : "days"} remaining`;
 
     const isOnTrack =
         daysLeft === null ||
@@ -133,14 +147,14 @@ export function ProjectOverview({
             : 0);
     const progressLabel = isOnTrack ? "On track" : "At risk";
 
-    const valueLockedGreen = (project.profit_margin ?? 0) > 30;
-    const budgetUsed = project.value ?? 0;
+    const projectValue = project.value ?? 0;
+    const margin = projectValue > 0 ? Math.round(((projectValue - spent) / projectValue) * 100) : null;
+    const valueLockedGreen = margin !== null && margin > 30;
     const budgetTotal = project.budget ?? 0;
-    const remainingBudget =
-        budgetTotal > 0 ? Math.max(0, budgetTotal - budgetUsed) : null;
+    const remainingBudget = budgetTotal > 0 ? budgetTotal - spent : null;
 
     const estimatedH = project.estimated_hours ?? 0;
-    const actualH = project.actual_hours ?? 0;
+    const actualH = loggedHours;
     const hasTime = actualH > 0;
     const burnRateDays = 7;
     const hoursArray = sparklineData?.map((d) => d.hours) ?? sparklineHours;
@@ -200,7 +214,7 @@ export function ProjectOverview({
                                 {formatMoney(project.value ?? 0, currency)}
                             </Typography>
                             <Typography variant="kpiSub" as="p">
-                                Margin: {project.profit_margin ?? 0}%
+                                Margin: {margin === null ? "—" : `${margin}%`}
                             </Typography>
                         </div>
                     </CardContent>
@@ -214,7 +228,7 @@ export function ProjectOverview({
                         <div className="min-w-0">
                             <Typography variant="overline" as="p">Budget used</Typography>
                             <Typography variant="kpiValue" as="p" className="tabular-nums">
-                                {formatMoney(budgetUsed, currency)}
+                                {formatMoney(spent, currency)}
                             </Typography>
                             <div className="flex items-center gap-2">
                                 <Typography variant="kpiSub" as="p">
@@ -222,7 +236,9 @@ export function ProjectOverview({
                                 </Typography>
                                 {remainingBudget !== null && (
                                     <Typography variant="kpiSub" as="p">
-                                        / {formatMoney(remainingBudget, currency)} remaining
+                                        / {remainingBudget < 0
+                                            ? `${formatMoney(Math.abs(remainingBudget), currency)} over`
+                                            : `${formatMoney(remainingBudget, currency)} remaining`}
                                     </Typography>
                                 )}
                             </div>
@@ -384,7 +400,7 @@ export function ProjectOverview({
                                 <Typography variant="metadata" as="span">{formatDate(project.due_date, "MMM d")}</Typography>
                             </div>
                             <Typography variant="bodySmall" color="muted" className="text-center">
-                                {daysLeft !== null ? `${daysLeft} days remaining` : "—"}
+                                {daysLeftText}
                                 {elapsedDays >= 0 && totalDays > 0 && (
                                     <> · {elapsedDays} days elapsed</>
                                 )}
@@ -426,13 +442,13 @@ export function ProjectOverview({
                             <div className="border-r border-border pt-4 pr-4">
                                 <Typography variant="overline" as="p">Profit Margin</Typography>
                                 <Typography variant="metricValue" as="p" color="primary" className="mt-0.5">
-                                    {project.profit_margin ?? 0}%
+                                    {margin === null ? "—" : `${margin}%`}
                                 </Typography>
                                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                                     <div
                                         className="h-full rounded-full bg-primary transition-[width]"
                                         style={{
-                                            width: `${Math.min(100, project.profit_margin ?? 0)}%`,
+                                            width: `${margin === null ? 0 : Math.min(100, Math.max(0, margin))}%`,
                                         }}
                                     />
                                 </div>

@@ -18,11 +18,9 @@ function toFormValues(project: Project, businessCurrency: string): ProjectFormVa
         priority: project.priority ?? "medium",
         progress: project.progress ?? 0,
         currency: project.currency || businessCurrency,
-        profitMargin: project.profit_margin ?? 0,
         value: project.value ?? 0,
         budget: project.budget ?? 0,
         estimatedHours: project.estimated_hours ?? 0,
-        actualHours: project.actual_hours ?? 0,
         startDate: toDateInput(project.start_date),
         dueDate: toDateInput(project.due_date),
         completedDate: toDateInput(project.completed_date),
@@ -34,10 +32,12 @@ export function EditProjectPage({
     project,
     clients,
     businessCurrency,
+    loggedHours,
 }: {
     project: Project;
     clients: Client[];
     businessCurrency: string;
+    loggedHours: number;
 }) {
     return (
         <ProjectFormLayout
@@ -53,6 +53,7 @@ export function EditProjectPage({
             pendingLabel="Saving..."
             submitIcon={SaveIcon}
             businessCurrency={businessCurrency}
+            loggedHours={loggedHours}
         />
     );
 }

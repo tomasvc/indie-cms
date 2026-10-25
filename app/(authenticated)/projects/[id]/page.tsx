@@ -58,6 +58,10 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
     const unbilledAmount = timeEntries
         .filter((e) => e.billable && !e.invoice_id)
         .reduce((sum, e) => sum + e.hours * e.rate, 0);
+    const spent = timeEntries
+        .filter((e) => e.billable !== false)
+        .reduce((sum, e) => sum + e.hours * e.rate, 0);
+    const loggedHours = timeEntries.reduce((sum, e) => sum + e.hours, 0);
 
     return (
         <div className="flex flex-col gap-4 animate-fadein">
@@ -123,6 +127,8 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         client={project.client_id ? clients.find((client) => client.id === project.client_id) ?? null : null}
                         sparklineData={sparklineData}
                         unbilledAmount={unbilledAmount}
+                        spent={spent}
+                        loggedHours={loggedHours}
                     />
                 </TabsContent>
                 <TabsContent value="tasks">

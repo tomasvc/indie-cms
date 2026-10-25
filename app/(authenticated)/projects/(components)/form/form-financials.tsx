@@ -12,7 +12,7 @@ const finite = (n: number) => (Number.isFinite(n) ? n : 0);
 
 export const FormFinancials = ({ businessCurrency }: { businessCurrency: string }) => {
     const { register, setValue, control, formState: { errors } } = useFormContext<ProjectFormValues>();
-    const [currency, value, budget, profitMargin] = useWatch({ control, name: ["currency", "value", "budget", "profitMargin"] });
+    const [currency, value, budget] = useWatch({ control, name: ["currency", "value", "budget"] });
     const [matchDefaultCurrency, setMatchDefaultCurrency] = useState(false);
     const remaining = Math.max(0, finite(budget) - finite(value));
 
@@ -52,22 +52,6 @@ export const FormFinancials = ({ businessCurrency }: { businessCurrency: string 
                             }}
                         />
                     </Field>
-                    <Field data-invalid={!!errors.profitMargin}>
-                        <FieldLabel htmlFor="project-profit-margin">PROFIT MARGIN</FieldLabel>
-                        <div className="flex items-center gap-1 border border-input rounded-md bg-input/20 px-2.5 py-[7px]">
-                            <Input
-                                id="project-profit-margin"
-                                type="number"
-                                min={0}
-                                max={100}
-                                {...register("profitMargin", { valueAsNumber: true })}
-                                aria-invalid={!!errors.profitMargin}
-                                className="border-0 bg-transparent h-7 p-0 shadow-none focus-visible:ring-0"
-                            />
-                            <span className="text-muted-foreground text-sm">%</span>
-                        </div>
-                        <FieldError errors={[errors.profitMargin]} />
-                    </Field>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <Field data-invalid={!!errors.value}>
@@ -105,9 +89,8 @@ export const FormFinancials = ({ businessCurrency }: { businessCurrency: string 
                 </div>
                 <div className="flex gap-6 pt-2">
                     <span className="text-primary text-sm font-medium">
-                        Remaining: {formatMoney(remaining, currency)}
+                        Budget after fee: {formatMoney(remaining, currency)}
                     </span>
-                    <span className="text-primary text-sm font-medium">Margin: {finite(profitMargin)}%</span>
                 </div>
             </FieldGroup>
         </div>

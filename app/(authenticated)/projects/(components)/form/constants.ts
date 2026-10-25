@@ -25,7 +25,7 @@ export const SECTIONS = [
     {
         id: "time",
         label: "Time",
-        description: "Estimated and actual hours for burn-rate tracking.",
+        description: "How many hours you expect. Logged hours come from time entries.",
         icon: ClockIcon,
     },
     {
@@ -52,11 +52,9 @@ export const FIELD_SECTIONS: Record<keyof ProjectFormValues, SectionId> = {
     priority: "status",
     progress: "status",
     currency: "financials",
-    profitMargin: "financials",
     value: "financials",
     budget: "financials",
     estimatedHours: "time",
-    actualHours: "time",
     startDate: "timeline",
     dueDate: "timeline",
     completedDate: "timeline",
