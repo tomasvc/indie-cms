@@ -2,18 +2,18 @@ import type { DashboardCoreData } from "@/lib/data/dashboard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card"
 import { Typography } from "../../../../components/ui/typography"
 import { Table, TableCell, TableBody, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
-import { format, isAfter, parseISO } from "date-fns";
-import { Invoice } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { formatDate, formatMoney } from "@/lib/helpers/format";
+import { isOutstanding, isOverdue } from "@/lib/helpers/invoices";
 
 type OverdueInvoicesProps = {
     data: DashboardCoreData;
 };
 
 export function OverdueInvoices({ data }: OverdueInvoicesProps) {
-    const invoices = data.invoices;
-    const overdueInvoices = invoices.filter(invoice => invoice.status === "overdue");
-    const upcomingInvoices = invoices.filter(invoice => invoice.due_date && isAfter(parseISO(invoice.due_date), new Date()) && invoice.status !== "paid");
-    const overdueOrUpcomingInvoices = [...overdueInvoices, ...upcomingInvoices];
+    const outstandingInvoices = data.invoices
+        .filter((invoice) => isOutstanding(invoice) && invoice.due_date)
+        .sort((a, b) => a.due_date!.localeCompare(b.due_date!));
 
     return (
         <Card className="gap-0 pb-0">
@@ -22,7 +22,7 @@ export function OverdueInvoices({ data }: OverdueInvoicesProps) {
                 <CardDescription><Typography variant="body" color="muted" as="span">This is a summary of your overdue and upcoming invoices.</Typography></CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-                {overdueOrUpcomingInvoices.length === 0 ? (
+                {outstandingInvoices.length === 0 ? (
                     <div className="p-5">
                         <Typography variant="body" color="muted" as="span">No overdue or upcoming invoices</Typography>
                     </div>
@@ -37,7 +37,7 @@ export function OverdueInvoices({ data }: OverdueInvoicesProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {overdueOrUpcomingInvoices.map(invoice => (
+                            {outstandingInvoices.map(invoice => (
                                 <TableRow key={invoice.id}>
                                     <TableCell className="px-4 py-3">
                                         <Typography variant="code" as="span">{invoice.code}</Typography>
@@ -46,10 +46,13 @@ export function OverdueInvoices({ data }: OverdueInvoicesProps) {
                                         <Typography variant="body" as="span">{data.clients.find(c => c.id === invoice.client_id)?.name}</Typography>
                                     </TableCell>
                                     <TableCell className="px-4 py-3">
-                                        <Typography variant="body" as="span" className="font-medium">{Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(invoice.amount)}</Typography>
+                                        <Typography variant="body" as="span" className="font-medium">{formatMoney(invoice.total, invoice.currency)}</Typography>
                                     </TableCell>
                                     <TableCell className="px-4 py-3">
-                                        <Typography variant="metadata" as="span">{format(new Date(invoice.due_date), "MMM d, yyyy")}</Typography>
+                                        <div className="flex items-center gap-2">
+                                            <Typography variant="metadata" as="span">{formatDate(invoice.due_date, "MMM d, yyyy")}</Typography>
+                                            {isOverdue(invoice) && <Badge variant="destructive">Overdue</Badge>}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}

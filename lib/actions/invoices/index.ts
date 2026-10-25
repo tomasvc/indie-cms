@@ -3,115 +3,147 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
-import { toNullable } from "@/lib/schemas/common";
+import { id as idSchema } from "@/lib/schemas/common";
 import {
-    calculateInvoiceTotals,
     invoiceCreateSchema,
-    invoiceUpdateSchema,
+    invoiceIdSchema,
+    markInvoicePaidSchema,
     type InvoiceFormValues,
 } from "@/lib/schemas/invoice";
 
 const DUPLICATE_CODE: ActionState = {
     error: "Please fix the highlighted fields.",
-    fieldErrors: { code: ["An invoice with this reference number already exists."] },
+    fieldErrors: { code: ["You already have an invoice with this reference number."] },
 };
 
-export async function createInvoice(input: InvoiceFormValues): Promise<ActionState> {
-    const parsed = invoiceCreateSchema.safeParse(input);
-    if (!parsed.success) return validationError(parsed.error);
-    const values = parsed.data;
+const NOT_FOUND: ActionState = { error: "This invoice couldn't be found." };
 
+async function requireUser() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
+    return { supabase, user };
+}
 
-    const { lineTotals, subtotal, discountAmount, total } = calculateInvoiceTotals(
-        values.lineItems,
-        values.discountValue,
-        values.discountType
-    );
-    const invoiceId = crypto.randomUUID();
-
-    const { error: invoiceError } = await supabase.from('invoices').insert({
-        id: invoiceId,
-        user_id: user.id,
-        project_id: values.projectId,
-        client_id: values.clientId,
-        code: values.code,
-        currency: values.currency,
-        status: values.status,
-        amount: total,
-        subtotal,
-        total,
-        discount_amount: discountAmount > 0 ? discountAmount : null,
-        due_date: values.dueDate,
-        issue_date: values.issueDate,
-        notes: toNullable(values.notes),
-    });
-
-    if (invoiceError?.code === PG_ERROR.UNIQUE_VIOLATION) return DUPLICATE_CODE;
-    if (invoiceError) return databaseError(invoiceError, "Couldn't create this invoice. Please try again.");
-
-    const { error: lineItemsError } = await supabase.from('line_items').insert(
-        values.lineItems.map((item, index) => ({
-            id: crypto.randomUUID(),
-            invoice_id: invoiceId,
+/** Totals are deliberately not sent; the database computes them from the line items. */
+function toInvoicePayload(values: InvoiceFormValues) {
+    return {
+        p_invoice: {
+            project_id: values.projectId,
+            client_id: values.clientId,
+            code: values.code,
+            currency: values.currency,
+            status: values.status,
+            issue_date: values.issueDate,
+            due_date: values.dueDate,
+            notes: values.notes,
+            discount_type: values.discountType,
+            discount_value: values.discountValue,
+        },
+        p_line_items: values.lineItems.map((item) => ({
             description: item.description,
             quantity: item.quantity,
             unit: item.unit,
             unit_price: item.unitPrice,
-            total: lineTotals[index],
-        }))
-    );
-
-    if (lineItemsError) {
-        await supabase.from('invoices').delete().eq('id', invoiceId).eq('user_id', user.id);
-        return databaseError(lineItemsError, "Couldn't save the line items. Please try again.");
-    }
-
-    revalidatePath('/invoices');
-    redirect('/invoices');
+        })),
+    };
 }
 
-export async function updateInvoice(_prev: ActionState, formData: FormData): Promise<ActionState> {
-    const parsed = invoiceUpdateSchema.safeParse(Object.fromEntries(formData));
+function invoiceWriteError(error: { code?: string; message?: string }, fallback: string): ActionState {
+    if (error.code === PG_ERROR.UNIQUE_VIOLATION) return DUPLICATE_CODE;
+    if (error.code === "P0002") return NOT_FOUND;
+    if (error.code === "55000") return { error: "Paid invoices can't be edited. Mark it as unpaid first." };
+    return databaseError(error, fallback);
+}
+
+export async function createInvoice(input: InvoiceFormValues): Promise<ActionState> {
+    const parsed = invoiceCreateSchema.safeParse(input);
     if (!parsed.success) return validationError(parsed.error);
-    const { id, paid_date, pdf_url, ...values } = parsed.data;
+    if (parsed.data.status === "void") return { error: "A new invoice can't be void." };
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    const { supabase } = await requireUser();
+    const { error } = await supabase.rpc("create_invoice", toInvoicePayload(parsed.data));
+    if (error) return invoiceWriteError(error, "Couldn't create this invoice. Please try again.");
 
-    const { error } = await supabase
-        .from('invoices')
-        .update({
-            ...values,
-            paid_date: toNullable(paid_date),
-            pdf_url: toNullable(pdf_url),
-            updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', user.id);
+    revalidatePath("/invoices");
+    redirect("/invoices");
+}
 
-    if (error?.code === PG_ERROR.UNIQUE_VIOLATION) return DUPLICATE_CODE;
-    if (error) return databaseError(error, "Couldn't save this invoice. Please try again.");
-    revalidatePath('/invoices');
+export async function updateInvoice(id: string, input: InvoiceFormValues): Promise<ActionState> {
+    const parsedId = idSchema("Invoice").safeParse(id);
+    if (!parsedId.success) return NOT_FOUND;
+
+    const parsed = invoiceCreateSchema.safeParse(input);
+    if (!parsed.success) return validationError(parsed.error);
+
+    const { supabase } = await requireUser();
+    const { error } = await supabase.rpc("update_invoice", {
+        p_id: parsedId.data,
+        ...toInvoicePayload(parsed.data),
+    });
+    if (error) return invoiceWriteError(error, "Couldn't save this invoice. Please try again.");
+
+    revalidatePath("/invoices");
+    redirect("/invoices");
+}
+
+export async function markInvoicePaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = markInvoicePaidSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return validationError(parsed.error);
+    const { id, paid_date, payment_method } = parsed.data;
+
+    const { supabase, user } = await requireUser();
+    const { data, error } = await supabase
+        .from("invoices")
+        .update({ status: "paid", paid_date, payment_method })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .in("status", ["sent", "draft"])
+        .select("id");
+
+    if (error) return databaseError(error, "Couldn't record this payment. Please try again.");
+    if (!data?.length) return { error: "Only draft or sent invoices can be marked as paid." };
+
+    revalidatePath("/invoices");
+    revalidatePath("/dashboard");
     return { ok: true };
 }
 
-export async function deleteInvoice(id: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+export async function markInvoiceUnpaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = invoiceIdSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return NOT_FOUND;
 
+    const { supabase, user } = await requireUser();
     const { error } = await supabase
-        .from('invoices')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .from("invoices")
+        .update({ status: "sent", paid_date: null, payment_method: null })
+        .eq("id", parsed.data.id)
+        .eq("user_id", user.id)
+        .eq("status", "paid");
 
-    if (error) throw error;
-    revalidatePath('/invoices');
-    redirect('/invoices');
+    if (error) return databaseError(error, "Couldn't update this invoice. Please try again.");
+
+    revalidatePath("/invoices");
+    revalidatePath("/dashboard");
+    return { ok: true };
+}
+
+export async function deleteInvoice(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = invoiceIdSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return NOT_FOUND;
+
+    const { supabase, user } = await requireUser();
+    const { error } = await supabase
+        .from("invoices")
+        .delete()
+        .eq("id", parsed.data.id)
+        .eq("user_id", user.id);
+
+    if (error?.code === PG_ERROR.FOREIGN_KEY_VIOLATION) {
+        return { error: "This invoice has time entries linked to it, so it can't be deleted. Void it instead." };
+    }
+    if (error) return databaseError(error, "Couldn't delete this invoice. Please try again.");
+
+    revalidatePath("/invoices");
+    return { ok: true };
 }

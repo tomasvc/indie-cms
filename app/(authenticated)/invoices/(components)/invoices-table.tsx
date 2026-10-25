@@ -3,33 +3,30 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Invoice } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { BanknoteIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, Undo2Icon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
-import { EditInvoiceDialog } from "@/app/(authenticated)/invoices/(components)/edit-invoice-dialog";
-import { Client, Project } from "@/types";
 import { useState } from "react";
 import { formatMoney, formatDate } from "@/lib/helpers/format";
-import { deleteInvoice } from "@/lib/actions/invoices";
+import { displayStatus, type InvoiceDisplayStatus } from "@/lib/helpers/invoices";
+import { DeleteInvoiceDialog, MarkPaidDialog, MarkUnpaidDialog } from "./invoice-dialogs";
 
-interface InvoicesTableProps {
-    invoices: Invoice[];
-    projects: Project[];
-    clients: Client[];
-}
+const STATUS_BADGE: Record<InvoiceDisplayStatus, React.ComponentProps<typeof Badge>["variant"]> = {
+    draft: "outline",
+    sent: "secondary",
+    overdue: "destructive",
+    paid: "success",
+    void: "ghost",
+};
 
-export function InvoicesTable({ invoices, projects, clients }: InvoicesTableProps) {
+type PendingDialog = { kind: "paid" | "unpaid" | "delete"; invoice: Invoice } | null;
+
+export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
     const router = useRouter();
-    const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
-    const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
-
-    async function handleDeleteInvoice(id: string) {
-        if (!deleteInvoiceId) return;
-        await deleteInvoice(id);
-        setDeleteInvoiceId(null);
-        router.refresh();
-    }
+    const [dialog, setDialog] = useState<PendingDialog>(null);
+    const closeDialog = (open: boolean) => !open && setDialog(null);
 
     return (
         <>
@@ -47,55 +44,73 @@ export function InvoicesTable({ invoices, projects, clients }: InvoicesTableProp
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {invoices?.map((invoice) => (
-                            <TableRow key={invoice.id} className="group cursor-pointer hover:bg-muted" onClick={() => router.push(`/invoices/${invoice.id}`)}>
-                                <TableCell className="pl-4 font-mono">INV-{invoice.code}</TableCell>
-                                <TableCell>
-                                    <Badge variant="outline" className="capitalize">{invoice.status}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    {formatMoney(invoice.total, "USD")}
-                                </TableCell>
-                                <TableCell>{formatDate(invoice.due_date, "MMM d, yyyy")}</TableCell>
-                                <TableCell>{formatDate(invoice.issue_date, "MMM d, yyyy")}</TableCell>
-                                <TableCell>{formatDate(invoice.paid_date, "MMM d, yyyy")}</TableCell>
-                                <TableCell className="text-right px-1 pr-4" style={{ width: "1%" }} onClick={e => e.stopPropagation()}>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button
-                                                tabIndex={-1}
-                                                className="flex items-center p-1 mr-2 hover:bg-accent rounded focus:outline-none"
-                                                aria-label="Actions"
-                                            >
-                                                <EllipsisVerticalIcon className="w-4 h-4" />
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="z-50">
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setEditInvoice(invoice); }}>
-                                                <PencilIcon className="w-4 h-4 mr-2" />
-                                                Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem variant="destructive" onClick={() => handleDeleteInvoice(invoice.id)}>
-                                                <TrashIcon className="w-4 h-4 mr-2" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {invoices.map((invoice) => {
+                            const status = displayStatus(invoice);
+                            const isPaid = invoice.status === "paid";
+                            const canMarkPaid = invoice.status === "draft" || invoice.status === "sent";
+                            return (
+                                <TableRow
+                                    key={invoice.id}
+                                    className="group cursor-pointer hover:bg-muted"
+                                    onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
+                                >
+                                    <TableCell className="pl-4 font-mono">INV-{invoice.code}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={STATUS_BADGE[status]} className="capitalize">{status}</Badge>
+                                    </TableCell>
+                                    <TableCell>{formatMoney(invoice.total, invoice.currency)}</TableCell>
+                                    <TableCell>{formatDate(invoice.due_date, "MMM d, yyyy")}</TableCell>
+                                    <TableCell>{formatDate(invoice.issue_date, "MMM d, yyyy")}</TableCell>
+                                    <TableCell>{formatDate(invoice.paid_date, "MMM d, yyyy")}</TableCell>
+                                    <TableCell className="text-right px-1 pr-4" style={{ width: "1%" }} onClick={e => e.stopPropagation()}>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button
+                                                    tabIndex={-1}
+                                                    className="flex items-center p-1 mr-2 hover:bg-accent rounded focus:outline-none"
+                                                    aria-label="Actions"
+                                                >
+                                                    <EllipsisVerticalIcon className="w-4 h-4" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="z-50">
+                                                {!isPaid && (
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/invoices/${invoice.id}/edit`}>
+                                                            <PencilIcon className="w-4 h-4 mr-2" />
+                                                            Edit
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {canMarkPaid && (
+                                                    <DropdownMenuItem onSelect={() => setDialog({ kind: "paid", invoice })}>
+                                                        <BanknoteIcon className="w-4 h-4 mr-2" />
+                                                        Mark as paid
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {isPaid && (
+                                                    <DropdownMenuItem onSelect={() => setDialog({ kind: "unpaid", invoice })}>
+                                                        <Undo2Icon className="w-4 h-4 mr-2" />
+                                                        Mark as unpaid
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem variant="destructive" onSelect={() => setDialog({ kind: "delete", invoice })}>
+                                                    <TrashIcon className="w-4 h-4 mr-2" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </Card>
-            {editInvoice && (
-                <EditInvoiceDialog
-                    invoice={editInvoice}
-                    projects={projects}
-                    clients={clients}
-                    open={!!editInvoice}
-                    onOpenChange={(open) => !open && setEditInvoice(null)}
-                />
-            )}
+            {dialog?.kind === "paid" && <MarkPaidDialog invoice={dialog.invoice} onOpenChange={closeDialog} />}
+            {dialog?.kind === "unpaid" && <MarkUnpaidDialog invoice={dialog.invoice} onOpenChange={closeDialog} />}
+            {dialog?.kind === "delete" && <DeleteInvoiceDialog invoice={dialog.invoice} onOpenChange={closeDialog} />}
         </>
     )
 }

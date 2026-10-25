@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import type { DashboardCoreData } from "@/lib/data/dashboard";
 
 const PROJECT_STATUSES = ["active", "on_hold", "completed", "cancelled"] as const;
-const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue"] as const;
+const INVOICE_STATUSES = ["draft", "sent", "paid", "void"] as const;
 const CLIENT_STATUSES = ["active", "inactive", "lead"] as const;
 const TASK_STATUSES = ["todo", "in_progress", "review", "done"] as const;
 
@@ -58,13 +58,16 @@ function mockInvoice(userId: string, projectId: string, clientId: string) {
   const issueDate = faker.date.recent({ days: 45 });
   const dueDate = faker.date.soon({ days: 30 });
   const status = faker.helpers.arrayElement(INVOICE_STATUSES);
+  const total = faker.number.float({ min: 500, max: 15000, fractionDigits: 2 });
   return {
     id: faker.string.uuid(),
     user_id: userId,
     project_id: projectId,
     client_id: clientId,
     code: `INV-${faker.string.numeric(6)}`,
-    amount: faker.number.float({ min: 500, max: 15000, fractionDigits: 2 }),
+    currency: "USD",
+    subtotal: total,
+    total,
     status,
     due_date: dueDate.toISOString().split("T")[0],
     issue_date: issueDate.toISOString().split("T")[0],

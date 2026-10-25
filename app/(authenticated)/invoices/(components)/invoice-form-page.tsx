@@ -18,8 +18,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { Client, InvoiceStatus, Project } from "@/types";
-import { createInvoice } from "@/lib/actions/invoices";
+import { Client, Project } from "@/types";
+import { createInvoice, updateInvoice } from "@/lib/actions/invoices";
+import type { InvoiceWithLineItems } from "@/lib/data/invoices";
 import { applyServerErrors } from "@/lib/forms/apply-server-errors";
 import {
     INVOICE_CURRENCIES,
@@ -29,23 +30,47 @@ import {
     type InvoiceFormValues,
     type LineItemValues,
 } from "@/lib/schemas/invoice";
-import { PlusIcon, XIcon, InfoIcon } from "lucide-react";
+import { PlusIcon, XIcon, InfoIcon, CheckIcon } from "lucide-react";
 import { formatMoney } from "@/lib/helpers/format";
 import { cn } from "@/lib/utils";
 
-const FORM_ID = "create-invoice-form";
+const FORM_ID = "invoice-form";
 
-const STATUS_OPTIONS: { value: InvoiceStatus; label: string }[] = [
+const STATUS_OPTIONS: { value: InvoiceFormValues["status"]; label: string }[] = [
     { value: "draft", label: "Draft" },
     { value: "sent", label: "Sent" },
-    { value: "paid", label: "Paid" },
-    { value: "overdue", label: "Overdue" },
     { value: "void", label: "Void" },
 ];
 
 const CURRENCY_SYMBOLS: Record<InvoiceFormValues["currency"], string> = { USD: "$", GBP: "£", EUR: "€" };
 
 const newLineItem = (): LineItemValues => ({ description: "", quantity: 1, unit: "hrs", unitPrice: 0 });
+
+const oneOf = <T extends string>(options: readonly T[], value: string | undefined, fallback: T): T =>
+    options.includes(value as T) ? (value as T) : fallback;
+
+function toFormValues(invoice: InvoiceWithLineItems): InvoiceFormValues {
+    return {
+        projectId: invoice.project_id,
+        clientId: invoice.client_id,
+        status: invoice.status === "paid" ? "sent" : invoice.status,
+        code: invoice.code,
+        issueDate: invoice.issue_date?.slice(0, 10) ?? "",
+        dueDate: invoice.due_date?.slice(0, 10) ?? "",
+        currency: oneOf(INVOICE_CURRENCIES, invoice.currency, "USD"),
+        notes: invoice.notes ?? "",
+        discountValue: Number(invoice.discount_value ?? 0),
+        discountType: invoice.discount_type ?? "flat",
+        lineItems: invoice.items.length
+            ? invoice.items.map((item) => ({
+                description: item.description ?? "",
+                quantity: Number(item.quantity),
+                unit: oneOf(LINE_ITEM_UNITS, item.unit, "flat"),
+                unitPrice: Number(item.unit_price),
+            }))
+            : [newLineItem()],
+    };
+}
 
 const DEFAULT_VALUES: InvoiceFormValues = {
     projectId: "",
@@ -61,17 +86,22 @@ const DEFAULT_VALUES: InvoiceFormValues = {
     lineItems: [newLineItem()],
 };
 
-export function CreateInvoicePage({
+export function InvoiceFormPage({
     projects,
     clients,
+    invoice,
+    defaultCode = "",
 }: {
     projects: Project[];
     clients: Client[];
+    invoice?: InvoiceWithLineItems;
+    defaultCode?: string;
 }) {
+    const isEdit = !!invoice;
     const [isPending, startTransition] = useTransition();
     const form = useForm<InvoiceFormValues>({
         resolver: zodResolver(invoiceCreateSchema),
-        defaultValues: DEFAULT_VALUES,
+        defaultValues: invoice ? toFormValues(invoice) : { ...DEFAULT_VALUES, code: defaultCode },
     });
     const { register, control, formState: { errors } } = form;
     const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
@@ -84,7 +114,7 @@ export function CreateInvoicePage({
 
     const onSubmit = form.handleSubmit((values) =>
         startTransition(async () => {
-            const result = await createInvoice(values);
+            const result = invoice ? await updateInvoice(invoice.id, values) : await createInvoice(values);
             applyServerErrors(form.setError, result);
         })
     );
@@ -97,14 +127,16 @@ export function CreateInvoicePage({
                     <div>
                         <div className="flex items-center gap-2">
                             <Typography variant="pageTitle" as="h1">
-                                New Invoice
+                                {isEdit ? `Edit INV-${invoice.code}` : "New Invoice"}
                             </Typography>
                             <Badge variant="outline" className="capitalize text-xs">
                                 {status}
                             </Badge>
                         </div>
                         <Typography variant="subtitle" className="text-muted-foreground mt-0.5">
-                            Add line items, set payment terms, and send to your client.
+                            {isEdit
+                                ? "Update line items and payment terms. Totals are recalculated when you save."
+                                : "Add line items, set payment terms, and send to your client."}
                         </Typography>
                     </div>
                 </div>
@@ -116,8 +148,10 @@ export function CreateInvoicePage({
                         </Link>
                     </Button>
                     <Button size="lg" type="submit" form={FORM_ID} disabled={isPending}>
-                        <PlusIcon className="size-3.5" />
-                        {isPending ? "Creating…" : "Create Invoice"}
+                        {isEdit ? <CheckIcon className="size-3.5" /> : <PlusIcon className="size-3.5" />}
+                        {isEdit
+                            ? isPending ? "Saving…" : "Save Changes"
+                            : isPending ? "Creating…" : "Create Invoice"}
                     </Button>
                 </div>
             </div>
@@ -182,7 +216,7 @@ export function CreateInvoicePage({
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {STATUS_OPTIONS.map((opt) => (
+                                                {STATUS_OPTIONS.filter((opt) => isEdit || opt.value !== "void").map((opt) => (
                                                     <SelectItem key={opt.value} value={opt.value}>
                                                         {opt.label}
                                                     </SelectItem>

@@ -1,8 +1,9 @@
 import { getClients } from "@/lib/data/clients";
 import { getProjects } from "@/lib/data/projects";
+import { getNextInvoiceCode } from "@/lib/data/invoices";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CreateInvoicePage } from "../(components)/create-invoice-page";
+import { InvoiceFormPage } from "../(components)/invoice-form-page";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 import { Suspense } from "react";
 
@@ -13,18 +14,19 @@ async function NewInvoicePageContent() {
         redirect('/auth/login');
     }
 
-    let projects, clients;
+    let projects, clients, nextCode;
     try {
-        [projects, clients] = await Promise.all([
+        [projects, clients, nextCode] = await Promise.all([
             getProjects(user.id),
             getClients(),
+            getNextInvoiceCode(user.id),
         ]);
         if (!projects || !clients) notFound();
     } catch {
         notFound();
     }
 
-    return <CreateInvoicePage projects={projects} clients={clients} />;
+    return <InvoiceFormPage projects={projects} clients={clients} defaultCode={nextCode} />;
 }
 
 export default function NewInvoicePage() {

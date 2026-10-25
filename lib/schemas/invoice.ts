@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { amount, formNumber, id, isOnOrAfter, optionalDate, optionalText, optionalUrl, requiredDate, requiredId } from "./common";
+import { amount, id, isOnOrAfter, optionalText, requiredDate, requiredId } from "./common";
 
-export const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue", "void"] as const;
+/** Stored statuses. "Overdue" is derived from a sent invoice's due date; see lib/helpers/invoices.ts. */
+export const INVOICE_STATUSES = ["draft", "sent", "paid", "void"] as const;
+/** Statuses the invoice form can set. "paid" is only set by the payment actions. */
+export const EDITABLE_INVOICE_STATUSES = ["draft", "sent", "void"] as const;
 export const INVOICE_CURRENCIES = ["USD", "GBP", "EUR"] as const;
 export const LINE_ITEM_UNITS = ["hrs", "days", "flat", "items", "words", "pages"] as const;
 export const DISCOUNT_TYPES = ["percent", "flat"] as const;
+export const PAYMENT_METHODS = ["bank_transfer", "stripe", "paypal", "cash", "other"] as const;
 
-const invoiceStatus = z.enum(INVOICE_STATUSES, { error: "Choose a status" });
+const invoiceStatus = z.enum(EDITABLE_INVOICE_STATUSES, { error: "Choose a status" });
 
 const invoiceCode = z
     .string({ error: "Reference number is required" })
@@ -52,33 +56,26 @@ export const invoiceCreateSchema = z
 export type InvoiceFormValues = z.infer<typeof invoiceCreateSchema>;
 export type LineItemValues = z.infer<typeof lineItemSchema>;
 
-export const invoiceUpdateSchema = z
-    .object({
-        id: id("Invoice"),
-        project_id: requiredId("project"),
-        client_id: requiredId("client"),
-        status: invoiceStatus,
-        code: invoiceCode,
-        amount: formNumber(z.number({ error: "Amount is required" }).min(0, "Amount can't be negative")),
-        issue_date: requiredDate("Issue date"),
-        due_date: requiredDate("Due date"),
-        paid_date: optionalDate("Paid date"),
-        pdf_url: optionalUrl("PDF URL"),
-    })
-    .refine((v) => isOnOrAfter(v.due_date, v.issue_date), {
-        error: "Due date must be on or after the issue date",
-        path: ["due_date"],
-    });
+export const markInvoicePaidSchema = z.object({
+    id: id("Invoice"),
+    paid_date: requiredDate("Paid date"),
+    payment_method: z.enum(PAYMENT_METHODS, { error: "Choose a payment method" }),
+});
+
+export const invoiceIdSchema = z.object({ id: id("Invoice") });
 
 const roundMoney = (value: number) => Math.round(value * 100) / 100;
 
+/** Live preview for the form. Stored totals are computed by `public.invoice_totals` in the database. */
 export function calculateInvoiceTotals(
     lineItems: Pick<LineItemValues, "quantity" | "unitPrice">[],
     discountValue: number,
     discountType: (typeof DISCOUNT_TYPES)[number]
 ) {
     const finite = (n: number) => (Number.isFinite(n) ? n : 0);
-    const lineTotals = lineItems.map((item) => roundMoney(finite(item.quantity) * finite(item.unitPrice)));
+    const lineTotals = lineItems.map((item) =>
+        roundMoney(roundMoney(finite(item.quantity)) * roundMoney(finite(item.unitPrice)))
+    );
     const subtotal = roundMoney(lineTotals.reduce((sum, total) => sum + total, 0));
     const discount = finite(discountValue);
     const discountAmount = roundMoney(

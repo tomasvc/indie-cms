@@ -25,7 +25,7 @@ async function fetchInvoices(userId: string) {
 
     const { data, error } = await supabase
         .from("invoices")
-        .select("id, user_id, project_id, client_id, code, amount, status, due_date, issue_date, paid_date, pdf_url, created_at, updated_at")
+        .select("id, user_id, project_id, client_id, code, currency, subtotal, total, status, due_date, issue_date, paid_date, pdf_url, created_at, updated_at")
         .eq("user_id", userId)
         .order("issue_date", { ascending: false });
 

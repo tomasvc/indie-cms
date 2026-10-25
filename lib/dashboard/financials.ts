@@ -1,18 +1,11 @@
 import type { Client, Invoice } from "@/types";
+import { invoiceTotal, isBilled, isOutstanding } from "@/lib/helpers/invoices";
 
-// -----------------------------------------------------------------------------
-// Invoice amount helpers (dashboard API uses amount; app type uses total/subtotal)
-// -----------------------------------------------------------------------------
-
-/** Dashboard API returns amount; app type uses total. Normalize for both. */
-export function invoiceTotal(inv: Invoice | { total?: number; amount?: number }): number {
-    const n = (inv as { amount?: number }).amount ?? (inv as Invoice).total;
-    return typeof n === "number" && !Number.isNaN(n) ? n : 0;
-}
+export { invoiceTotal };
 
 function invoiceSubtotal(inv: Invoice | { subtotal?: number }): number {
-    const n = (inv as Invoice).subtotal;
-    return typeof n === "number" && !Number.isNaN(n) ? n : 0;
+    const n = Number((inv as Invoice).subtotal);
+    return Number.isFinite(n) ? n : 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -43,7 +36,7 @@ const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 // -----------------------------------------------------------------------------
 
 export function getFinancialSummary(invoices: Array<Invoice> | null): FinancialSummary {
-    const list = invoices ?? [];
+    const list = (invoices ?? []).filter(isBilled);
 
     const previousMonthInvoices = list.filter(invoice => {
         const paid = invoice.paid_date == null ? null : new Date(invoice.paid_date);
@@ -69,18 +62,16 @@ export function getFinancialSummary(invoices: Array<Invoice> | null): FinancialS
         0
     ) ?? 0;
 
-    const outstanding = list.filter(invoice => invoice.paid_date === null).reduce(
+    const outstanding = list.filter(isOutstanding).reduce(
         (acc, invoice) => acc + invoiceTotal(invoice),
         0
-    ) ?? 0;
+    );
 
     const paidInvoices = list.filter(
-        (inv) => inv.paid_date != null && inv.issue_date != null
-    ) ?? [];
+        (inv) => inv.status === "paid" && inv.paid_date != null && inv.issue_date != null
+    );
 
-    const unpaidInvoices = list.filter(
-        (inv) => inv.paid_date === null && inv.issue_date != null
-    ) ?? [];
+    const unpaidInvoices = list.filter(isOutstanding);
 
     const totalDays = paidInvoices.reduce((acc, inv) => {
         const paid = new Date(inv.paid_date!);
@@ -148,7 +139,7 @@ export function getRepeatBusinessData(
     clients: Array<Client> | null,
     invoices: Array<Invoice> | null
 ): { overallPercent: number; chartData: RepeatBusinessChartItem[] } {
-    const invList = invoices ?? [];
+    const invList = (invoices ?? []).filter(isBilled);
     const clientList = clients ?? [];
 
     const totalRevenue = invList.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
@@ -285,7 +276,7 @@ export function getClientRevenueBreakdown(
     totalRevenue: number;
     warnings: RevenueWarning[];
 } {
-    const invList = invoices ?? [];
+    const invList = (invoices ?? []).filter(isBilled);
     const clientList = clients ?? [];
 
     const totalRevenue = invList.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
@@ -362,7 +353,7 @@ export function getClientRevenueBreakdown(
     }
 
     // Overdue concentration: one client holds >60% of all unpaid invoice value
-    const unpaidInvoices = invList.filter((inv) => inv.paid_date == null && inv.status !== "void");
+    const unpaidInvoices = invList.filter(isOutstanding);
     const totalOutstanding = unpaidInvoices.reduce((acc, inv) => acc + invoiceTotal(inv), 0);
     if (totalOutstanding > 0) {
         const outstandingByClient: Record<string, number> = {};

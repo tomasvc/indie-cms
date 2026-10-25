@@ -1,6 +1,6 @@
 type ProjectStatus = 'proposal' | 'active' | 'on_hold' | 'review' | 'completed' | 'archived' | 'draft';
 type ClientStatus = 'lead' | 'active' | 'archived';
-type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'void';
 type TaskStatus = 'todo' | 'in_progress' | 'done';
 type PortfolioProjectStatus = 'draft' | 'published' | 'archived';
 
@@ -58,12 +58,14 @@ interface Invoice {
     line_items?: LineItem[];
     currency: string;
     discount_amount?: number;
+    discount_type: 'percent' | 'flat';
+    discount_value: number;
     subtotal: number;
     total: number;
     status: InvoiceStatus;
     issue_date?: string;
     due_date?: string;
-    paid_date?: string;
+    paid_date?: string | null;
     pdf_url?: string;
     payment_method?: 'bank_transfer' | 'stripe' | 'paypal' | 'cash' | 'other';
     reminder_count?: number;
@@ -75,6 +77,7 @@ interface Invoice {
 interface LineItem {
     id: string;
     invoice_id: string;
+    position: number;
     description?: string;
     quantity: number;
     unit_price: number;
@@ -167,6 +170,7 @@ export type {
     ClientStatus,
     Invoice,
     InvoiceStatus,
+    LineItem,
     PortfolioProject,
     Profile,
     Project,

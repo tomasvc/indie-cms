@@ -3,8 +3,6 @@ import { getInvoices } from "@/lib/data/invoices";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InvoicesTable } from "./(components)/invoices-table";
-import { getProjects } from "@/lib/data/projects";
-import { getClients } from "@/lib/data/clients";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
@@ -26,8 +24,6 @@ async function InvoicesPage() {
     if (!user) {
         redirect('/auth/login');
     }
-    const projects = await getProjects(user.id);
-    const clients = await getClients();
     const invoices = await getInvoices(user.id);
     if (!invoices) {
         notFound();
@@ -51,7 +47,7 @@ async function InvoicesPage() {
                     </Button>
                 </div>
             </div>
-            <InvoicesTable invoices={invoices} projects={projects} clients={clients} />
+            <InvoicesTable invoices={invoices} />
         </div>
     )
 }
