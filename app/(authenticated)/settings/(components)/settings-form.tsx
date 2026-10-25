@@ -25,9 +25,11 @@ import {
     ShieldIcon,
     CheckCircleIcon,
 } from "lucide-react";
+import { DemoResetButton } from "@/components/demo-reset-button";
 
 type SettingsFormProps = {
     profile: Profile | null;
+    isDemo?: boolean;
 };
 
 function useSavedFlash() {
@@ -375,7 +377,7 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
     );
 }
 
-function SecurityTab() {
+function SecurityTab({ isDemo }: { isDemo: boolean }) {
     const formRef = useRef<HTMLFormElement>(null);
     const [saved, flashSaved] = useSavedFlash();
     const { state, isPending, onSubmit, errors } = useFormAction(updatePassword, {
@@ -384,6 +386,26 @@ function SecurityTab() {
             flashSaved();
         },
     });
+
+    if (isDemo) {
+        return (
+            <Card>
+                <CardHeader className="border-b">
+                    <CardTitle>
+                        <Typography variant="cardTitle" as="span">Demo workspace</Typography>
+                    </CardTitle>
+                    <CardDescription>
+                        <Typography variant="body" color="muted" as="span">
+                            This demo has no password, and it is deleted after 24 hours. Create an account to keep your work.
+                        </Typography>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-5">
+                    <DemoResetButton />
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
@@ -441,7 +463,7 @@ function SecurityTab() {
     );
 }
 
-export function SettingsForm({ profile }: SettingsFormProps) {
+export function SettingsForm({ profile, isDemo = false }: SettingsFormProps) {
     return (
         <Tabs defaultValue="profile" className="flex flex-col gap-6">
             <TabsList variant="line" className="w-full justify-start">
@@ -468,7 +490,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
             </TabsContent>
 
             <TabsContent value="security">
-                <SecurityTab />
+                <SecurityTab isDemo={isDemo} />
             </TabsContent>
         </Tabs>
     );

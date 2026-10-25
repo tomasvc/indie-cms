@@ -4,11 +4,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 import { Suspense } from "react";
 import { getProfile } from "@/lib/data/settings";
+import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "./(components)/settings-form";
 import { Typography } from "@/components/ui/typography";
 
 async function Settings() {
-    const profile = await getProfile();
+    const [profile, supabase] = await Promise.all([getProfile(), createClient()]);
+    const { data: { user } } = await supabase.auth.getUser();
 
     return (
         <div className="flex flex-col gap-6 max-w-2xl animate-fadein">
@@ -18,7 +20,7 @@ async function Settings() {
                     Manage your account, billing preferences, and notifications.
                 </Typography>
             </div>
-            <SettingsForm profile={profile} />
+            <SettingsForm profile={profile} isDemo={Boolean(user?.is_anonymous)} />
         </div>
     );
 }

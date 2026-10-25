@@ -15,31 +15,27 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { User } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 
 async function SidebarUser() {
     const supabase = await createClient();
-    const { data } = await supabase.auth.getClaims();
-    const demo = (await cookies()).get("demo")?.value === "true";
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-    const claims = data?.claims as unknown as User | undefined;
-    if (!claims?.user_metadata) {
-        return null;
-    }
+    const demo = Boolean(user.is_anonymous);
+    const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
 
-    const email =
-        claims.user_metadata?.email ??
-        (claims as { email?: string }).email ??
-        "";
-    const full_name = claims.user_metadata?.full_name ?? "";
-
-    return <NavUser user={{ email, full_name }} demo={demo} />;
+    return (
+        <NavUser
+            user={{ email: user.email ?? "", full_name: fullName || (demo ? "Alex Rivera" : "") }}
+            demo={demo}
+        />
+    );
 }
 
 async function DemoBanner() {
-    const demo = (await cookies()).get("demo")?.value === "true";
-    if (!demo) return null;
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.is_anonymous) return null;
     return <DismissableDemoBanner />;
 }
 

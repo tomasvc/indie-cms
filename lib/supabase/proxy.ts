@@ -47,27 +47,21 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  const isDemo = request.nextUrl.searchParams.get("demo") === "true" || request.cookies.get("demo")?.value === "true";
+  // Marketing links use ?demo=true. The cookie is no longer a login.
+  const wantsDemo = request.nextUrl.searchParams.get("demo") === "true";
+  if (wantsDemo && !user && request.nextUrl.pathname !== "/auth/demo") {
+    return NextResponse.redirect(new URL("/auth/demo", request.url));
+  }
 
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    !isDemo
+    !request.nextUrl.pathname.startsWith("/auth")
   ) {
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
-    const res = NextResponse.redirect(url)
-    res.cookies.set("demo", "false", { path: '/', maxAge: 60 * 60 * 24 });
-    return res
-  }
-
-  if (isDemo && !user && request.nextUrl.pathname !== "/auth/demo") {
-    const res = NextResponse.redirect(new URL('/auth/demo', request.url));
-    res.cookies.set("demo", "true", { path: '/', maxAge: 60 * 60 * 24 });
-    return res;
+    return NextResponse.redirect(url);
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

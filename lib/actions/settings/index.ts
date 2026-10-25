@@ -78,6 +78,12 @@ export async function updatePassword(_prev: ActionState, formData: FormData): Pr
     if (!parsed.success) return validationError(parsed.error);
 
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect("/auth/login");
+    if (user.is_anonymous) {
+        return { error: "Demo workspaces don't have a password. Create an account to keep your work." };
+    }
+
     const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
     if (error) return { error: error.message };
     return { ok: true };
