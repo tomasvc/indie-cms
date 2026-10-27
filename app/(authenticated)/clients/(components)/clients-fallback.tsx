@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -20,24 +20,15 @@ function ClientsListFallback() {
     <ul className="flex flex-col gap-3">
       {[...Array(4)].map((_, i) => (
         <li key={i}>
-          <Card>
-            <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-1">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-full max-w-[280px]" />
-              </div>
-              <Skeleton className="h-5 w-16 rounded-full shrink-0" />
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-3 w-28" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-2 flex-1 rounded-full" />
-                <Skeleton className="h-3 w-12 shrink-0" />
-              </div>
-            </CardContent>
+          <Card className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-3 w-56" />
+            </div>
+            <div className="flex gap-6">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-20" />
+            </div>
           </Card>
         </li>
       ))}
@@ -50,14 +41,13 @@ function ClientsTableFallback() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
           <TableHead>Company</TableHead>
+          <TableHead>Contact</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Total Billed</TableHead>
-          <TableHead>Last Contact</TableHead>
-          <TableHead>Created At</TableHead>
-          <TableHead>Updated At</TableHead>
+          <TableHead>Billed</TableHead>
+          <TableHead>Owed</TableHead>
+          <TableHead>Last contact</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -68,8 +58,7 @@ function ClientsTableFallback() {
             <TableCell><Skeleton className="h-4 w-36" /></TableCell>
             <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
             <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
             <TableCell><Skeleton className="h-4 w-28" /></TableCell>
           </TableRow>
         ))}

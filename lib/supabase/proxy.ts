@@ -70,9 +70,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/demo", request.url));
   }
 
+  // Shared invoice links are read by clients who don't have an account
+  const isPublicShare = request.nextUrl.pathname.startsWith("/share/");
+
   if (
     request.nextUrl.pathname !== "/" &&
     !userId &&
+    !isPublicShare &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth")
   ) {
@@ -99,7 +103,7 @@ export async function updateSession(request: NextRequest) {
   // A profile error still lets the request through so a blip cannot trap the user.
   const pathname = request.nextUrl.pathname;
   const alreadyConfirmed = request.cookies.get(ONBOARDING_DONE_COOKIE)?.value === userId;
-  if (userId && pathname !== "/onboarding" && !pathname.startsWith("/auth") && !alreadyConfirmed) {
+  if (userId && !isPublicShare && pathname !== "/onboarding" && !pathname.startsWith("/auth") && !alreadyConfirmed) {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("onboarding_completed_at")

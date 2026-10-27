@@ -1,70 +1,67 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
+import { ClientStatusBadge } from "@/components/client-status-badge";
+import { Card } from "@/components/ui/card";
 import { Client } from "@/types";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { formatMoney, formatDate } from "@/lib/helpers/format";
+import { formatDate } from "@/lib/helpers/format";
+import { totalsFor, type ClientTotals } from "@/lib/helpers/clients";
+import { formatMoneyByCurrency } from "@/lib/money";
 
 interface ClientsListProps {
     clients: Client[];
+    totals: Record<string, ClientTotals>;
     currency: string;
+    locale: string;
 }
 
-export function ClientsList({ clients, currency }: ClientsListProps) {
-    const router = useRouter();
-
+export function ClientsList({ clients, totals, currency, locale }: ClientsListProps) {
     if (clients.length === 0) {
         return (
             <div className="rounded-lg border border-dashed py-12 text-center text-muted-foreground text-sm">
-                No clients yet.
+                No clients yet. Add the people you work with to link projects and invoices to them.
             </div>
         );
     }
 
     return (
         <ul className="flex flex-col gap-3">
-            {clients.map((client) => (
-                <li key={client.id}>
-                    <Card className="transition-shadow hover:ring-foreground/15 cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
-                        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1 space-y-1">
-                                <CardTitle className="text-base font-semibold leading-tight">
-                                    {client.name}
-                                </CardTitle>
-                                {client.company ? (
-                                    <p className="text-muted-foreground line-clamp-2 text-sm">
-                                        {client.company}
+            {clients.map((client) => {
+                const { billed, owed } = totalsFor(totals, client.id);
+                const hasOwed = Object.values(owed).some((amount) => amount > 0);
+                return (
+                    <li key={client.id}>
+                        <Link href={`/clients/${client.id}`} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <Card className="flex flex-col gap-3 px-5 py-4 transition-shadow hover:ring-foreground/15 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0 space-y-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="truncate text-base font-semibold leading-tight text-foreground">
+                                            {client.company || client.name}
+                                        </span>
+                                        <ClientStatusBadge status={client.status} className="shrink-0" />
+                                    </div>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {client.company ? client.name : client.email || "No company"}
+                                        {client.last_contact ? ` · Last contact ${formatDate(client.last_contact, "d MMM yyyy")}` : ""}
                                     </p>
-                                ) : null}
-                            </div>
-                            <Badge variant="outline" className="shrink-0 capitalize">
-                                {client.status.replace("_", " ")}
-                            </Badge>
-                        </CardHeader>
-                        <CardContent className="space-y-3 pt-4">
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-                                <span>{formatMoney(client.total_billed ?? 0, currency)}</span>
-                                <span>Last contact {formatDate(client.last_contact ?? "", "MMM d, yyyy")}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Progress
-                                    value={client.total_billed}
-                                    className={cn(
-                                        "h-2 flex-1",
-                                        client.total_billed && client.total_billed >= 100 && "[--progress-background:var(--primary)]"
-                                    )}
-                                />
-                                <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-                                    {formatMoney(client.total_billed ?? 0, currency)}
-                                </span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </li>
-            ))}
+                                </div>
+                                <dl className="flex shrink-0 gap-6 text-sm sm:text-right">
+                                    <div>
+                                        <dt className="text-[13px] text-muted-foreground">Billed</dt>
+                                        <dd className="tabular-nums text-foreground">{formatMoneyByCurrency(billed, locale, currency)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-[13px] text-muted-foreground">Owed</dt>
+                                        <dd className={hasOwed ? "tabular-nums font-medium text-foreground" : "tabular-nums text-muted-foreground"}>
+                                            {formatMoneyByCurrency(owed, locale, currency)}
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </Card>
+                        </Link>
+                    </li>
+                );
+            })}
         </ul>
     );
 }

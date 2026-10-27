@@ -31,10 +31,13 @@ const KNOWN_STATUSES: Set<string> = new Set(KANBAN_COLUMNS.map((c) => c.id));
 
 interface ProjectsKanbanProps {
     projects: Project[];
+    clientNames: Record<string, string>;
+    /** When false the Archived column shrinks to a drop target. */
+    showArchived: boolean;
     onStatusChange?: (projectId: string, newStatus: string) => Promise<ActionState>;
 }
 
-export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps) {
+export function ProjectsKanban({ projects, clientNames, showArchived, onStatusChange }: ProjectsKanbanProps) {
     const [localProjects, setLocalProjects] = useState<Project[]>(projects);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [moveError, setMoveError] = useState<string | null>(null);
@@ -119,17 +122,19 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
                         label={col.label}
                         count={col.projects.length}
                         projects={col.projects}
+                        clientNames={clientNames}
+                        collapsed={col.id === "archived" && !showArchived}
                     />
                 ))}
                 {otherProjects.length > 0 && (
                     <div className="flex min-w-[280px] shrink-0 flex-col rounded-lg border border-dashed bg-muted/20">
                         <div className="flex items-center justify-between border-b border-dashed px-3 py-2">
                             <span className="text-sm font-medium text-muted-foreground">Other</span>
-                            <span className="text-muted-foreground text-xs">{otherProjects.length}</span>
+                            <span className="text-muted-foreground text-[13px]">{otherProjects.length}</span>
                         </div>
                         <div className="flex flex-col gap-2 p-2">
                             {otherProjects.map((project) => (
-                                <KanbanCard key={project.id} project={project} />
+                                <KanbanCard key={project.id} project={project} clientName={clientNames[project.client_id ?? ""]} />
                             ))}
                         </div>
                     </div>
@@ -140,7 +145,7 @@ export function ProjectsKanban({ projects, onStatusChange }: ProjectsKanbanProps
                 <DragOverlay dropAnimation={null}>
                     {activeProject ? (
                         <div className="min-w-[280px] cursor-grabbing opacity-95 shadow-lg">
-                            <KanbanCardOverlay project={activeProject} />
+                            <KanbanCardOverlay project={activeProject} clientName={clientNames[activeProject.client_id ?? ""]} />
                         </div>
                     ) : null}
                 </DragOverlay>,

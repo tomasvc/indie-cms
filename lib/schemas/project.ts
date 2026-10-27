@@ -3,6 +3,7 @@ import { amount, isOnOrAfter, optionalDate, optionalId, optionalText, requiredTe
 
 export const PROJECT_STATUSES = ["proposal", "active", "on_hold", "review", "completed", "archived", "draft"] as const;
 export const PRIORITIES = ["low", "medium", "high"] as const;
+export const BILLING_TYPES = ["fixed", "hourly"] as const;
 
 export const projectStatusSchema = z.enum(PROJECT_STATUSES, { error: "Choose a valid status" });
 
@@ -23,6 +24,8 @@ export const projectFormSchema = z
             .min(0, "Progress can't be below 0%")
             .max(100, "Progress can't exceed 100%"),
         currency: z.string().regex(/^[A-Z]{3}$/, "Choose a currency"),
+        billingType: z.enum(BILLING_TYPES, { error: "Choose how you bill this project" }),
+        hourlyRate: amount("Hourly rate"),
         value: amount("Project value"),
         budget: amount("Budget"),
         estimatedHours: hours("Estimated hours"),
@@ -30,6 +33,10 @@ export const projectFormSchema = z
         dueDate: optionalDate("Due date"),
         completedDate: optionalDate("Completed date"),
         clientId: optionalId("Client"),
+    })
+    .refine((v) => v.billingType !== "hourly" || v.hourlyRate > 0, {
+        error: "Enter your hourly rate for this project",
+        path: ["hourlyRate"],
     })
     .refine((v) => isOnOrAfter(v.dueDate, v.startDate), {
         error: "Due date must be on or after the start date",

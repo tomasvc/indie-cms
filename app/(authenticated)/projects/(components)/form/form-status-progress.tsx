@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from "./constants"
 import type { ProjectFormValues } from "./types"
 
-export const FormStatusProgress = () => {
+export const FormStatusProgress = ({ taskProgress = null }: { taskProgress?: { done: number; total: number } | null }) => {
     const { register, control, formState: { errors } } = useFormContext<ProjectFormValues>();
     const progress = useWatch({ control, name: "progress" });
 
@@ -17,7 +17,7 @@ export const FormStatusProgress = () => {
                     name="status"
                     render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>STATUS</FieldLabel>
+                            <FieldLabel>Status</FieldLabel>
                             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Status">
                                 {STATUS_OPTIONS.map((opt) => (
                                     <Button
@@ -42,7 +42,7 @@ export const FormStatusProgress = () => {
                     name="priority"
                     render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>PRIORITY</FieldLabel>
+                            <FieldLabel>Priority</FieldLabel>
                             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Priority">
                                 {PRIORITY_OPTIONS.map((opt) => (
                                     <Button
@@ -52,7 +52,7 @@ export const FormStatusProgress = () => {
                                         aria-checked={field.value === opt.value}
                                         variant={field.value === opt.value ? "default" : "outline"}
                                         size="sm"
-                                        className={cn(field.value === opt.value && opt.value === "medium" && "bg-orange-500 hover:bg-orange-600")}
+                                        className={cn(field.value === opt.value && opt.value === "medium" && "bg-warning text-background hover:bg-warning/90")}
                                         onClick={() => field.onChange(opt.value)}
                                     >
                                         {opt.label}
@@ -63,10 +63,18 @@ export const FormStatusProgress = () => {
                         </Field>
                     )}
                 />
+                {taskProgress ? (
+                    <Field>
+                        <FieldLabel>Progress</FieldLabel>
+                        <FieldDescription>
+                            Calculated from tasks: {taskProgress.done} of {taskProgress.total} done ({progress}%).
+                            Tick tasks off on the project&apos;s Tasks tab to move it.
+                        </FieldDescription>
+                    </Field>
+                ) : (
                 <Field data-invalid={!!errors.progress}>
-                    <FieldLabel htmlFor="project-progress">PROGRESS</FieldLabel>
-                    <FieldDescription>Drag to set the current completion percentage.</FieldDescription>
-                    <p className="text-muted-foreground text-xs font-medium mb-2">Completion percentage</p>
+                    <FieldLabel htmlFor="project-progress">Progress</FieldLabel>
+                    <FieldDescription>Drag to set how far along the work is. Once the project has tasks, this follows them instead.</FieldDescription>
                     <div className="flex items-center gap-3">
                         <input
                             id="project-progress"
@@ -79,11 +87,12 @@ export const FormStatusProgress = () => {
                         />
                         <span className="text-primary font-medium text-sm w-10">{progress}%</span>
                     </div>
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
                         <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
                     </div>
                     <FieldError errors={[errors.progress]} />
                 </Field>
+                )}
             </FieldGroup>
         </div>
     )

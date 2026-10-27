@@ -284,7 +284,7 @@ export function getClientRevenueBreakdown(
     if (totalRevenue > 0) {
     for (const c of clientsWithRevenue) {
         const percent = (c.revenue / totalRevenue) * 100;
-        pieData.push({ name: c.name.toUpperCase(), value: c.revenue, percent: Math.round(percent) });
+        pieData.push({ name: c.name, value: c.revenue, percent: Math.round(percent) });
         if (percent > 50) {
             warnings.push({ type: "overdependence", clientName: c.name, percent: Math.round(percent) });
         }

@@ -3,6 +3,9 @@ import type { Invoice } from "@/types";
 
 type InvoiceState = Pick<Invoice, "status" | "due_date">;
 
+/** New invoices are issued today and due this many days later. */
+export const DEFAULT_PAYMENT_TERMS_DAYS = 30;
+
 export type InvoiceDisplayStatus = Invoice["status"] | "overdue";
 
 const todayISO = () => format(new Date(), "yyyy-MM-dd");

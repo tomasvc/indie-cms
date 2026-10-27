@@ -44,6 +44,8 @@ export const invoiceCreateSchema = z
         discountValue: amount("Discount"),
         discountType: z.enum(DISCOUNT_TYPES),
         lineItems: z.array(lineItemSchema).min(1, "Add at least one line item"),
+        /** Time entries this new invoice bills; ignored when editing. */
+        timeEntryIds: z.array(id("Time entry")).optional(),
     })
     .refine((v) => isOnOrAfter(v.dueDate, v.issueDate), {
         error: "Due date must be on or after the issue date",

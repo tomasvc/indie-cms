@@ -3,42 +3,44 @@ import { CURRENCY_CODES } from "@/lib/constants/profile";
 import type { ProjectStatus } from "@/types";
 import type { ProjectFormValues, SectionId } from "./types";
 
+// Ordered by what you know when a job starts: what it is, who it's for, the fee and the dates.
+// Status, progress and estimates are optional extras.
 export const SECTIONS = [
     {
         id: "basics",
         label: "Basics",
-        description: "Core project identity - title, description and categorisation.",
+        description: "Title (required), description and category.",
         icon: CheckIcon,
-    },
-    {
-        id: "status",
-        label: "Status & Progress",
-        description: "Track where this project stands and how far along it is.",
-        icon: LineChartIcon,
-    },
-    {
-        id: "financials",
-        label: "Financials",
-        description: "Project value, budget and currency settings.",
-        icon: DollarSignIcon,
-    },
-    {
-        id: "time",
-        label: "Time",
-        description: "How many hours you expect. Logged hours come from time entries.",
-        icon: ClockIcon,
-    },
-    {
-        id: "timeline",
-        label: "Timeline",
-        description: "Project start, due and completion dates.",
-        icon: CalendarIcon,
     },
     {
         id: "client",
         label: "Client",
-        description: "Link this project to a client in your account.",
+        description: "Who the work is for (required).",
         icon: UserIcon,
+    },
+    {
+        id: "financials",
+        label: "Fee & budget",
+        description: "Fixed fee or hourly rate, and how much time-cost you can spend.",
+        icon: DollarSignIcon,
+    },
+    {
+        id: "timeline",
+        label: "Timeline",
+        description: "Start, due and completion dates.",
+        icon: CalendarIcon,
+    },
+    {
+        id: "status",
+        label: "Status & progress",
+        description: "Optional. Where the project stands.",
+        icon: LineChartIcon,
+    },
+    {
+        id: "time",
+        label: "Time estimate",
+        description: "Optional. Hours you expect to spend.",
+        icon: ClockIcon,
     },
 ] as const;
 
@@ -52,6 +54,8 @@ export const FIELD_SECTIONS: Record<keyof ProjectFormValues, SectionId> = {
     priority: "status",
     progress: "status",
     currency: "financials",
+    billingType: "financials",
+    hourlyRate: "financials",
     value: "financials",
     budget: "financials",
     estimatedHours: "time",

@@ -13,7 +13,7 @@ async function Settings() {
     const { data: { user } } = await supabase.auth.getUser();
 
     return (
-        <div className="flex flex-col gap-6 max-w-2xl animate-fadein">
+        <div className="flex flex-col gap-6 max-w-2xl mx-auto animate-fadein">
             <div>
                 <Typography variant="pageTitle" as="h1">Settings</Typography>
                 <Typography variant="subtitle" as="p" className="mt-1">

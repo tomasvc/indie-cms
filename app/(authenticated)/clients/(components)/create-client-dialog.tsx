@@ -17,8 +17,8 @@ export function CreateClientDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="lg" variant="default" >
-                    <PlusIcon className="size-3 mb-0.5" />
+                <Button variant="default" >
+                    <PlusIcon aria-hidden />
                     New Client
                 </Button>
             </DialogTrigger>
@@ -36,22 +36,22 @@ function CreateClientForm({ onCreated }: { onCreated: () => void }) {
         <form onSubmit={onSubmit} noValidate>
             <DialogHeader>
                 <DialogTitle>New Client</DialogTitle>
-                <DialogDescription>Create a new client to get started.</DialogDescription>
+                <DialogDescription>Add who you work with. You can link projects and invoices to them afterwards.</DialogDescription>
             </DialogHeader>
             <FieldGroup className="my-4">
                 <Field data-invalid={!!errors("name")}>
-                    <FieldLabel htmlFor="name">Name</FieldLabel>
-                    <Input id="name" name="name" placeholder="Enter the client name" required aria-invalid={!!errors("name")} />
+                    <FieldLabel htmlFor="name">Contact name</FieldLabel>
+                    <Input id="name" name="name" placeholder="The person you work with, e.g. Maya Chen" required aria-invalid={!!errors("name")} />
                     <FieldError errors={errors("name")} />
                 </Field>
                 <Field data-invalid={!!errors("company")}>
-                    <FieldLabel htmlFor="company">Company</FieldLabel>
-                    <Input id="company" name="company" placeholder="Enter the client company" aria-invalid={!!errors("company")} />
+                    <FieldLabel htmlFor="company">Company (optional)</FieldLabel>
+                    <Input id="company" name="company" placeholder="Their business, e.g. Helio Labs" aria-invalid={!!errors("company")} />
                     <FieldError errors={errors("company")} />
                 </Field>
                 <Field data-invalid={!!errors("email")}>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                    <Input type="email" id="email" name="email" placeholder="Enter the client email" aria-invalid={!!errors("email")} />
+                    <FieldLabel htmlFor="email">Email (optional)</FieldLabel>
+                    <Input type="email" id="email" name="email" placeholder="maya@example.com" aria-invalid={!!errors("email")} />
                     <FieldError errors={errors("email")} />
                 </Field>
                 <Field data-invalid={!!errors("status")}>
@@ -72,13 +72,13 @@ function CreateClientForm({ onCreated }: { onCreated: () => void }) {
             </FieldGroup>
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button type="button" size="lg" variant="outline" >
-                        <XIcon className="size-3 mb-0.5" />
+                    <Button type="button" variant="outline" >
+                        <XIcon aria-hidden />
                         Cancel
                     </Button>
                 </DialogClose>
-                <Button type="submit" size="lg" variant="default" disabled={isPending}>
-                    <PlusIcon className="size-3 mb-0.5" />
+                <Button type="submit" variant="default" disabled={isPending}>
+                    <PlusIcon aria-hidden />
                     {isPending ? "Creating…" : "Create Client"}
                 </Button>
             </DialogFooter>

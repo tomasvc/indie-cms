@@ -22,8 +22,9 @@ export async function handleCreateClient(_prev: ActionState, formData: FormData)
     const { supabase, user } = await requireUser();
     const { name, company, email, status } = parsed.data;
 
+    const id = crypto.randomUUID();
     const { error } = await supabase.from('clients').insert({
-        id: crypto.randomUUID(),
+        id,
         user_id: user.id,
         name,
         company: toNullable(company),
@@ -33,7 +34,8 @@ export async function handleCreateClient(_prev: ActionState, formData: FormData)
 
     if (error) return databaseError(error, "Couldn't create this client. Please try again.");
     revalidatePath('/clients');
-    return { ok: true };
+    // Land on the new client so it's obvious the save worked
+    redirect(`/clients/${id}`);
 }
 
 export async function handleUpdateClient(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -41,17 +43,29 @@ export async function handleUpdateClient(_prev: ActionState, formData: FormData)
     if (!parsed.success) return validationError(parsed.error);
 
     const { supabase, user } = await requireUser();
-    const { id, name, company, email, status } = parsed.data;
+    const { id, name, company, email, status, phone, website, address, country, vat_number, last_contact } = parsed.data;
 
     const { error } = await supabase
         .from('clients')
-        .update({ name, company: toNullable(company), email: toNullable(email), status })
+        .update({
+            name,
+            company: toNullable(company),
+            email: toNullable(email),
+            status,
+            phone: toNullable(phone),
+            website: toNullable(website),
+            address: toNullable(address),
+            country: toNullable(country),
+            vat_number: toNullable(vat_number),
+            last_contact: toNullable(last_contact),
+        })
         .eq('id', id)
         .eq('user_id', user.id);
 
     if (error) return databaseError(error, "Couldn't save this client. Please try again.");
     revalidatePath(`/clients/${id}`);
-    redirect(`/clients/${id}`);
+    revalidatePath('/clients');
+    return { ok: true };
 }
 
 const clientIdFormSchema = z.object({ id: idSchema("Client") });

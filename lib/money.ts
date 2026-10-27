@@ -68,10 +68,12 @@ export function exceptCurrency(totals: MoneyByCurrency, currency: string | null)
     return Object.fromEntries(Object.entries(totals).filter(([code]) => code !== currency));
 }
 
-export function formatMoney(amount: number, currency: string, locale = "en") {
+/** `whole` drops the pennies, for summary figures that are read at a glance rather than reconciled. */
+export function formatMoney(amount: number, currency: string, locale = "en", { whole = false } = {}) {
     return Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency || "USD",
+        ...(whole ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
     }).format(Number.isFinite(amount) ? amount : 0);
 }
 
@@ -89,6 +91,13 @@ export function formatMoneyByCurrency(totals: MoneyByCurrency, locale = "en", fa
     if (entries.length === 0) return formatMoney(0, fallbackCurrency, locale);
     entries.sort((a, b) => a[0].localeCompare(b[0]));
     return entries.map(([currency, amount]) => formatMoney(amount, currency, locale)).join(" · ");
+}
+
+/** One entry per currency with a non-zero amount, largest first. An empty total is zero in `fallbackCurrency`. */
+export function moneyEntries(totals: MoneyByCurrency, fallbackCurrency = "USD"): Array<[currency: string, amount: number]> {
+    const entries = Object.entries(totals).filter(([, amount]) => amount !== 0);
+    if (entries.length === 0) return [[fallbackCurrency, 0]];
+    return entries.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
 
 export function percentChange(current: number, previous: number) {

@@ -18,6 +18,8 @@ function toFormValues(project: Project, businessCurrency: string): ProjectFormVa
         priority: project.priority ?? "medium",
         progress: project.progress ?? 0,
         currency: project.currency || businessCurrency,
+        billingType: project.billing_type ?? "fixed",
+        hourlyRate: Number(project.hourly_rate ?? 0),
         value: project.value ?? 0,
         budget: project.budget ?? 0,
         estimatedHours: project.estimated_hours ?? 0,
@@ -33,11 +35,14 @@ export function EditProjectPage({
     clients,
     businessCurrency,
     loggedHours,
+    taskProgress,
 }: {
     project: Project;
     clients: Client[];
     businessCurrency: string;
     loggedHours: number;
+    /** Set when the project has tasks: progress then comes from them. */
+    taskProgress: { done: number; total: number } | null;
 }) {
     return (
         <ProjectFormLayout
@@ -45,7 +50,7 @@ export function EditProjectPage({
             clients={clients}
             onSubmit={(values) => handleUpdateProject(project.id, values)}
             cancelHref={`/projects/${project.id}`}
-            eyebrow="EDITING"
+            eyebrow="Editing"
             fallbackTitle={project.title}
             heading="Edit Project"
             subheading="Changes are reflected immediately on the project overview."
@@ -54,6 +59,7 @@ export function EditProjectPage({
             submitIcon={SaveIcon}
             businessCurrency={businessCurrency}
             loggedHours={loggedHours}
+            taskProgress={taskProgress}
         />
     );
 }

@@ -54,8 +54,8 @@ export function FinancialsChart({ chartData, chartConfig }: FinancialsChartProps
       >
         <defs>
           <linearGradient id={BAR_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#B8B1FF" stopOpacity={1} />
-            <stop offset="100%" stopColor="#7E70FF" stopOpacity={0.9} />
+            <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={1} />
+            <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0.9} />
           </linearGradient>
         </defs>
         <RechartsPrimitive.CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -81,8 +81,8 @@ export function FinancialsChart({ chartData, chartConfig }: FinancialsChartProps
               payload?: RepeatBusinessChartItem;
             };
             const entry = p.payload;
-            const fill = entry?.isOverall ? "#D7D3FF" : `url(#${BAR_GRADIENT_ID})`;
-            const stroke = entry?.isOverall ? "#B8B1FF" : undefined;
+            const fill = entry?.isOverall ? "color-mix(in oklch, var(--chart-1) 35%, transparent)" : `url(#${BAR_GRADIENT_ID})`;
+            const stroke = entry?.isOverall ? "var(--chart-3)" : undefined;
             return (
               <BarShape
                 x={p.x}
@@ -102,7 +102,7 @@ export function FinancialsChart({ chartData, chartConfig }: FinancialsChartProps
             dataKey="value"
             position="top"
             formatter={(v: number) => `${v}%`}
-            className="fill-foreground text-xs font-medium"
+            className="fill-foreground text-[13px] font-medium"
           />
         </RechartsPrimitive.Bar>
       </RechartsPrimitive.BarChart>

@@ -1,5 +1,5 @@
 import { Typography } from "@/components/ui/typography";
-import { formatDate } from "@/lib/helpers/format";
+import { formatLocalDate } from "@/lib/helpers/format";
 import { daysBetween, todayISO } from "@/lib/money";
 import Link from "next/link";
 
@@ -11,7 +11,7 @@ type Deadline = {
     due_date: string;
 };
 
-export function UpcomingDeadlines({ upcomingDeadlines }: { upcomingDeadlines: Deadline[] }) {
+export function UpcomingDeadlines({ upcomingDeadlines, locale }: { upcomingDeadlines: Deadline[]; locale: string }) {
     const today = todayISO();
 
     if (upcomingDeadlines.length === 0) {
@@ -25,17 +25,21 @@ export function UpcomingDeadlines({ upcomingDeadlines }: { upcomingDeadlines: De
                 const when = daysLeft === 0 ? "Due today" : daysLeft === 1 ? "1 day left" : `${daysLeft} days left`;
                 return (
                     <div key={item.id} className="group relative flex justify-between">
-                        <div className="absolute -inset-x-1.5 -inset-y-1 rounded-lg transition-colors group-hover:bg-muted/50 pointer-events-none" />
-                        <Link href={`/projects/${item.project_id ?? ""}`} className="absolute -inset-x-1.5 -inset-y-1 rounded-lg z-20" aria-label={item.title} />
+                        <div className="absolute -inset-x-2.5 -inset-y-1 rounded-lg transition-colors group-hover:bg-muted/50 group-has-[:focus-visible]:bg-muted/50 pointer-events-none" />
+                        <Link
+                            href={item.project_id ? `/projects/${item.project_id}` : "/projects"}
+                            className="absolute -inset-x-2.5 -inset-y-1 rounded-lg z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-label={`${item.title}, ${item.projectTitle}, ${when.toLowerCase()}`}
+                        />
                         <div className="relative z-10">
                             <Typography variant="body" as="p">{item.title}</Typography>
                             <Typography variant="bodySmall" color="muted" as="span">{item.projectTitle}</Typography>
                         </div>
                         <div className="flex flex-col items-end relative z-10">
+                            <Typography variant="bodySmall" as="span" className="font-medium">{when}</Typography>
                             <Typography variant="bodySmall" color="muted" as="span">
-                                Due: {formatDate(item.due_date, "MMM d, yyyy")}
+                                Due {formatLocalDate(item.due_date, locale)}
                             </Typography>
-                            <Typography variant="bodySmall" color="muted" as="span">{when}</Typography>
                         </div>
                     </div>
                 );

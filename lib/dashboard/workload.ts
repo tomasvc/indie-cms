@@ -2,6 +2,9 @@ import { todayISO } from "@/lib/money";
 import { isTaskOverdue, isTaskUpcoming } from "@/lib/helpers/tasks";
 import { Project, Task } from "@/types";
 
+/** Rows in the dashboard's active-projects list; the rest fold into one "N more" link. */
+const ACTIVE_PROJECT_LIMIT = 5;
+
 export function getActiveProjects(
     projects: Array<Project> | null
 ): Array<Project | (Project & { id: "others"; count: number })> {
@@ -11,12 +14,12 @@ export function getActiveProjects(
         (project) => project.status === "active" || project.status === "review"
     );
 
-    if (filtered.length <= 3) {
+    if (filtered.length <= ACTIVE_PROJECT_LIMIT) {
         return filtered;
     }
 
-    const firstThree = filtered.slice(0, 3);
-    const others = filtered.slice(3);
+    const firstThree = filtered.slice(0, ACTIVE_PROJECT_LIMIT - 1);
+    const others = filtered.slice(ACTIVE_PROJECT_LIMIT - 1);
 
     const totalOtherValue = others.reduce(
         (sum, proj) => sum + (proj.value || 0),

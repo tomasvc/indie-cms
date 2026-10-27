@@ -62,18 +62,19 @@ export async function getNextInvoiceCode(userId: string) {
     return String(highest + 1).padStart(4, "0");
 }
 
-export async function countInvoicesForProject(projectId: string) {
+export async function getInvoicesForProject(projectId: string) {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { count, error } = await supabase
+    const { data, error } = await supabase
         .from("invoices")
-        .select("id", { count: "exact", head: true })
+        .select("*")
         .eq("project_id", projectId)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .order("issue_date", { ascending: false, nullsFirst: false });
 
     if (error) throw error;
-    return count ?? 0;
+    return (data ?? []) as Invoice[];
 }

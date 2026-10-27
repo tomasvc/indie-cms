@@ -34,6 +34,7 @@ import { PlusIcon, XIcon, InfoIcon, CheckIcon } from "lucide-react";
 import { formatMoney } from "@/lib/helpers/format";
 import { currencySymbol } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { clientLabel, sortClients } from "@/lib/helpers/clients";
 
 const FORM_ID = "invoice-form";
 
@@ -43,7 +44,7 @@ const STATUS_OPTIONS: { value: InvoiceFormValues["status"]; label: string }[] = 
     { value: "void", label: "Void" },
 ];
 
-const newLineItem = (): LineItemValues => ({ description: "", quantity: 1, unit: "hrs", unitPrice: 0 });
+const newLineItem = (unitPrice = 0): LineItemValues => ({ description: "", quantity: 1, unit: "hrs", unitPrice });
 
 const oneOf = <T extends string>(options: readonly T[], value: string | undefined, fallback: T): T =>
     options.includes(value as T) ? (value as T) : fallback;
@@ -85,25 +86,52 @@ const DEFAULT_VALUES: InvoiceFormValues = {
     lineItems: [newLineItem()],
 };
 
+/** Starting values for a new invoice, worked out by the page (today's date, profile rate, ?project= …). */
+export type NewInvoiceDefaults = {
+    code?: string;
+    currency?: string;
+    issueDate?: string;
+    dueDate?: string;
+    projectId?: string;
+    clientId?: string;
+    hourlyRate?: number;
+    /** Unbilled time to bill on this invoice: its lines, and the entries to mark as invoiced. */
+    timeLineItems?: LineItemValues[];
+    timeEntryIds?: string[];
+};
+
 export function InvoiceFormPage({
     projects,
     clients,
     invoice,
-    defaultCode = "",
-    defaultCurrency = "USD",
+    defaults = {},
 }: {
     projects: Project[];
     clients: Client[];
     invoice?: InvoiceWithLineItems;
-    defaultCode?: string;
-    defaultCurrency?: string;
+    defaults?: NewInvoiceDefaults;
 }) {
     const isEdit = !!invoice;
+    const defaultHourlyRate = defaults.hourlyRate ?? 0;
     const [isPending, startTransition] = useTransition();
     const form = useForm<InvoiceFormValues>({
         resolver: zodResolver(invoiceCreateSchema),
-        defaultValues: invoice ? toFormValues(invoice) : { ...DEFAULT_VALUES, code: defaultCode, currency: oneOf(INVOICE_CURRENCIES, defaultCurrency, "USD") },
+        defaultValues: invoice
+            ? toFormValues(invoice)
+            : {
+                ...DEFAULT_VALUES,
+                code: defaults.code ?? "",
+                currency: oneOf(INVOICE_CURRENCIES, defaults.currency, "USD"),
+                issueDate: defaults.issueDate ?? "",
+                dueDate: defaults.dueDate ?? "",
+                projectId: defaults.projectId ?? "",
+                clientId: defaults.clientId ?? "",
+                lineItems: defaults.timeLineItems?.length ? defaults.timeLineItems : [newLineItem(defaultHourlyRate)],
+                timeEntryIds: defaults.timeEntryIds ?? [],
+            },
     });
+    const billedEntryCount = isEdit ? 0 : defaults.timeEntryIds?.length ?? 0;
+    const billedHours = (defaults.timeLineItems ?? []).reduce((sum, item) => sum + item.quantity, 0);
     const { register, control, formState: { errors } } = form;
     const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
 
@@ -130,7 +158,7 @@ export function InvoiceFormPage({
                             <Typography variant="pageTitle" as="h1">
                                 {isEdit ? `Edit INV-${invoice.code}` : "New Invoice"}
                             </Typography>
-                            <Badge variant="outline" className="capitalize text-xs">
+                            <Badge variant="outline" className="capitalize text-[13px]">
                                 {status}
                             </Badge>
                         </div>
@@ -142,13 +170,13 @@ export function InvoiceFormPage({
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="lg" asChild>
+                    <Button variant="outline" asChild>
                         <Link href="/invoices">
                             <XIcon className="size-3.5" />
                             Cancel
                         </Link>
                     </Button>
-                    <Button size="lg" type="submit" form={FORM_ID} disabled={isPending}>
+                    <Button type="submit" form={FORM_ID} disabled={isPending}>
                         {isEdit ? <CheckIcon className="size-3.5" /> : <PlusIcon className="size-3.5" />}
                         {isEdit
                             ? isPending ? "Saving…" : "Save Changes"
@@ -167,8 +195,20 @@ export function InvoiceFormPage({
                                 name="projectId"
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="invoice-project">PROJECT</FieldLabel>
-                                        <Select value={field.value} onValueChange={field.onChange}>
+                                        <FieldLabel htmlFor="invoice-project">Project</FieldLabel>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={(projectId) => {
+                                                field.onChange(projectId);
+                                                const clientId = projects.find((project) => project.id === projectId)?.client_id;
+                                                if (clientId && clients.some((client) => client.id === clientId)) {
+                                                    form.setValue("clientId", clientId, {
+                                                        shouldDirty: true,
+                                                        shouldValidate: form.formState.isSubmitted,
+                                                    });
+                                                }
+                                            }}
+                                        >
                                             <SelectTrigger id="invoice-project" aria-invalid={fieldState.invalid}>
                                                 <SelectValue placeholder="Select project" />
                                             </SelectTrigger>
@@ -189,15 +229,15 @@ export function InvoiceFormPage({
                                 name="clientId"
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="invoice-client">CLIENT</FieldLabel>
+                                        <FieldLabel htmlFor="invoice-client">Client</FieldLabel>
                                         <Select value={field.value} onValueChange={field.onChange}>
                                             <SelectTrigger id="invoice-client" aria-invalid={fieldState.invalid}>
                                                 <SelectValue placeholder="Select client" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {clients.map((c) => (
+                                                {sortClients(clients).map((c) => (
                                                     <SelectItem key={c.id} value={c.id}>
-                                                        {c.name}
+                                                        {clientLabel(c)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -211,7 +251,7 @@ export function InvoiceFormPage({
                                 name="status"
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="invoice-status">STATUS</FieldLabel>
+                                        <FieldLabel htmlFor="invoice-status">Status</FieldLabel>
                                         <Select value={field.value} onValueChange={field.onChange}>
                                             <SelectTrigger id="invoice-status" aria-invalid={fieldState.invalid}>
                                                 <SelectValue />
@@ -231,7 +271,7 @@ export function InvoiceFormPage({
                         </div>
                         <div className="grid grid-cols-3 gap-4">
                             <Field data-invalid={!!errors.code}>
-                                <FieldLabel htmlFor="invoice-code">REFERENCE NUMBER</FieldLabel>
+                                <FieldLabel htmlFor="invoice-code">Reference number</FieldLabel>
                                 <div
                                     className={cn(
                                         "flex items-center border border-input rounded-md bg-input/20 overflow-hidden",
@@ -250,7 +290,7 @@ export function InvoiceFormPage({
                                 <FieldError errors={[errors.code]} />
                             </Field>
                             <Field data-invalid={!!errors.issueDate}>
-                                <FieldLabel htmlFor="invoice-issue-date">ISSUE DATE</FieldLabel>
+                                <FieldLabel htmlFor="invoice-issue-date">Issue date</FieldLabel>
                                 <Input
                                     id="invoice-issue-date"
                                     type="date"
@@ -260,7 +300,7 @@ export function InvoiceFormPage({
                                 <FieldError errors={[errors.issueDate]} />
                             </Field>
                             <Field data-invalid={!!errors.dueDate}>
-                                <FieldLabel htmlFor="invoice-due-date">DUE DATE</FieldLabel>
+                                <FieldLabel htmlFor="invoice-due-date">Due date</FieldLabel>
                                 <Input
                                     id="invoice-due-date"
                                     type="date"
@@ -277,21 +317,37 @@ export function InvoiceFormPage({
                 <Card className="mb-4">
                     <CardContent className="p-5">
                         <div className="mb-3">
-                            <Typography variant="label" className="font-semibold text-sm">
-                                Line Items
+                            <Typography variant="cardTitle" as="h2">
+                                Line items
                             </Typography>
-                            <p className="text-muted-foreground text-xs mt-0.5">
+                            <p className="text-muted-foreground text-[13px] mt-0.5">
                                 Break down your work into billable components
                             </p>
                         </div>
 
+                        {billedEntryCount > 0 && (
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[14px]">
+                                <span>
+                                    Billing {billedEntryCount} unbilled time {billedEntryCount === 1 ? "entry" : "entries"} ({billedHours.toFixed(2)} h).
+                                    They&apos;ll be marked as invoiced when you create this invoice.
+                                </span>
+                                <button
+                                    type="button"
+                                    className="text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                    onClick={() => form.setValue("timeEntryIds", [])}
+                                >
+                                    Don&apos;t mark them
+                                </button>
+                            </div>
+                        )}
+
                         {/* Table header */}
                         <div className="grid grid-cols-[1fr_80px_110px_120px_100px_32px] gap-2 mb-2 px-1">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</span>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">QTY</span>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Unit</span>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rate</span>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">Total</span>
+                            <span className="text-[13px] font-medium text-muted-foreground">Description</span>
+                            <span className="text-[13px] font-medium text-muted-foreground">Qty</span>
+                            <span className="text-[13px] font-medium text-muted-foreground">Unit</span>
+                            <span className="text-[13px] font-medium text-muted-foreground">Rate</span>
+                            <span className="text-[13px] font-medium text-muted-foreground text-right">Total</span>
                             <span />
                         </div>
 
@@ -380,7 +436,7 @@ export function InvoiceFormPage({
                         {/* Add line item */}
                         <button
                             type="button"
-                            onClick={() => append(newLineItem())}
+                            onClick={() => append(newLineItem(isEdit ? 0 : defaultHourlyRate))}
                             className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30 transition-colors"
                         >
                             <PlusIcon className="size-3.5" />
@@ -396,7 +452,7 @@ export function InvoiceFormPage({
                         <CardContent className="p-5">
                             <FieldGroup>
                                 <Field data-invalid={!!errors.notes}>
-                                    <FieldLabel htmlFor="invoice-notes">NOTES TO CLIENT</FieldLabel>
+                                    <FieldLabel htmlFor="invoice-notes">Notes to client</FieldLabel>
                                     <Textarea
                                         id="invoice-notes"
                                         {...register("notes")}
@@ -411,7 +467,7 @@ export function InvoiceFormPage({
                                     name="currency"
                                     render={({ field, fieldState }) => (
                                         <Field data-invalid={fieldState.invalid}>
-                                            <FieldLabel htmlFor="invoice-currency">CURRENCY</FieldLabel>
+                                            <FieldLabel htmlFor="invoice-currency">Currency</FieldLabel>
                                             <Select value={field.value} onValueChange={field.onChange}>
                                                 <SelectTrigger id="invoice-currency">
                                                     <SelectValue />
@@ -433,7 +489,7 @@ export function InvoiceFormPage({
                     {/* Summary */}
                     <Card>
                         <CardContent className="p-5">
-                            <Typography variant="label" className="font-semibold text-sm uppercase tracking-wide text-muted-foreground mb-4 block">
+                            <Typography variant="cardTitle" as="h2" className="mb-4 block">
                                 Summary
                             </Typography>
                             <div className="flex flex-col gap-3">
@@ -482,7 +538,7 @@ export function InvoiceFormPage({
                                 </div>
                                 <div className="border-t border-border pt-3 flex items-center justify-between">
                                     <span className="font-semibold text-base">Total</span>
-                                    <span className="font-bold text-xl text-primary font-serif">
+                                    <span className="font-semibold text-xl text-foreground tabular-nums">
                                         {formatMoney(total, currency)}
                                     </span>
                                 </div>

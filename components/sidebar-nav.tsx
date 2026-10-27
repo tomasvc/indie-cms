@@ -3,7 +3,6 @@
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -12,6 +11,7 @@ import {
   Folder,
   Home,
   Receipt,
+  Settings,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -26,17 +26,24 @@ const mainNav = [
   // { label: "Portfolio", href: "/portfolio", icon: BriefcaseBusiness },
 ];
 
+const secondaryNav = [
+  { label: "Settings", href: "/settings", icon: Settings },
+];
+
+// A section stays highlighted on its detail pages too (e.g. /invoices/123)
+const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
 export function SidebarNav() {
   const pathname = usePathname();
 
   return (
+    <>
     <SidebarGroup>
-      <SidebarGroupLabel>Main</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {mainNav.map((item) => (
             <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+              <SidebarMenuButton asChild isActive={isActive(pathname, item.href)} tooltip={item.label}>
                 <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
@@ -47,5 +54,22 @@ export function SidebarNav() {
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
+    <SidebarGroup className="mt-auto">
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {secondaryNav.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton asChild isActive={isActive(pathname, item.href)} tooltip={item.label}>
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+    </>
   );
 }

@@ -1,27 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const outfit = Outfit({
+// Geist: a neutral sans with a tall x-height and open shapes, so small UI text and figures stay
+// readable. Mono is kept for reference numbers only (invoice codes).
+const geist = Geist({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const fraunces = Fraunces({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
 });
@@ -42,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
       <body className="antialiased">
         <ThemeProvider
           attribute="class"

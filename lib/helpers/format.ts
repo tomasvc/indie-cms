@@ -15,6 +15,16 @@ export function formatDate(dateStr: string | undefined | null, fmt: string) {
     }
 }
 
+export function formatLocalDate(
+    dateStr: string | undefined | null,
+    locale = "en",
+    options: Intl.DateTimeFormatOptions = { dateStyle: "medium" }
+) {
+    if (!dateStr) return "—";
+    const d = parseISO(dateStr);
+    return isValid(d) ? new Intl.DateTimeFormat(locale, options).format(d) : "—";
+}
+
 export function relativeDays(dateStr: string | undefined | null): string {
     if (!dateStr) return "—";
     try {

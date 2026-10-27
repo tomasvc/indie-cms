@@ -2,6 +2,7 @@ import { getProject } from "@/lib/data/projects";
 import { getProfile } from "@/lib/data/settings";
 import { getClients } from "@/lib/data/clients";
 import { getTimeEntriesForProject } from "@/lib/data/time-entries";
+import { getTasksForProject } from "@/lib/data/tasks";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Client, Project as ProjectType } from "@/types";
@@ -22,10 +23,11 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
         notFound();
     }
 
-    const [loadedClients, timeEntries, profile] = await Promise.all([
+    const [loadedClients, timeEntries, profile, tasks] = await Promise.all([
         getClients(),
         getTimeEntriesForProject(id),
         getProfile(),
+        getTasksForProject(id),
     ]);
     clients = loadedClients;
     if (!clients) notFound();
@@ -37,6 +39,7 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
             clients={clients}
             businessCurrency={profile?.currency || "USD"}
             loggedHours={loggedHours}
+            taskProgress={tasks.length > 0 ? { done: tasks.filter((task) => task.status === "done").length, total: tasks.length } : null}
         />
     );
 }

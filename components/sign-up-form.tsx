@@ -197,7 +197,7 @@ export function SignUpForm({
         <div className="relative flex items-center gap-3">
           <div className="flex-1 border-t border-border" />
           <span
-            className="text-xs text-muted-foreground"
+            className="text-[13px] text-muted-foreground"
             style={{ fontFamily: "var(--font-sans)" }}
           >
             or

@@ -1,10 +1,11 @@
 import type { DashboardCoreData } from "@/lib/data/dashboard";
-import { DollarSign, FileCheck } from "lucide-react";
-import { Card } from "../../../../components/ui/card";
-import { Typography } from "../../../../components/ui/typography";
+import { Banknote, CalendarClock, FileClock, Hourglass } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { getTopStatsData } from "@/lib/dashboard/top-stats";
-import { comparableChange, formatMoneyByCurrency } from "@/lib/money";
+import { comparableChange, formatMoney, moneyEntries, type MoneyByCurrency } from "@/lib/money";
 import { Profile } from "@/types";
+import { cn } from "@/lib/utils";
 
 type TopStatsProps = {
     data: DashboardCoreData;
@@ -12,11 +13,7 @@ type TopStatsProps = {
 };
 
 export function TopStats({ data, profile }: TopStatsProps) {
-    const projects = data.projects;
-    if (!projects || projects.length === 0) {
-        return <Typography variant="body" color="muted">No projects found</Typography>;
-    }
-
+    const projects = data.projects ?? [];
     const locale = profile.language || "en";
     const stats = getTopStatsData(
         projects.map((project) => ({
@@ -28,65 +25,76 @@ export function TopStats({ data, profile }: TopStatsProps) {
         data.invoices,
         data.portfolio
     );
-    const money = (totals: Parameters<typeof formatMoneyByCurrency>[0]) =>
-        formatMoneyByCurrency(totals, locale, profile.currency);
-    const revenueChange = comparableChange(stats.monthlyEarnings, stats.previousMonthEarnings);
+    // One line per currency, largest first: mixed currencies are never added together
+    const money = (totals: MoneyByCurrency) => (
+        <>
+            {moneyEntries(totals, profile.currency).map(([currency, amount], index) => (
+                <span key={currency} className={cn("block", index > 0 && "text-[16px] text-muted-foreground")}>
+                    {formatMoney(amount, currency, locale, { whole: true })}
+                </span>
+            ))}
+        </>
+    );
+
+    const revenueChange = Object.values(stats.previousMonthEarnings).some((amount) => amount > 0)
+        ? comparableChange(stats.monthlyEarnings, stats.previousMonthEarnings)
+        : null;
 
     const sections = [
         {
             id: "revenue",
             name: "Revenue (MTD)",
-            icon: DollarSign,
+            icon: Banknote,
             value: money(stats.monthlyEarnings),
             subvalue: revenueChange ?? "",
             subValueText: revenueChange ? "vs last month" : "paid this month",
         },
         {
-            id: "unbilled",
-            name: "Unbilled",
-            icon: DollarSign,
+            id: "left-to-invoice",
+            name: "Left to invoice",
+            icon: Hourglass,
             value: money(stats.unbilled),
             subvalue: "",
-            subValueText: "active and in review",
+            subValueText: "agreed fees not yet invoiced",
         },
         {
             id: "forecast",
-            name: "30d Forecast",
-            icon: DollarSign,
+            name: "Due in 30 days",
+            icon: CalendarClock,
             value: money(stats.forecast30d),
             subvalue: stats.forecastCount,
-            subValueText: stats.forecastCount === 1 ? "invoice due" : "invoices due",
+            subValueText: stats.forecastCount === 1 ? "unpaid invoice" : "unpaid invoices",
         },
         {
             id: "invoices",
-            name: "Invoices Sent",
-            icon: FileCheck,
+            name: "Awaiting payment",
+            icon: FileClock,
             value: stats.invoicesSent,
-            subvalue: stats.totalInvoices,
-            subValueText: "total invoices",
+            subvalue: "",
+            subValueText: stats.invoicesSent === 1 ? "sent invoice not yet paid" : "sent invoices not yet paid",
         },
-        // {
-        //     id: crypto.randomUUID(),
-        //     name: "Portfolio Views",
-        //     icon: Eye,
-        //     value: stats.portfolioViews,
-        //     subvalue: 0,
-        //     subValueText: "portfolio views",
-        // },
     ];
 
     return (
-        <Card className="grid grid-cols-2 lg:grid-cols-4 gap-0 rounded-lg divide-x p-0">
-            {sections.map((s) => {
+        <Card className="grid grid-cols-2 lg:grid-cols-4 gap-0 rounded-lg p-0">
+            {sections.map((s, i) => {
                 const Icon = s.icon;
 
-                return <div key={s.id} className="p-4 flex flex-col gap-1">
-                    <div className="flex justify-between items-center">
+                return <div
+                    key={s.id}
+                    className={cn(
+                        "p-4 flex flex-col gap-1 min-w-0",
+                        i % 2 === 1 && "border-l",
+                        i < 2 && "border-b lg:border-b-0",
+                        i === 2 && "lg:border-l"
+                    )}
+                >
+                    <div className="flex justify-between items-center gap-2">
                         <Typography variant="kpiLabel" as="p">{s.name}</Typography>
-                        <Icon className="text-muted-foreground w-4 h-4" />
+                        <Icon className="text-muted-foreground w-4 h-4 shrink-0" aria-hidden />
                     </div>
                     <div>
-                        <Typography variant="kpiValue" as="p">{s.value}</Typography>
+                        <Typography variant="kpiValue" as="div" className="tabular-nums break-words">{s.value}</Typography>
                         <Typography variant="kpiSub" as="p">{s.subvalue} {s.subValueText}</Typography>
                     </div>
                 </div>

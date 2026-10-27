@@ -17,7 +17,7 @@ export const FormBasics = () => {
         <div className="max-w-2xl space-y-6">
             <FieldGroup>
                 <Field data-invalid={!!errors.title}>
-                    <FieldLabel htmlFor="project-title">PROJECT TITLE</FieldLabel>
+                    <FieldLabel htmlFor="project-title">Title</FieldLabel>
                     <Input
                         id="project-title"
                         {...register("title")}
@@ -27,7 +27,7 @@ export const FormBasics = () => {
                     <FieldError errors={[errors.title]} />
                 </Field>
                 <Field data-invalid={!!errors.description}>
-                    <FieldLabel htmlFor="project-description">DESCRIPTION</FieldLabel>
+                    <FieldLabel htmlFor="project-description">Description</FieldLabel>
                     <FieldDescription>
                         A short summary visible on project cards and reports.
                     </FieldDescription>
@@ -41,7 +41,7 @@ export const FormBasics = () => {
                     <FieldError errors={[errors.description]} />
                 </Field>
                 <Field data-invalid={!!errors.category}>
-                    <FieldLabel htmlFor="project-category">CATEGORY</FieldLabel>
+                    <FieldLabel htmlFor="project-category">Category</FieldLabel>
                     <Input
                         id="project-category"
                         {...register("category")}
@@ -51,7 +51,7 @@ export const FormBasics = () => {
                     <FieldError errors={[errors.category]} />
                 </Field>
                 <Field data-invalid={!!errors.color}>
-                    <FieldLabel htmlFor="project-color">PROJECT COLOR</FieldLabel>
+                    <FieldLabel htmlFor="project-color">Colour</FieldLabel>
                     <div className="flex flex-wrap items-center gap-2">
                         {PROJECT_COLORS.map((c: string) => (
                             <button
@@ -70,14 +70,14 @@ export const FormBasics = () => {
                             id="project-color"
                             {...register("color")}
                             aria-invalid={!!errors.color}
-                            className="ml-2 w-24 font-mono text-xs"
+                            className="ml-2 w-24 font-mono text-[13px]"
                         />
                         <span className="size-6 rounded border border-border shrink-0" style={{ backgroundColor: color }} />
                     </div>
                     <FieldError errors={[errors.color]} />
                 </Field>
                 <Field data-invalid={!!errors.tags}>
-                    <FieldLabel htmlFor="project-tags">TAGS</FieldLabel>
+                    <FieldLabel htmlFor="project-tags">Tags</FieldLabel>
                     <FieldDescription>Separate tags with commas</FieldDescription>
                     <Input
                         id="project-tags"
@@ -91,7 +91,7 @@ export const FormBasics = () => {
                             {splitTags(tags).map((t) => (
                                 <span
                                     key={t}
-                                    className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs"
+                                    className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-[13px]"
                                 >
                                     {t}
                                     <button

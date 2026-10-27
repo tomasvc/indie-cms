@@ -1,65 +1,60 @@
-import type { DashboardCoreData } from "@/lib/data/dashboard"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card"
-import { Typography } from "../../../../components/ui/typography"
-import { Table, TableCell, TableBody, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
+import type { DashboardCoreData } from "@/lib/data/dashboard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, formatMoney } from "@/lib/helpers/format";
+import Link from "next/link";
+import { formatLocalDate, formatMoney } from "@/lib/helpers/format";
 import { isOutstanding, isOverdue } from "@/lib/helpers/invoices";
+import { clientLabel } from "@/lib/helpers/clients";
+import type { Invoice } from "@/types";
+import { RecordPaymentButton } from "../../invoices/(components)/record-payment-button";
 
 type OverdueInvoicesProps = {
     data: DashboardCoreData;
+    locale: string;
 };
 
-export function OverdueInvoices({ data }: OverdueInvoicesProps) {
-    const outstandingInvoices = data.invoices
+/** Sent, unpaid invoices, oldest due first. Rows rather than a table so it fits a half-width column. */
+export function OverdueInvoices({ data, locale }: OverdueInvoicesProps) {
+    const clientById = new Map(data.clients.map((client) => [client.id, client]));
+    const projectTitle = new Map(data.projects.map((project) => [project.id, project.title]));
+    const outstandingInvoices = (data.invoices as unknown as Invoice[])
         .filter((invoice) => isOutstanding(invoice) && invoice.due_date)
         .sort((a, b) => a.due_date!.localeCompare(b.due_date!));
 
     return (
         <Card className="gap-0 pb-0">
             <CardHeader className="border-b">
-                <CardTitle><Typography variant="cardTitle" as="span">Overdue / Upcoming Invoices</Typography></CardTitle>
-                <CardDescription><Typography variant="body" color="muted" as="span">This is a summary of your overdue and upcoming invoices.</Typography></CardDescription>
+                <CardTitle><Typography variant="cardTitle" as="h2">Unpaid invoices</Typography></CardTitle>
             </CardHeader>
             <CardContent className="p-0">
                 {outstandingInvoices.length === 0 ? (
-                    <div className="p-5">
-                        <Typography variant="body" color="muted" as="span">No overdue or upcoming invoices</Typography>
+                    <div className="px-5 py-4">
+                        <Typography variant="body" color="muted" as="span">Nothing unpaid. Every sent invoice has been paid.</Typography>
                     </div>
                 ) : (
-                    <Table className="p-0">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="px-4">Invoice</TableHead>
-                                <TableHead className="px-4">Client</TableHead>
-                                <TableHead className="px-4">Amount</TableHead>
-                                <TableHead className="px-4">Due Date</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {outstandingInvoices.map(invoice => (
-                                <TableRow key={invoice.id}>
-                                    <TableCell className="px-4 py-3">
-                                        <Typography variant="code" as="span">{invoice.code}</Typography>
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3">
-                                        <Typography variant="body" as="span">{data.clients.find(c => c.id === invoice.client_id)?.name}</Typography>
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3">
-                                        <Typography variant="body" as="span" className="font-medium">{formatMoney(invoice.total, invoice.currency)}</Typography>
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Typography variant="metadata" as="span">{formatDate(invoice.due_date, "MMM d, yyyy")}</Typography>
-                                            {isOverdue(invoice) && <Badge variant="destructive">Overdue</Badge>}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <ul className="divide-y">
+                        {outstandingInvoices.map((invoice) => (
+                            <li key={invoice.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
+                                <Link href={`/invoices/${invoice.id}`} className="flex min-w-[10rem] flex-1 flex-col rounded-sm hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                    <Typography variant="body" as="span" className="truncate font-medium">{clientLabel(clientById.get(invoice.client_id))}</Typography>
+                                    <Typography variant="bodySmall" color="muted" as="span" className="truncate">
+                                        INV-{invoice.code}{projectTitle.get(invoice.project_id) ? ` · ${projectTitle.get(invoice.project_id)}` : ""}
+                                    </Typography>
+                                </Link>
+                                <div className="flex shrink-0 flex-col items-end">
+                                    <Typography variant="body" as="span" className="font-semibold tabular-nums">{formatMoney(invoice.total, invoice.currency, locale)}</Typography>
+                                    <span className="flex items-center gap-2">
+                                        {isOverdue(invoice) && <Badge variant="destructive">Overdue</Badge>}
+                                        <Typography variant="metadata" as="span">Due {formatLocalDate(invoice.due_date, locale)}</Typography>
+                                    </span>
+                                </div>
+                                <RecordPaymentButton invoice={invoice} />
+                            </li>
+                        ))}
+                    </ul>
                 )}
             </CardContent>
         </Card>
-    )
+    );
 }

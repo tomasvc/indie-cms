@@ -35,6 +35,7 @@ export function NavUser({
     user: {
         full_name: string
         email: string
+        avatar_url?: string | null
     },
     demo: boolean
 }) {
@@ -52,13 +53,13 @@ export function NavUser({
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarImage src={user.full_name} alt={user.full_name} />
+                                {user.avatar_url && <AvatarImage src={user.avatar_url} alt="" />}
                                 <AvatarFallback className="rounded-lg">{user.full_name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-medium text-foreground">{user.full_name}</span>
                                 {!demo &&
-                                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                                    <span className="truncate text-[13px] text-muted-foreground">{user.email}</span>
                                 }
                             </div>
                             <ChevronsUpDown className="ml-auto size-4" />
@@ -73,13 +74,13 @@ export function NavUser({
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={user.full_name} alt={user.full_name} />
+                                    {user.avatar_url && <AvatarImage src={user.avatar_url} alt="" />}
                                     <AvatarFallback className="rounded-lg">{user.full_name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-medium text-foreground">{user.full_name}</span>
                                     {!demo &&
-                                        <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                                        <span className="truncate text-[13px] text-muted-foreground">{user.email}</span>
                                     }
                                 </div>
                             </div>

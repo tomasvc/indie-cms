@@ -18,7 +18,7 @@ export const FormTime = ({ loggedHours = 0 }: { loggedHours?: number }) => {
             <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
                     <Field data-invalid={!!errors.estimatedHours}>
-                        <FieldLabel htmlFor="project-estimated-hours">ESTIMATED HOURS</FieldLabel>
+                        <FieldLabel htmlFor="project-estimated-hours">Estimated hours</FieldLabel>
                         <div className="flex items-center gap-1 border border-input rounded-md bg-input/20 px-2.5 py-[7px]">
                             <Input
                                 id="project-estimated-hours"
@@ -34,7 +34,7 @@ export const FormTime = ({ loggedHours = 0 }: { loggedHours?: number }) => {
                         <FieldError errors={[errors.estimatedHours]} />
                     </Field>
                     <Field>
-                        <FieldLabel>LOGGED HOURS</FieldLabel>
+                        <FieldLabel>Logged hours</FieldLabel>
                         <Typography variant="body" as="p" className="py-[7px]">{logged}h</Typography>
                         <Typography variant="bodySmall" color="muted" as="p">
                             Counted from time entries. Saving this form does not change them.

@@ -42,7 +42,7 @@ export function DeleteProjectButton({
                     variant={mode === "delete" ? "destructive" : "secondary"}
                     aria-label={`${label} project`}
                 >
-                    <Icon className={iconOnly ? "size-4" : "size-3 mb-0.5"} />
+                    <Icon className="size-4" aria-hidden />
                     {!iconOnly && label}
                 </Button>
             </AlertDialogTrigger>

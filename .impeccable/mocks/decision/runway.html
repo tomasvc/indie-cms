@@ -1,0 +1,68 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--fg:#09090b;--muted:#71717a;--line:#e4e4e7;--soft:#f4f4f5;--pri:#159570;--pri-soft:#e3f4ee;--amber:#d97706;--amber-soft:#fdf3e1;--red:#dc2626;--red-soft:#fdecec}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;font-family:Outfit,sans-serif;color:var(--fg);background:var(--soft);display:flex}
+.nav{width:232px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{font-weight:600;font-size:15px;padding:0 8px 18px}
+.nav a{font-size:13px;padding:8px;border-radius:8px;color:var(--muted)}
+.nav a.on{background:var(--soft);color:var(--fg);font-weight:500}
+main{flex:1;padding:28px 32px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;justify-content:space-between;align-items:flex-end}
+h1{font-family:Fraunces,serif;font-size:30px;font-weight:600;letter-spacing:-.02em}
+.sum{font-size:15px;color:var(--muted);margin-top:6px}.sum b{color:var(--fg);font-weight:500}.sum .r{color:var(--red)}
+.acts{display:flex;gap:8px}.btn{font-size:13px;font-weight:500;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#fff}.btn.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px}
+.run{flex:1;display:flex;flex-direction:column}
+.runhead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.runhead h2{font-size:13px;font-weight:600}.legend{display:flex;gap:16px;font-size:11px;color:var(--muted)}
+.days{display:grid;grid-template-columns:300px repeat(14,1fr);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);border-bottom:1px solid var(--line)}
+.days div{padding:8px 0;text-align:center}.days .t{color:var(--pri);font-weight:500}
+.lane{display:grid;grid-template-columns:300px 1fr;border-bottom:1px solid var(--line);min-height:78px}
+.lab{padding:12px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.lab .n{font-size:14px;font-weight:500}.lab .c{font-size:12px;color:var(--muted)}
+.meta{display:flex;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;width:fit-content}
+.ok{background:var(--pri-soft);color:#0d6b50}.warn{background:var(--amber-soft);color:#92520a}.bad{background:var(--red-soft);color:#b91c1c}
+.track{position:relative}
+.track:before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;border-radius:2px;background:var(--c,var(--pri));opacity:.85}
+.today{position:absolute;top:0;bottom:0;left:calc(100%/14*2 + 300px);width:2px;background:var(--pri);opacity:.35}
+.stop{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--c,var(--pri));transform:translate(-50%,-50%)}
+.stop.inv{border-radius:3px}.stop.end{width:18px;height:18px;background:var(--c,var(--pri))}
+.stop.late{border-color:var(--red);background:var(--red)}
+.slab{position:absolute;top:calc(50% + 12px);font-size:10px;color:var(--muted);transform:translateX(-50%);white-space:nowrap}
+.money{display:grid;grid-template-columns:repeat(4,1fr)}
+.money div{padding:14px 18px;border-right:1px solid var(--line)}.money div:last-child{border-right:0}
+.k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.v{font-family:Fraunces,serif;font-size:24px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+.s{font-size:12px;color:var(--muted);margin-top:2px}.s.r{color:var(--red)}
+</style></head><body>
+<nav class="nav"><div class="brand">Freelance OS</div>
+<a class="on">Dashboard</a><a>Projects</a><a>Clients</a><a>Invoices</a><a>Time &amp; Earnings</a><a>Settings</a></nav>
+<main>
+<header><div><h1>Dashboard</h1>
+<p class="sum"><b class="r">2 invoices overdue</b> · <b>€4,200 unbilled</b> · Brand identity is burning budget faster than it's progressing</p></div>
+<div class="acts"><span class="btn">Log time</span><span class="btn">New project</span><span class="btn p">New invoice</span></div></header>
+<section class="card run">
+<div class="runhead"><h2>Next 14 days</h2><div class="legend"><span>● Task due</span><span>■ Invoice due</span><span>⬤ Deadline</span><span>Today: Tue 27 Oct</span></div></div>
+<div class="days"><div style="text-align:left;padding-left:18px">Active projects · 4</div><div>25</div><div>26</div><div class="t">27</div><div>28</div><div>29</div><div>30</div><div>31</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div></div>
+<div style="position:relative;flex:1">
+<div class="today"></div>
+<div class="lane"><div class="lab"><span class="n">Brand identity</span><span class="c">Northwind Studio</span><div class="meta"><span class="tag warn">Burning fast</span><span>margin 18%</span><span>€1,850 unbilled</span></div></div>
+<div class="track" style="--c:var(--amber)"><span class="stop late" style="left:9%"></span><span class="slab" style="left:9%">Logo v2 · overdue</span><span class="stop" style="left:38%"></span><span class="slab" style="left:38%">Type system</span><span class="stop end" style="left:78%"></span><span class="slab" style="left:78%">Deadline 4 Nov</span></div></div>
+<div class="lane"><div class="lab"><span class="n">Website redesign</span><span class="c">Acme Corp</span><div class="meta"><span class="tag ok">On track</span><span>margin 46%</span><span>€1,200 unbilled</span></div></div>
+<div class="track"><span class="stop" style="left:23%"></span><span class="slab" style="left:23%">Staging review</span><span class="stop inv" style="left:52%"></span><span class="slab" style="left:52%">INV-0042 due</span><span class="stop" style="left:88%"></span><span class="slab" style="left:88%">CMS handoff</span></div></div>
+<div class="lane"><div class="lab"><span class="n">Mobile app</span><span class="c">Brightline Health</span><div class="meta"><span class="tag bad">Behind</span><span>margin 31%</span><span>€900 unbilled</span></div></div>
+<div class="track" style="--c:var(--red)"><span class="stop late" style="left:5%"></span><span class="slab" style="left:5%">Onboarding flow · overdue</span><span class="stop inv late" style="left:12%"></span><span class="stop" style="left:60%"></span><span class="slab" style="left:60%">Beta build</span></div></div>
+<div class="lane"><div class="lab"><span class="n">API integration</span><span class="c">Fernway Logistics</span><div class="meta"><span class="tag ok">On track</span><span>margin 52%</span><span>€250 unbilled</span></div></div>
+<div class="track"><span class="stop" style="left:45%"></span><span class="slab" style="left:45%">Webhook tests</span><span class="stop end" style="left:96%"></span><span class="slab" style="left:93%">Deadline 7 Nov</span></div></div>
+</div></section>
+<section class="card money">
+<div><p class="k">Revenue this month</p><p class="v">€8,400</p><p class="s">+12% vs September</p></div>
+<div><p class="k">Awaiting payment</p><p class="v">€6,150</p><p class="s r">€2,300 overdue · 2 invoices</p></div>
+<div><p class="k">Unbilled time</p><p class="v">€4,200</p><p class="s">Across 4 projects</p></div>
+<div><p class="k">Revenue concentration</p><p class="v">62%</p><p class="s r">from Acme Corp alone</p></div>
+</section>
+</main></body></html>

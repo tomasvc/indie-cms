@@ -94,7 +94,7 @@ export function LoginForm({
             </Label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
             >
               Forgot password?
             </Link>
@@ -149,7 +149,7 @@ export function LoginForm({
         <div className="relative flex items-center gap-3">
           <div className="flex-1 border-t border-border" />
           <span
-            className="text-xs text-muted-foreground"
+            className="text-[13px] text-muted-foreground"
           >
             or
           </span>

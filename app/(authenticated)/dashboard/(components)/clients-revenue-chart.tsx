@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as RechartsPrimitive from "recharts";
 import type { ClientRevenueSegment, RevenueWarning } from "@/lib/dashboard/financials";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangleIcon } from "lucide-react";
 
 const PIE_COLORS = [
@@ -12,20 +11,37 @@ const PIE_COLORS = [
   "var(--chart-3)",
   "var(--chart-4)",
   "var(--chart-5)",
-  "var(--chart-6)",
+];
+
+// Segment label colors, paired with PIE_COLORS: light text on the deeper hues, dark text on amber
+const LABEL_COLORS = [
+  "oklch(0.99 0.01 165)",
+  "oklch(0.99 0.01 165)",
+  "oklch(0.22 0.05 70)",
+  "oklch(0.99 0.01 165)",
+  "oklch(0.99 0.01 165)",
 ];
 
 // Space reserved above the arc top for labels rendered inside segments
 const LABEL_TOP_PADDING = 16;
 // Height below the chart SVG reserved for the warning row
 const WARNING_HEIGHT = 24;
+// Keeps the semicircle from dominating wide (mobile, full-width) containers
+const MAX_OUTER_RADIUS = 150;
 
 type ClientsRevenueChartProps = {
   pieData: ClientRevenueSegment[];
-  totalClients: number;
   warnings: RevenueWarning[];
   animationKey?: number;
 };
+
+const MAX_LABEL_CHARS = 12;
+
+// First name only for people, clipped with an ellipsis so labels stay inside narrow segments
+function shortName(name: string) {
+  const first = name.trim().split(/\s+/)[0] ?? name;
+  return first.length > MAX_LABEL_CHARS ? `${first.slice(0, MAX_LABEL_CHARS - 1)}…` : first;
+}
 
 // Renders name + percent inside each segment
 function SegmentLabel(props: {
@@ -35,25 +51,26 @@ function SegmentLabel(props: {
   innerRadius?: number;
   outerRadius?: number;
   payload?: ClientRevenueSegment;
+  index?: number;
 }) {
-  const { cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, payload } = props;
+  const { cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, payload, index = 0 } = props;
   if (!payload) return null;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  const fontSize = outerRadius - innerRadius > 36 ? 9 : 7;
+  const fontSize = outerRadius - innerRadius > 36 ? 12 : 11;
   return (
     <text
       x={x}
       y={y}
-      fill="black"
+      fill={LABEL_COLORS[index % LABEL_COLORS.length]}
       textAnchor="middle"
       dominantBaseline="central"
       fontSize={fontSize}
       fontWeight={600}
     >
-      <tspan x={x} dy={`-${fontSize * 0.6}px`}>{payload.name}</tspan>
+      <tspan x={x} dy={`-${fontSize * 0.6}px`}>{shortName(payload.name)}</tspan>
       <tspan x={x} dy={`${fontSize * 1.4}px`}>{payload.percent}%</tspan>
     </text>
   );
@@ -61,7 +78,6 @@ function SegmentLabel(props: {
 
 export function ClientsRevenueChart({
   pieData,
-  totalClients,
   warnings,
   animationKey,
 }: ClientsRevenueChartProps) {
@@ -86,8 +102,8 @@ export function ClientsRevenueChart({
     );
   }
 
-  // Outer radius = half the container width
-  const outerR = containerWidth ? Math.floor(containerWidth / 2) : 100;
+  // Outer radius = half the container width, capped so wide containers don't get a giant arc
+  const outerR = Math.min(containerWidth ? Math.floor(containerWidth / 2) : 100, MAX_OUTER_RADIUS);
   const innerR = Math.floor(outerR * 0.6);
 
   // SVG height: just enough to show the top semicircle + a little padding at the top for labels
@@ -100,9 +116,15 @@ export function ClientsRevenueChart({
 
   return (
     <div ref={wrapperRef} className="relative w-full" style={{ height: totalHeight }}>
+      <ul className="sr-only">
+        {pieData.map((segment) => (
+          <li key={segment.name}>{segment.name}: {segment.percent}% of paid revenue</li>
+        ))}
+      </ul>
       {containerWidth > 0 && (
+        <div aria-hidden>
         <RechartsPrimitive.ResponsiveContainer width="100%" height={chartHeight}>
-          <RechartsPrimitive.PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+          <RechartsPrimitive.PieChart margin={{ top: -3, right: 0, bottom: 0, left: 0 }}>
             <RechartsPrimitive.Pie
               key={animationKey}
               data={pieData}
@@ -131,78 +153,31 @@ export function ClientsRevenueChart({
             </RechartsPrimitive.Pie>
           </RechartsPrimitive.PieChart>
         </RechartsPrimitive.ResponsiveContainer>
+        </div>
       )}
 
       {/* Center text sits just above the flat baseline in the donut hole */}
       <div
-        className="absolute top-[6.7rem] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+        className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
         style={{ bottom: WARNING_HEIGHT + Math.floor(innerR * 0.12) }}
+        aria-hidden
       >
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-medium leading-none">
-          Total
+        <span className="text-xl text-foreground font-bold leading-tight tabular-nums">{pieData.length}</span>
+        <span className="text-[12px] text-muted-foreground font-medium leading-none mt-0.5">
+          paying {pieData.length === 1 ? "client" : "clients"}
         </span>
-        <span className="text-xl text-foreground font-bold leading-tight tabular-nums mt-1">{totalClients}</span>
       </div>
 
       {/* Warning row sits below the chart SVG */}
       <div
-        className="absolute top-[9.5rem] left-1/2 -translate-x-1/2 flex items-center justify-center"
-        style={{ bottom: 4, height: WARNING_HEIGHT - 4 }}
+        className="absolute left-1/2 -translate-x-1/2 mt-1 flex items-center justify-center"
+        style={{ top: chartHeight + 4, height: WARNING_HEIGHT - 4 }}
       >
         {warnings.length > 0 ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 text-destructive text-xs font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
-              >
-                <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
-                {warnings.length} {warnings.length === 1 ? "warning" : "warnings"}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              <ul className="list-disc list-outside pl-3 space-y-1 text-left">
-                {warnings.map((w, i) => {
-                  if (w.type === "overdependence") {
-                    return (
-                      <li key={i}>
-                        Overdependence: <strong>{w.clientName}</strong> makes up {w.percent}% of revenue
-                      </li>
-                    );
-                  }
-                  if (w.type === "single_client") {
-                    return (
-                      <li key={i}>
-                        Single source: <strong>{w.clientName}</strong> is your only revenue-generating client
-                      </li>
-                    );
-                  }
-                  if (w.type === "top2_concentration") {
-                    return (
-                      <li key={i}>
-                        Concentration: <strong>{w.client1}</strong> and <strong>{w.client2}</strong> together account for {w.percent}% of revenue
-                      </li>
-                    );
-                  }
-                  if (w.type === "dormant_top_client") {
-                    return (
-                      <li key={i}>
-                        Inactive top client: <strong>{w.clientName}</strong> is your highest earner but is {w.status === "archived" ? "archived" : "still a lead"}
-                      </li>
-                    );
-                  }
-                  if (w.type === "overdue_concentration") {
-                    return (
-                      <li key={i}>
-                        Outstanding risk: <strong>{w.clientName}</strong> holds {w.percent}% of your unpaid balance
-                      </li>
-                    );
-                  }
-                  return null;
-                })}
-              </ul>
-            </TooltipContent>
-          </Tooltip>
+          <p className="flex items-center gap-1.5 text-warning text-[13px] font-medium">
+            <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {warnings.length} revenue {warnings.length === 1 ? "risk" : "risks"} flagged above
+          </p>
         ) : null}
       </div>
     </div>

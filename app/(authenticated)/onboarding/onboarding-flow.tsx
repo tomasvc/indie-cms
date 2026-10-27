@@ -100,7 +100,7 @@ export function OnboardingFlow() {
                             </CardDescription>
                         </CardHeader>
                         <CardFooter className="flex justify-end gap-2">
-                            <Button onClick={() => setStep(2)} size="lg">
+                            <Button onClick={() => setStep(2)}>
                                 Get started
                             </Button>
                         </CardFooter>
@@ -117,7 +117,7 @@ export function OnboardingFlow() {
                             </CardTitle>
                             <CardDescription>
                                 <Typography variant="bodySmall" color="muted" as="span">
-                                    Optional — you can change this later in settings.
+                                    Optional. You can change this later in Settings.
                                 </Typography>
                             </CardDescription>
                         </CardHeader>
@@ -176,7 +176,7 @@ export function OnboardingFlow() {
                             <Button variant="ghost" onClick={() => finish(null)} disabled={isCompleting}>
                                 Skip for now
                             </Button>
-                            <Button onClick={handleNext} size="lg">
+                            <Button onClick={handleNext}>
                                 Next
                             </Button>
                         </CardFooter>
@@ -201,7 +201,7 @@ export function OnboardingFlow() {
                         <CardFooter className="flex justify-end gap-2">
                             <Button
                                 onClick={() => finish(details)}
-                                size="lg"
+                               
                                 disabled={isCompleting}
                             >
                                 {isCompleting ? "Taking you there…" : "Go to dashboard"}

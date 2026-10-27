@@ -25,6 +25,8 @@ function toProjectRow(values: ProjectFormValues) {
         priority: values.priority,
         progress: values.progress,
         currency: values.currency,
+        billing_type: values.billingType,
+        hourly_rate: values.billingType === "hourly" ? values.hourlyRate : null,
         value: values.value,
         budget: values.budget,
         estimated_hours: values.estimatedHours,
@@ -62,9 +64,17 @@ export async function handleUpdateProject(id: string, input: ProjectFormValues):
 
     const { supabase, user } = await requireUser();
 
+    // Once a project has tasks, progress is kept in step with them by a database trigger
+    const { count: taskCount } = await supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", parsedId.data);
+    const { progress, ...rest } = toProjectRow(parsed.data);
+    const row = (taskCount ?? 0) > 0 ? rest : { ...rest, progress };
+
     const { error } = await supabase
         .from("projects")
-        .update(toProjectRow(parsed.data))
+        .update(row)
         .eq("id", parsedId.data)
         .eq("user_id", user.id);
 

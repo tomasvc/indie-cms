@@ -1,6 +1,7 @@
 'use client';
 
 import { Client } from "@/types";
+import type { ClientTotals } from "@/lib/helpers/clients";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientsList } from "./clients-list";
@@ -11,10 +12,12 @@ const CLIENTS_VIEW_KEY = "clients-view";
 
 interface ClientsViewProps {
     clients: Client[];
+    totals: Record<string, ClientTotals>;
     currency: string;
+    locale: string;
 }
 
-export function ClientsView({ clients, currency }: ClientsViewProps) {
+export function ClientsView({ clients, totals, currency, locale }: ClientsViewProps) {
     const [state, setState] = useState<"list" | "table">("list");
 
     useEffect(() => {
@@ -37,10 +40,10 @@ export function ClientsView({ clients, currency }: ClientsViewProps) {
                 <TabsTrigger value="table">Table</TabsTrigger>
             </TabsList>
             <TabsContent value="list">
-                <ClientsList clients={clients} currency={currency} />
+                <ClientsList clients={clients} totals={totals} currency={currency} locale={locale} />
             </TabsContent>
             <TabsContent value="table">
-                <ClientsTable clients={clients} currency={currency} />
+                <ClientsTable clients={clients} totals={totals} currency={currency} locale={locale} />
             </TabsContent>
         </Tabs>
     )

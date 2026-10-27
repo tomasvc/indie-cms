@@ -22,11 +22,13 @@ async function SidebarUser() {
     if (!user) return null;
 
     const demo = Boolean(user.is_anonymous);
-    const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
+    const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle();
+    const metadataName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
+    const fullName = profile?.full_name || metadataName;
 
     return (
         <NavUser
-            user={{ email: user.email ?? "", full_name: fullName || (demo ? "Alex Rivera" : "") }}
+            user={{ email: user.email ?? "", full_name: fullName || (demo ? "Alex Rivera" : ""), avatar_url: profile?.avatar_url ?? null }}
             demo={demo}
         />
     );
@@ -46,14 +48,14 @@ export default function ProtectedLayout({
 }) {
     return (
         <SidebarProvider>
-            <Sidebar collapsible="icon">
+            <Sidebar collapsible="icon" className="print:hidden">
                 <SidebarHeader>
                     <Link
                         href="/dashboard"
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                     >
                         <div className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md shrink-0">
-                            <span className="text-xs font-semibold leading-none tracking-tight">OS</span>
+                            <span className="text-[13px] font-semibold leading-none tracking-tight">OS</span>
                         </div>
                         <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
                             Freelance OS
@@ -76,11 +78,10 @@ export default function ProtectedLayout({
             </Sidebar>
 
             <SidebarInset>
-                <header className="bg-background/80 sticky top-0 z-10 border-b backdrop-blur">
+                <header className="bg-background/80 sticky top-0 z-10 border-b backdrop-blur print:hidden">
                     <div className="flex h-14 items-center justify-between px-4 sm:px-6">
                         <div className="flex items-center gap-2">
                             <SidebarTrigger />
-                            <p className="text-sm font-medium">Freelance OS</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <ThemeSwitcher />
@@ -88,10 +89,12 @@ export default function ProtectedLayout({
                     </div>
                 </header>
 
-                <div className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
-                    <Suspense fallback={null}>
-                        <DemoBanner />
-                    </Suspense>
+                <div className="flex-1 min-w-0 p-4 sm:p-6 max-w-[1600px] w-full mx-auto print:p-0">
+                    <div className="print:hidden">
+                        <Suspense fallback={null}>
+                            <DemoBanner />
+                        </Suspense>
+                    </div>
                     {children}
                 </div>
             </SidebarInset>

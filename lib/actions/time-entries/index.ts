@@ -24,6 +24,7 @@ export async function createTimeEntry(_prev: ActionState, formData: FormData): P
 
     if (error) return databaseError(error, "Couldn't log this time. Please try again.");
     revalidatePath(`/projects/${values.project_id}`);
+    revalidatePath("/dashboard");
     return { ok: true };
 }
 

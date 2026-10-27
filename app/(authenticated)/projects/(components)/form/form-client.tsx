@@ -1,12 +1,12 @@
 import { Controller, useFormContext, useWatch } from "react-hook-form"
-import { FieldGroup, Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { FieldGroup, Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Typography } from "@/components/ui/typography"
 import { Client } from "@/types"
 import type { ProjectFormValues } from "./types"
+import { clientLabel, sortClients } from "@/lib/helpers/clients"
 
 export const FormClient = ({ clients }: { clients: Client[] }) => {
     const { control } = useFormContext<ProjectFormValues>();
@@ -16,11 +16,6 @@ export const FormClient = ({ clients }: { clients: Client[] }) => {
     return (
         <div className="max-w-2xl space-y-6">
             <FieldGroup>
-                <Field>
-                    <FieldLabel htmlFor="project-client-id">CLIENT ID</FieldLabel>
-                    <FieldDescription>The internal ID of the linked client record.</FieldDescription>
-                    <Input id="project-client-id" readOnly value={clientId || "—"} className="bg-muted/50" />
-                </Field>
                 <Controller
                     control={control}
                     name="clientId"
@@ -32,9 +27,9 @@ export const FormClient = ({ clients }: { clients: Client[] }) => {
                                     <SelectValue placeholder="Select a client" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {clients.map((c) => (
+                                    {sortClients(clients).map((c) => (
                                         <SelectItem key={c.id} value={c.id}>
-                                            {c.company || c.name}
+                                            {clientLabel(c)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

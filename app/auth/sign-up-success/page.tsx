@@ -18,7 +18,7 @@ export default function Page() {
               className="mt-1 text-sm text-muted-foreground"
               style={{ fontFamily: "var(--font-sans)", fontWeight: 300 }}
             >
-              One last step — confirm your email
+              One last step: confirm your email
             </p>
           </div>
           <p

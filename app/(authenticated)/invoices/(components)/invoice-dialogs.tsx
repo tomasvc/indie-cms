@@ -89,10 +89,10 @@ export function MarkPaidDialog({ invoice, onOpenChange }: DialogProps) {
                         {state.error && !state.fieldErrors && <FieldError>{state.error}</FieldError>}
                     </FieldGroup>
                     <DialogFooter>
-                        <Button type="button" size="lg" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit" size="lg" disabled={isPending}>
+                        <Button type="submit" disabled={isPending}>
                             {isPending ? "Saving…" : "Mark as paid"}
                         </Button>
                     </DialogFooter>

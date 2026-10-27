@@ -1,18 +1,23 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProject } from "@/lib/data/projects";
 import { handleArchiveProject, handleDeleteProject } from "@/lib/actions/projects";
-import { countInvoicesForProject } from "@/lib/data/invoices";
+import { getInvoicesForProject } from "@/lib/data/invoices";
+import { getProfile } from "@/lib/data/settings";
 import { getTasksForProject } from "@/lib/data/tasks";
 import { getTimeEntriesForProject } from "@/lib/data/time-entries";
 import { ProjectOverview } from "./(components)/project-overview";
 import { ProjectTasks } from "./(components)/project-tasks";
 import { ProjectTime } from "./(components)/project-time";
+import { ProjectInvoices } from "./(components)/project-invoices";
+import { unbilledAmount } from "@/lib/helpers/time-entries";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { StarIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import { formatDate, format, subDays } from "date-fns";
-import { formatMoney } from "@/lib/helpers/format";
+import { clientLabel } from "@/lib/helpers/clients";
+import { ProjectStatusBadge } from "@/components/project-status-badge";
+import type { ProjectStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { DeleteProjectButton } from "./(components)/delete-project-button";
 import Link from "next/link";
@@ -20,14 +25,21 @@ import { getClients } from "@/lib/data/clients";
 import { ProjectDetailFallback } from "./(components)/project-detail-fallback";
 import { Typography } from "@/components/ui/typography";
 
-async function Project({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const [project, clients, tasks, timeEntries, invoiceCount] = await Promise.all([
+const TABS = ["overview", "tasks", "time", "invoices"] as const;
+type ProjectTab = (typeof TABS)[number];
+type ProjectSearchParams = Promise<{ tab?: string }>;
+
+async function Project({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: ProjectSearchParams }) {
+    const [{ id }, { tab }] = await Promise.all([params, searchParams]);
+    // ?tab= lets other screens (e.g. "Open task" on the dashboard) land on the right tab
+    const initialTab: ProjectTab = TABS.includes(tab as ProjectTab) ? (tab as ProjectTab) : "overview";
+    const [project, clients, tasks, timeEntries, invoices, profile] = await Promise.all([
         getProject(id),
         getClients(),
         getTasksForProject(id),
         getTimeEntriesForProject(id),
-        countInvoicesForProject(id),
+        getInvoicesForProject(id),
+        getProfile(),
     ]);
 
     if (!project || !clients) {
@@ -55,35 +67,33 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
             })),
         });
     }
-    const unbilledAmount = timeEntries
-        .filter((e) => e.billable && !e.invoice_id)
-        .reduce((sum, e) => sum + e.hours * e.rate, 0);
+    const unbilled = unbilledAmount(timeEntries);
     const spent = timeEntries
         .filter((e) => e.billable !== false)
         .reduce((sum, e) => sum + e.hours * e.rate, 0);
     const loggedHours = timeEntries.reduce((sum, e) => sum + e.hours, 0);
+    const client = project.client_id ? clients.find((c) => c.id === project.client_id) ?? null : null;
+    const locale = profile?.language || "en";
+    const hourlyRate = Number(profile?.hourly_rate);
 
     return (
         <div className="flex flex-col gap-4 animate-fadein">
             <div>
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col justify-between mb-2">
+                <div className="flex flex-wrap justify-between items-start gap-3">
+                    <div className="flex flex-col mb-2 min-w-0">
                         <Typography variant="pageTitle" as="h1">{project.title}</Typography>
-                        <Typography variant="subtitle" className="mb-0">{project.description}</Typography>
+                        {project.description && <Typography variant="subtitle" className="mb-0">{project.description}</Typography>}
                     </div>
                     <div className="flex gap-1">
-                        <Button size="icon-lg" variant="secondary" aria-label="Star">
-                            <StarIcon className="size-4" />
-                        </Button>
-                        <Button size="lg" variant="secondary" asChild>
+                        <Button variant="secondary" asChild>
                             <Link href={`/projects/${id}/edit`}>
-                                <PencilIcon className="size-3 mb-0.5" />
+                                <PencilIcon aria-hidden />
                                 Edit
                             </Link>
                         </Button>
                         <DeleteProjectButton
                             id={id}
-                            canDelete={invoiceCount === 0 && timeEntries.length === 0}
+                            canDelete={invoices.length === 0 && timeEntries.length === 0}
                             isArchived={project.status === "archived"}
                             deleteProject={handleDeleteProject}
                             archiveProject={handleArchiveProject}
@@ -91,42 +101,34 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         />
                     </div>
                 </div>
-                <div className="flex gap-4 items-center flex-wrap">
-                    <Badge variant="secondary">
-                        <span className="size-2 rounded-full bg-primary" aria-hidden />
-                        <Typography variant="badge" className="capitalize">{project.status.replace("_", " ")}</Typography>
-                    </Badge>
-                    <span className="text-muted-foreground">
-                        <Typography variant="labelUppercase" as="span">Progress:</Typography>{" "}
-                        <Typography variant="metadataStrong" as="span">{project.progress}%</Typography>
-                    </span>
-                    <span className="text-muted-foreground">
-                        <Typography variant="labelUppercase" as="span">Value:</Typography>{" "}
-                        <Typography variant="metadataStrong" as="span">{formatMoney(project.value, project.currency)}</Typography>
-                    </span>
+                <div className="flex gap-x-4 gap-y-2 items-center flex-wrap text-[14px]">
+                    <ProjectStatusBadge status={project.status as ProjectStatus} />
+                    {client ? (
+                        <Link href={`/clients/${client.id}`} className="text-foreground underline-offset-4 hover:underline">
+                            {clientLabel(client)}
+                        </Link>
+                    ) : (
+                        <span className="text-muted-foreground">No client</span>
+                    )}
                     {project.due_date && (
-                        <span className="text-muted-foreground">
-                            <Typography variant="labelUppercase" as="span">Due:</Typography>{" "}
-                            <Typography variant="metadataStrong" as="span">{formatDate(project.due_date, "MMM d, yyyy")}</Typography>
-                        </span>
+                        <span className="text-muted-foreground">Due {formatDate(project.due_date, "d MMM yyyy")}</span>
                     )}
                 </div>
             </div>
-            <Tabs defaultValue="overview" className="flex flex-col gap-4">
+            <Tabs key={initialTab} defaultValue={initialTab} className="flex flex-col gap-4">
                 <TabsList variant="line">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="tasks">Tasks</TabsTrigger>
                     <TabsTrigger value="time">Time</TabsTrigger>
-                    <TabsTrigger value="files">Files</TabsTrigger>
-                    <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                    <TabsTrigger value="notes">Notes</TabsTrigger>
+                    <TabsTrigger value="invoices">Invoices{invoices.length > 0 ? ` (${invoices.length})` : ""}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
                     <ProjectOverview
                         project={project}
-                        client={project.client_id ? clients.find((client) => client.id === project.client_id) ?? null : null}
+                        client={client}
+                        tasks={tasks}
                         sparklineData={sparklineData}
-                        unbilledAmount={unbilledAmount}
+                        unbilledAmount={unbilled}
                         spent={spent}
                         loggedHours={loggedHours}
                     />
@@ -140,66 +142,26 @@ async function Project({ params }: { params: Promise<{ id: string }> }) {
                         timeEntries={timeEntries}
                         tasks={tasks}
                         currency={project.currency}
-                        defaultHourlyRate={0}
+                        defaultHourlyRate={Number(project.hourly_rate) > 0 ? Number(project.hourly_rate) : Number.isFinite(hourlyRate) && hourlyRate > 0 ? hourlyRate : 0}
+                        invoiceCodes={Object.fromEntries(invoices.map((invoice) => [invoice.id, invoice.code]))}
                     />
                 </TabsContent>
-                <TabsContent value="files">
-                    <div className="flex flex-col items-center justify-center min-h-[240px] border border-dashed border-muted rounded-lg bg-muted/40 text-center p-6">
-                        <svg width="44" height="44" viewBox="0 0 24 24" className="mx-auto mb-3 text-muted-foreground opacity-70" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="5" width="18" height="14" rx="3" />
-                            <path d="M8 3v4M16 3v4" />
-                            <path d="M3 10h18" />
-                        </svg>
-                        <Typography variant="subtitle" className="mb-1">
-                            Files are coming soon!
-                        </Typography>
-                        <Typography variant="bodySmall" color="muted">
-                            File tracking for this project will be available in a future update.<br />
-                            Stay tuned for improvements.
-                        </Typography>
-                    </div>
-                </TabsContent>
                 <TabsContent value="invoices">
-                    <div className="flex flex-col items-center justify-center min-h-[240px] border border-dashed border-muted rounded-lg bg-muted/40 text-center p-6">
-                        <svg width="44" height="44" viewBox="0 0 24 24" className="mx-auto mb-3 text-muted-foreground opacity-70" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="5" width="18" height="14" rx="3" />
-                            <path d="M8 3v4M16 3v4" />
-                            <path d="M3 10h18" />
-                        </svg>
-                        <Typography variant="subtitle" className="mb-1">
-                            Project invoices are coming soon!
-                        </Typography>
-                        <Typography variant="bodySmall" color="muted">
-                            Invoice tracking for this project will be available in a future update.<br />
-                            Stay tuned for improvements.
-                        </Typography>
-                    </div>
-                </TabsContent>
-                <TabsContent value="notes">
-                    <div className="flex flex-col items-center justify-center min-h-[240px] border border-dashed border-muted rounded-lg bg-muted/40 text-center p-6">
-                        <svg width="44" height="44" viewBox="0 0 24 24" className="mx-auto mb-3 text-muted-foreground opacity-70" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="5" width="18" height="14" rx="3" />
-                            <path d="M8 3v4M16 3v4" />
-                            <path d="M3 10h18" />
-                        </svg>
-                        <Typography variant="subtitle" className="mb-1">
-                            Notes are coming soon!
-                        </Typography>
-                        <Typography variant="bodySmall" color="muted">
-                            Note tracking for this project will be available in a future update.<br />
-                            Stay tuned for improvements.
-                        </Typography>
-                    </div>
+                    <ProjectInvoices projectId={id} invoices={invoices} locale={locale} />
                 </TabsContent>
             </Tabs>
         </div >
     )
 }
 
-export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: ProjectSearchParams }) {
     return (
         <Suspense fallback={<ProjectDetailFallback />}>
-            <Project params={params} />
+            <Project params={params} searchParams={searchParams} />
         </Suspense>
     );
 } 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const project = await getProject((await params).id).catch(() => null);
+    return { title: project?.title ?? "Project", description: project?.description ?? undefined };
+}

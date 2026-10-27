@@ -35,7 +35,9 @@ import {
 import { Typography } from "@/components/ui/typography";
 import type { TimeEntry, Task } from "@/types";
 import { deleteTimeEntry } from "@/lib/actions/time-entries";
-import { ClockIcon, PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
+import { ClockIcon, PencilIcon, TrashIcon, PlusIcon, ReceiptIcon } from "lucide-react";
+import Link from "next/link";
+import { unbilledAmount } from "@/lib/helpers/time-entries";
 import { formatMoney, formatDate } from "@/lib/helpers/format";
 import { useActionWithRefresh } from "@/hooks/use-action-with-refresh";
 import { useEntityDialog } from "@/hooks/use-entity-dialog";
@@ -47,12 +49,15 @@ export function ProjectTime({
     tasks = [],
     currency,
     defaultHourlyRate = 0,
+    invoiceCodes = {},
 }: {
     projectId: string;
     timeEntries: TimeEntry[];
     tasks?: Task[];
     currency: string;
     defaultHourlyRate?: number;
+    /** Invoice code per invoice id, to show which invoice billed an entry. */
+    invoiceCodes?: Record<string, string>;
 }) {
     const {
         isAddOpen,
@@ -71,9 +76,7 @@ export function ProjectTime({
     const formProps = { projectId, tasks, currency, defaultHourlyRate };
 
     const totalHours = timeEntries.reduce((sum, e) => sum + e.hours, 0);
-    const unbilledAmount = timeEntries
-        .filter((e) => e.billable && !e.invoice_id)
-        .reduce((sum, e) => sum + e.hours * e.rate, 0);
+    const unbilled = unbilledAmount(timeEntries);
 
     async function handleDelete(id: string) {
         await run(async () => {
@@ -98,15 +101,24 @@ export function ProjectTime({
                         <CardDescription>
                             <Typography variant="body" color="muted" as="span">
                                 Log and manage time for this project. Total: {totalHours.toFixed(1)}h
-                                {unbilledAmount > 0 && (
-                                    <> · Unbilled: {formatMoney(unbilledAmount, currency)}</>
+                                {unbilled > 0 && (
+                                    <> · Unbilled: {formatMoney(unbilled, currency)}</>
                                 )}
                             </Typography>
                         </CardDescription>
                     </div>
+                    <div className="flex flex-wrap gap-2">
+                    {unbilled > 0 && (
+                        <Button variant="outline" asChild>
+                            <Link href={`/invoices/new?project=${projectId}&time=unbilled`}>
+                                <ReceiptIcon className="size-3.5" />
+                                Invoice unbilled time
+                            </Link>
+                        </Button>
+                    )}
                     <Dialog open={isAddOpen} onOpenChange={(open) => (open ? openAdd() : closeAdd())}>
                         <DialogTrigger asChild>
-                            <Button size="lg">
+                            <Button>
                                 <ClockIcon className="size-3.5" />
                                 Log time
                             </Button>
@@ -115,6 +127,7 @@ export function ProjectTime({
                             <TimeEntryForm {...formProps} onDone={closeAdd} />
                         </DialogContent>
                     </Dialog>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -142,8 +155,7 @@ export function ProjectTime({
                                     <TableHead className="text-right">Hours</TableHead>
                                     <TableHead className="text-right">Rate</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead>Billable</TableHead>
-                                    <TableHead>Approved</TableHead>
+                                    <TableHead>Billing</TableHead>
                                     <TableHead className="w-[80px] pr-4.5" />
                                 </TableRow>
                             </TableHeader>
@@ -164,17 +176,16 @@ export function ProjectTime({
                                             {formatMoney(entry.hours * entry.rate, currency)}
                                         </TableCell>
                                         <TableCell>
-                                            {entry.billable ? (
-                                                <Badge variant="secondary">Yes</Badge>
+                                            {entry.invoice_id ? (
+                                                <Link href={`/invoices/${entry.invoice_id}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                                    <Badge variant="success">
+                                                        {invoiceCodes[entry.invoice_id] ? `INV-${invoiceCodes[entry.invoice_id]}` : "Invoiced"}
+                                                    </Badge>
+                                                </Link>
+                                            ) : entry.billable ? (
+                                                <Badge variant="outline">Unbilled</Badge>
                                             ) : (
-                                                <Badge variant="secondary">No</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            {entry.approved ? (
-                                                <Badge variant="success">Yes</Badge>
-                                            ) : (
-                                                <Badge variant="secondary">No</Badge>
+                                                <Badge variant="secondary">Not billable</Badge>
                                             )}
                                         </TableCell>
                                         <TableCell className="pr-4.5">

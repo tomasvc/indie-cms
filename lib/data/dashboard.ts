@@ -5,6 +5,8 @@ export type DashboardCoreData = {
     invoices: Awaited<ReturnType<typeof fetchInvoices>>;
     clients: Awaited<ReturnType<typeof fetchClients>>;
     tasks: Awaited<ReturnType<typeof fetchTasks>>;
+    /** Billable time not yet on an invoice. */
+    unbilledTime: Awaited<ReturnType<typeof fetchUnbilledTime>>;
     portfolio: Awaited<ReturnType<typeof fetchPortfolio>> | null;
 };
 
@@ -12,7 +14,7 @@ async function fetchProjects(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("projects")
-        .select("id, title, status, progress, value, currency, due_date, client_id, created_at, updated_at")
+        .select("id, title, status, priority, progress, value, currency, due_date, client_id, billing_type, hourly_rate, created_at, updated_at")
         .eq("user_id", userId)
         .order("due_date", { ascending: true });
 
@@ -25,7 +27,7 @@ async function fetchInvoices(userId: string) {
 
     const { data, error } = await supabase
         .from("invoices")
-        .select("id, user_id, project_id, client_id, code, currency, subtotal, total, status, due_date, issue_date, paid_date, pdf_url, created_at, updated_at")
+        .select("id, user_id, project_id, client_id, code, currency, subtotal, total, status, due_date, issue_date, paid_date, sent_at, pdf_url, created_at, updated_at")
         .eq("user_id", userId)
         .order("issue_date", { ascending: false });
 
@@ -57,6 +59,19 @@ async function fetchTasks(userId: string) {
     return data ?? [];
 }
 
+async function fetchUnbilledTime(userId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("time_entries")
+        .select("id, project_id, hours, rate, entry_date")
+        .eq("user_id", userId)
+        .is("invoice_id", null)
+        .or("billable.is.null,billable.eq.true");
+
+    if (error) throw error;
+    return data ?? [];
+}
+
 async function fetchPortfolio(userId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -70,13 +85,14 @@ async function fetchPortfolio(userId: string) {
 }
 
 export async function getDashboardCoreData(userId: string) {
-    const [projects, invoices, clients, tasks, portfolio] = await Promise.all([
+    const [projects, invoices, clients, tasks, unbilledTime, portfolio] = await Promise.all([
         fetchProjects(userId),
         fetchInvoices(userId),
         fetchClients(userId),
         fetchTasks(userId),
+        fetchUnbilledTime(userId),
         fetchPortfolio(userId),
     ]);
 
-    return { projects, invoices, clients, tasks, portfolio };
+    return { projects, invoices, clients, tasks, unbilledTime, portfolio };
 }

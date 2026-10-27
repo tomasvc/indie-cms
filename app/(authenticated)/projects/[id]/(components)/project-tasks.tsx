@@ -36,6 +36,9 @@ import { PlusIcon, PencilIcon, TrashIcon, ListTodoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskForm } from "./task-form";
 
+const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "To do", in_progress: "In progress", done: "Done" };
+const TASK_STATUS_VARIANT = { todo: "outline", in_progress: "info", done: "success" } as const;
+
 function formatDueDate(dateStr: string | undefined | null): string {
     if (!dateStr) return "—";
     try {
@@ -61,10 +64,13 @@ export function ProjectTasks({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
 
-    const filteredTasks =
-        statusFilter === "all"
-            ? tasks
-            : tasks.filter((t) => t.status === statusFilter);
+    // Open work first, soonest due at the top; finished tasks sink to the bottom
+    const filteredTasks = (statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter))
+        .slice()
+        .sort((a, b) =>
+            Number(a.status === "done") - Number(b.status === "done") ||
+            (a.due_date || "9999").localeCompare(b.due_date || "9999")
+        );
 
     const todoCount = tasks.filter((t) => t.status === "todo").length;
     const inProgressCount = tasks.filter((t) => t.status === "in_progress").length;
@@ -114,7 +120,7 @@ export function ProjectTasks({
                     </div>
                     <Dialog open={addOpen} onOpenChange={setAddOpen}>
                         <DialogTrigger asChild>
-                            <Button size="lg">
+                            <Button>
                                 <PlusIcon className="size-3.5" />
                                 Add task
                             </Button>
@@ -189,7 +195,8 @@ export function ProjectTasks({
                                 key={task.id}
                                 className={cn(
                                     "flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors",
-                                    task.status === "done" && "opacity-75"
+                                    task.status === "done" && "opacity-75",
+                                    isTaskOverdue(task) && "border-destructive/40 bg-destructive/5"
                                 )}
                             >
                                 <Checkbox
@@ -224,21 +231,23 @@ export function ProjectTasks({
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge variant="outline" className="capitalize">
-                                        {task.status.replace("_", " ")}
+                                    <Badge variant={TASK_STATUS_VARIANT[task.status]}>
+                                        {TASK_STATUS_LABEL[task.status]}
                                     </Badge>
-                                    <Badge
-                                        variant={
-                                            task.priority === "high"
-                                                ? "destructive"
-                                                : task.priority === "low"
-                                                  ? "secondary"
-                                                  : "outline"
-                                        }
-                                    >
-                                        {task.priority}
-                                    </Badge>
-                                    <span className="text-muted-foreground text-xs whitespace-nowrap">
+                                    {task.status !== "done" && (
+                                        <Badge
+                                            variant={
+                                                task.priority === "high"
+                                                    ? "destructive"
+                                                    : task.priority === "low"
+                                                      ? "secondary"
+                                                      : "warning"
+                                            }
+                                        >
+                                            <span className="capitalize">{task.priority}</span>
+                                        </Badge>
+                                    )}
+                                    <span className={cn("text-[13px] whitespace-nowrap", isTaskOverdue(task) ? "text-destructive" : task.status === "done" ? "text-muted-foreground" : "text-foreground")}>
                                         Due {formatDueDate(task.due_date)}
                                     </span>
                                     {isTaskOverdue(task) && (

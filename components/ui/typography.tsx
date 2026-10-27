@@ -7,74 +7,75 @@ import { cn } from "@/lib/utils"
 
 /**
  * Design system typography variants.
- * Maps to Freelance OS type scale: Outfit (sans), Fraunces (serif), JetBrains Mono (mono).
+ * Freelance OS type scale: Geist (sans) for everything, Geist Mono for reference numbers only.
+ * Body text is 14px; nothing a user needs to read is smaller than 12px.
  */
 const typographyVariants = cva("", {
   variants: {
     variant: {
-      // ── Headings (serif) ──
+      // ── Headings ──
       pageTitle:
-        "font-serif text-[28px] font-bold leading-[1.2] tracking-[-0.3px] text-foreground",
+        "font-sans text-[26px] font-semibold leading-[1.2] tracking-[-0.4px] text-foreground",
       subtitle:
-        "font-sans text-[14px] font-medium text-muted-foreground mt-1",
+        "font-sans text-[15px] font-normal text-muted-foreground mt-1",
 
-      // ── Display / numbers (serif) ──
+      // ── Numbers ──
       kpiValue:
-        "font-sans text-[22px] font-semibold leading-[1.1] text-foreground",
+        "font-sans text-[26px] font-semibold leading-[1.15] tracking-[-0.3px] text-foreground tabular-nums",
       metricValue:
-        "font-sans text-[18px] font-semibold text-foreground",
+        "font-sans text-[20px] font-semibold text-foreground tabular-nums",
 
-      // ── Card / section ──
+      // ── Card / section (sentence case: uppercase micro-labels are slow to read) ──
       cardTitle:
-        "font-sans text-[11px] font-semibold uppercase tracking-[0.9px] text-card-foreground",
+        "font-sans text-[15px] font-semibold text-card-foreground",
       cardSectionTitle:
-        "font-sans text-[12px] font-medium text-card-foreground",
+        "font-sans text-[14px] font-semibold text-card-foreground",
       clientName:
-        "font-sans text-[14px] font-semibold text-foreground",
+        "font-sans text-[15px] font-semibold text-foreground",
 
-      // ── Body (sans) ──
+      // ── Body ──
       body:
-        "font-sans text-[13px] font-normal leading-relaxed text-foreground",
-      bodyLarge:
         "font-sans text-[14px] font-normal leading-relaxed text-foreground",
+      bodyLarge:
+        "font-sans text-[15px] font-normal leading-relaxed text-foreground",
       bodySmall:
-        "font-sans text-[12px] font-normal leading-relaxed text-foreground",
+        "font-sans text-[13px] font-normal leading-relaxed text-foreground",
 
       // ── UI labels ──
       button:
-        "font-sans text-[13px] font-medium text-foreground",
+        "font-sans text-[14px] font-medium text-foreground",
       label:
-        "font-sans text-[12px] font-medium text-foreground",
+        "font-sans text-[13px] font-medium text-foreground",
       labelSmall:
-        "font-sans text-[11px] font-medium text-foreground",
+        "font-sans text-[12px] font-medium text-foreground",
       labelUppercase:
-        "font-sans text-[11px] font-medium uppercase tracking-[0.8px] text-muted-foreground",
+        "font-sans text-[13px] font-medium text-muted-foreground",
       badge:
-        "font-sans text-[12px] font-medium tracking-[0.2px]",
+        "font-sans text-[12px] font-medium",
       badgeSmall:
-        "font-sans text-[11px] font-medium uppercase tracking-[0.6px] text-muted-foreground",
+        "font-sans text-[12px] font-medium text-muted-foreground",
 
-      // ── Metadata / dates (mono) ──
+      // ── Metadata / dates (sans: mono digits read slowly in running text) ──
       metadata:
-        "font-mono text-[11px] font-normal text-muted-foreground",
+        "font-sans text-[13px] font-normal text-muted-foreground tabular-nums",
       metadataMedium:
-        "font-mono text-[12px] font-medium text-muted-foreground",
+        "font-sans text-[13px] font-medium text-muted-foreground tabular-nums",
       metadataStrong:
-        "font-mono text-[12px] font-medium text-foreground",
+        "font-sans text-[13px] font-medium text-foreground tabular-nums",
 
-      // ── Inline / code ──
+      // ── Reference numbers (invoice codes) ──
       code:
-        "font-mono text-[12px] font-normal text-foreground",
+        "font-mono text-[13px] font-normal text-foreground",
       codeMuted:
-        "font-mono text-[11px] font-normal text-muted-foreground",
+        "font-mono text-[12px] font-normal text-muted-foreground",
 
-      // ── Overline / KPI label ──
+      // ── KPI label ──
       overline:
-        "font-sans text-[11px] font-medium uppercase tracking-[0.8px] text-muted-foreground",
+        "font-sans text-[13px] font-medium text-muted-foreground",
       kpiLabel:
-        "font-sans text-[11px] font-medium uppercase tracking-[0.8px] text-muted-foreground",
+        "font-sans text-[13px] font-medium text-muted-foreground",
       kpiSub:
-        "font-mono text-[11px] font-normal text-muted-foreground mt-0.5",
+        "font-sans text-[13px] font-normal text-muted-foreground mt-0.5",
 
       // ── Muted text (no size lock, for composition) ──
       muted:

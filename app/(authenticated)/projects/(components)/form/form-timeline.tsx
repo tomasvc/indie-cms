@@ -27,7 +27,7 @@ export const FormTimeline = () => {
             <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
                     <Field data-invalid={!!errors.startDate}>
-                        <FieldLabel htmlFor="project-start-date">START DATE</FieldLabel>
+                        <FieldLabel htmlFor="project-start-date">Start date</FieldLabel>
                         <Input
                             id="project-start-date"
                             type="date"
@@ -37,7 +37,7 @@ export const FormTimeline = () => {
                         <FieldError errors={[errors.startDate]} />
                     </Field>
                     <Field data-invalid={!!errors.dueDate}>
-                        <FieldLabel htmlFor="project-due-date">DUE DATE</FieldLabel>
+                        <FieldLabel htmlFor="project-due-date">Due date</FieldLabel>
                         <Input
                             id="project-due-date"
                             type="date"
@@ -48,7 +48,7 @@ export const FormTimeline = () => {
                     </Field>
                 </div>
                 <Field data-invalid={!!errors.completedDate}>
-                    <FieldLabel htmlFor="project-completed-date">COMPLETED DATE</FieldLabel>
+                    <FieldLabel htmlFor="project-completed-date">Completed date</FieldLabel>
                     <FieldDescription>Leave blank if the project is still in progress.</FieldDescription>
                     <Input
                         id="project-completed-date"
@@ -59,16 +59,16 @@ export const FormTimeline = () => {
                     <FieldError errors={[errors.completedDate]} />
                 </Field>
                 <Field>
-                    <FieldLabel>TIMELINE PREVIEW</FieldLabel>
+                    <FieldLabel>Timeline preview</FieldLabel>
                     <div className="rounded-md border border-border p-4">
                         {startDt && dueDt && (
                             <>
                                 <div className="relative h-8 flex items-center">
                                     <div className="flex-1 h-1.5 rounded-full bg-muted" />
-                                    <span className="absolute left-0 text-[10px] text-muted-foreground" style={{ left: 0 }}>
+                                    <span className="absolute left-0 text-[11px] text-muted-foreground" style={{ left: 0 }}>
                                         {formatDate(startDate, "MMM d")}
                                     </span>
-                                    <span className="absolute right-0 text-[10px] text-muted-foreground" style={{ right: 0 }}>
+                                    <span className="absolute right-0 text-[11px] text-muted-foreground" style={{ right: 0 }}>
                                         {formatDate(dueDate, "MMM d")}
                                     </span>
                                     <span
@@ -77,7 +77,7 @@ export const FormTimeline = () => {
                                         title="TODAY"
                                     />
                                 </div>
-                                <p className="text-muted-foreground text-xs mt-2">{daysRemaining} days remaining</p>
+                                <p className="text-muted-foreground text-[13px] mt-2">{daysRemaining} days remaining</p>
                             </>
                         )}
                     </div>

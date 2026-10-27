@@ -30,7 +30,7 @@ export function AuthMarketingPanel() {
 
         <div className="mb-8">
           <span
-            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border"
+            className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-medium border"
             style={{
               color: "var(--auth-accent)",
               borderColor: "var(--auth-badge-border)",
@@ -60,7 +60,7 @@ export function AuthMarketingPanel() {
               fontWeight: 300,
             }}
           >
-            Projects, clients, invoices, and financial health — all in one
+            Projects, clients, invoices and your numbers, in one
             clean workspace designed around how you actually work.
           </p>
         </div>
@@ -85,7 +85,7 @@ export function AuthMarketingPanel() {
                 </svg>
               ),
               title: "Client management",
-              desc: "Keep all your clients, contacts, and history organised.",
+              desc: "Each client's projects, invoices, and what they owe, in one place.",
             },
             {
               icon: (
@@ -94,7 +94,7 @@ export function AuthMarketingPanel() {
                 </svg>
               ),
               title: "Invoice generation",
-              desc: "Line-item invoices with live totals, sent in seconds.",
+              desc: "Turn logged time into invoices, then share a link or save a PDF.",
             },
             {
               icon: (
@@ -104,7 +104,7 @@ export function AuthMarketingPanel() {
                 </svg>
               ),
               title: "Financial health",
-              desc: "Profit margins, unbilled work, and revenue forecasts.",
+              desc: "Project margins, fees left to invoice, and payments due in the next 30 days.",
             },
           ].map((item) => (
             <li key={item.title} className="flex items-start gap-3">
@@ -125,7 +125,7 @@ export function AuthMarketingPanel() {
                   {item.title}
                 </p>
                 <p
-                  className="text-xs mt-0.5"
+                  className="text-[13px] mt-0.5"
                   style={{
                     color: "rgba(255,255,255,0.55)",
                     fontFamily: "var(--font-sans)",

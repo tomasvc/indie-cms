@@ -18,6 +18,9 @@ interface Project {
     value: number;
     budget: number;
     currency: string;
+    billing_type: 'fixed' | 'hourly';
+    /** Rate for hourly projects; time entries default to it. */
+    hourly_rate?: number | null;
     estimated_hours: number;
     actual_hours: number;
     profit_margin: number;
@@ -67,6 +70,10 @@ interface Invoice {
     due_date?: string;
     paid_date?: string | null;
     pdf_url?: string;
+    /** First time the invoice became sent. */
+    sent_at?: string | null;
+    /** Present while a read-only share link is active. */
+    share_token?: string | null;
     payment_method?: 'bank_transfer' | 'stripe' | 'paypal' | 'cash' | 'other';
     reminder_count?: number;
     notes?: string;
@@ -121,6 +128,8 @@ interface Profile {
     bio?: string | null;
     created_at: string;
     updated_at: string;
+    last_seen_at?: string | null;
+    previous_seen_at?: string | null;
     notification_preferences?: {
         email: boolean;
         invoice_reminders: boolean;
@@ -154,7 +163,7 @@ interface TimeEntry {
     id: string;
     project_id: string;
     user_id: string;
-    invoice_id?: string;
+    invoice_id?: string | null;
     task_id?: string;
     description?: string;
     hours: number;

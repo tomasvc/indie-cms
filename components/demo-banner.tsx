@@ -30,7 +30,7 @@ export function DismissableDemoBanner() {
                 "flex items-center justify-between gap-3"
             )}
         >
-            <p className="text-sm text-primary">
+            <p className="text-sm text-foreground">
                 This demo is yours for 24 hours. Anything you change stays in this browser until then.
             </p>
             <div className="flex items-center gap-1 shrink-0">

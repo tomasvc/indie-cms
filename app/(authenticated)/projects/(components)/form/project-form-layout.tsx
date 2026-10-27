@@ -48,6 +48,7 @@ type ProjectFormLayoutProps = {
     submitIcon: LucideIcon;
     businessCurrency: string;
     loggedHours?: number;
+    taskProgress?: { done: number; total: number } | null;
 };
 
 export function ProjectFormLayout({
@@ -64,6 +65,7 @@ export function ProjectFormLayout({
     submitIcon: SubmitIcon,
     businessCurrency,
     loggedHours = 0,
+    taskProgress = null,
 }: ProjectFormLayoutProps) {
     const [activeSection, setActiveSection] = useState<SectionId>("basics");
     const [isPending, startTransition] = useTransition();
@@ -114,7 +116,7 @@ export function ProjectFormLayout({
                         {title || fallbackTitle}
                     </Typography>
                 </div>
-                <Button size="lg" type="submit" form={FORM_ID} disabled={isPending}>
+                <Button type="submit" form={FORM_ID} disabled={isPending}>
                     {submitButtonContent}
                 </Button>
             </div>
@@ -178,7 +180,7 @@ export function ProjectFormLayout({
 
                         <div className="flex-1 overflow-auto p-6">
                             {activeSection === "basics" && <FormBasics />}
-                            {activeSection === "status" && <FormStatusProgress />}
+                            {activeSection === "status" && <FormStatusProgress taskProgress={taskProgress} />}
                             {activeSection === "financials" && <FormFinancials businessCurrency={businessCurrency} />}
                             {activeSection === "time" && <FormTime loggedHours={loggedHours} />}
                             {activeSection === "timeline" && <FormTimeline />}

@@ -64,7 +64,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "font-sans gap-1.5 rounded-[var(--radius)] border border-transparent px-4 py-2.5 text-[13px] font-medium group-data-vertical/tabs:py-[calc(--spacing(1.25))] [&_svg:not([class*='size-'])]:size-3.5 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-muted-foreground hover:text-foreground transition-colors duration-150 group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center whitespace-nowrap",
+        "font-sans gap-1.5 rounded-[var(--radius)] border border-transparent px-4 py-2.5 text-[14px] font-medium group-data-vertical/tabs:py-[calc(--spacing(1.25))] [&_svg:not([class*='size-'])]:size-3.5 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-muted-foreground hover:text-foreground transition-colors duration-150 group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center whitespace-nowrap",
         "group-data-[state=vertical]/tabs-list:bg-transparent group-data-[state=vertical]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[state=vertical]/tabs-list:data-[state=active]:border-transparent dark:group-data-[state=vertical]/tabs-list:data-[state=active]:bg-transparent",
         "data-[state=active]:bg-background dark:data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 data-[state=active]:text-foreground",
         "after:bg-foreground after:absolute after:opacity-0 after:transition-opacity after:h-px after:rounded-none after:content-['']",
@@ -89,7 +89,7 @@ function TabsContent({
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("font-sans text-[13px] leading-relaxed flex-1 outline-none", className)}
+      className={cn("font-sans text-[14px] leading-relaxed flex-1 outline-none", className)}
       {...props}
     />
   )

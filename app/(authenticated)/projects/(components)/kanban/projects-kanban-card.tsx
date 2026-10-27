@@ -9,9 +9,11 @@ import { formatMoney, formatDate } from "@/lib/helpers/format";
 
 export function KanbanCardContent({
   project,
+  clientName,
   onTitleClick,
 }: {
   project: Project;
+  clientName?: string;
   onTitleClick?: () => void;
 }) {
   return (
@@ -19,18 +21,19 @@ export function KanbanCardContent({
       <CardHeader className="pb-1">
         <CardTitle
           className={cn(
-            "text-xs font-medium leading-tight",
+            "text-[14px] font-medium normal-case tracking-normal leading-tight",
             onTitleClick && "cursor-pointer hover:underline"
           )}
           onClick={onTitleClick}
         >
           {project.title}
         </CardTitle>
+        <p className="truncate text-[13px] text-muted-foreground">{clientName ?? "No client"}</p>
       </CardHeader>
       <CardContent className="space-y-1.5 pt-0">
-        <div className="flex items-center justify-between text-muted-foreground text-xs">
-          <span>{formatMoney(project.value ?? 0, project.currency)}</span>
-          <span>Due {formatDate(project.due_date ?? "", "MMM d, yyyy")}</span>
+        <div className="flex items-center justify-between text-foreground text-[13px]">
+          <span className="tabular-nums">{formatMoney(project.value ?? 0, project.currency)}</span>
+          <span>{project.due_date ? `Due ${formatDate(project.due_date, "d MMM")}` : "No due date"}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -42,7 +45,7 @@ export function KanbanCardContent({
               style={{ width: `${Math.min(100, project.progress)}%` }}
             />
           </div>
-          <span className="shrink-0 text-muted-foreground text-[10px]">
+          <span className="shrink-0 text-muted-foreground text-[12px] tabular-nums">
             {project.progress}%
           </span>
         </div>
@@ -53,9 +56,10 @@ export function KanbanCardContent({
 
 interface KanbanCardProps {
   project: Project;
+  clientName?: string;
 }
 
-export function KanbanCard({ project }: KanbanCardProps) {
+export function KanbanCard({ project, clientName }: KanbanCardProps) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: project.id,
@@ -78,7 +82,7 @@ export function KanbanCard({ project }: KanbanCardProps) {
       {...attributes}
       {...listeners}
     >
-      <KanbanCardContent project={project} onTitleClick={() => router.push(`/projects/${project.id}`)} />
+      <KanbanCardContent project={project} clientName={clientName} onTitleClick={() => router.push(`/projects/${project.id}`)} />
     </Card>
   );
 }

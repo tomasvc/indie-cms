@@ -1,0 +1,83 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--fg:#09090b;--muted:#71717a;--line:#e4e4e7;--soft:#f4f4f5;--pri:#159570;--pri-soft:#e3f4ee;--amber:#d97706;--amber-soft:#fdf3e1;--red:#dc2626;--red-soft:#fdecec}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;font-family:Outfit,sans-serif;color:var(--fg);background:var(--soft);display:flex}
+.nav{width:232px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{font-weight:600;font-size:15px;padding:0 8px 18px}
+.nav a{font-size:13px;padding:8px;border-radius:8px;color:var(--muted)}.nav a.on{background:var(--soft);color:var(--fg);font-weight:500}
+main{flex:1;padding:28px 32px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;justify-content:space-between;align-items:flex-end}
+h1{font-family:Fraunces,serif;font-size:30px;font-weight:600;letter-spacing:-.02em}
+.sum{font-size:15px;color:var(--muted);margin-top:6px}.sum b{color:var(--fg);font-weight:500}.sum .r{color:var(--red)}
+.acts{display:flex;gap:8px}.btn{font-size:13px;font-weight:500;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#fff}.btn.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+.grid{flex:1;display:grid;grid-template-columns:3fr 2fr;gap:16px;min-height:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.ch h2{font-size:13px;font-weight:600}.ch span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 18px;border-bottom:1px solid var(--line)}
+th.n,td.n{text-align:right}
+td{padding:16px 18px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+.p{font-size:14px;font-weight:500}.c{font-size:12px;color:var(--muted);margin-top:2px}
+.twin{display:flex;flex-direction:column;gap:5px;width:170px}
+.bar{height:6px;border-radius:3px;background:var(--soft);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--pri)}
+.bar.t i{background:#a1a1aa}
+.bl{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.ok{background:var(--pri-soft);color:#0d6b50}.warn{background:var(--amber-soft);color:#92520a}.bad{background:var(--red-soft);color:#b91c1c}
+.rail{display:flex;flex-direction:column;gap:16px;min-height:0}
+.kp{display:grid;grid-template-columns:1fr 1fr}
+.kp div{padding:16px 18px}.kp div+div{border-left:1px solid var(--line)}
+.k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.v{font-family:Fraunces,serif;font-size:26px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+.s{font-size:12px;color:var(--muted);margin-top:2px}
+.inv{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px}
+.inv:last-child{border-bottom:0}
+.alert{padding:16px 18px;background:var(--amber-soft);border-top:1px solid #f5dfb5}
+.alert p{font-size:13px;color:#7a4508}.alert b{font-weight:600}
+</style></head><body>
+<nav class="nav"><div class="brand">Freelance OS</div>
+<a class="on">Dashboard</a><a>Projects</a><a>Clients</a><a>Invoices</a><a>Time &amp; Earnings</a><a>Settings</a></nav>
+<main>
+<header><div><h1>Dashboard</h1>
+<p class="sum"><b class="r">2 invoices overdue</b> · <b>€4,200 unbilled</b> · 1 project burning budget faster than it's progressing</p></div>
+<div class="acts"><span class="btn">Log time</span><span class="btn">New project</span><span class="btn p">New invoice</span></div></header>
+<div class="grid">
+<section class="card">
+<div class="ch"><h2>Project health</h2><span>Sorted by money at risk</span></div>
+<table><thead><tr><th>Project</th><th>Progress vs time</th><th class="n">Margin</th><th class="n">Unbilled</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td><p class="p">Brand identity</p><p class="c">Northwind Studio</p></td>
+<td><div class="twin"><div class="bar"><i style="width:40%"></i></div><div class="bar t"><i style="width:72%"></i></div><div class="bl"><span>40% done</span><span>72% of time</span></div></div></td>
+<td class="n mono">18%</td><td class="n mono">€1,850</td><td><span class="tag warn">Burning fast</span></td></tr>
+<tr><td><p class="p">Mobile app</p><p class="c">Brightline Health</p></td>
+<td><div class="twin"><div class="bar"><i style="width:35%"></i></div><div class="bar t"><i style="width:58%"></i></div><div class="bl"><span>35% done</span><span>58% of time</span></div></div></td>
+<td class="n mono">31%</td><td class="n mono">€900</td><td><span class="tag bad">Behind</span></td></tr>
+<tr><td><p class="p">Website redesign</p><p class="c">Acme Corp</p></td>
+<td><div class="twin"><div class="bar"><i style="width:68%"></i></div><div class="bar t"><i style="width:60%"></i></div><div class="bl"><span>68% done</span><span>60% of time</span></div></div></td>
+<td class="n mono">46%</td><td class="n mono">€1,200</td><td><span class="tag ok">On track</span></td></tr>
+<tr><td><p class="p">API integration</p><p class="c">Fernway Logistics</p></td>
+<td><div class="twin"><div class="bar"><i style="width:80%"></i></div><div class="bar t"><i style="width:70%"></i></div><div class="bl"><span>80% done</span><span>70% of time</span></div></div></td>
+<td class="n mono">52%</td><td class="n mono">€250</td><td><span class="tag ok">On track</span></td></tr>
+<tr><td><p class="p">Marketing site</p><p class="c">Acme Corp</p></td>
+<td><div class="twin"><div class="bar"><i style="width:15%"></i></div><div class="bar t"><i style="width:10%"></i></div><div class="bl"><span>15% done</span><span>10% of time</span></div></div></td>
+<td class="n mono">—</td><td class="n mono">€0</td><td><span class="tag ok">On track</span></td></tr>
+</tbody></table>
+</section>
+<aside class="rail">
+<section class="card kp"><div><p class="k">Revenue this month</p><p class="v">€8,400</p><p class="s">+12% vs September</p></div><div><p class="k">Awaiting payment</p><p class="v">€6,150</p><p class="s">4 invoices</p></div></section>
+<section class="card">
+<div class="ch"><h2>Unpaid invoices</h2><span>Oldest due first</span></div>
+<div class="inv"><span><b>Brightline Health</b> · <span class="mono">INV-0039</span></span><span class="mono">€1,500 <span class="tag bad">12 days late</span></span></div>
+<div class="inv"><span><b>Northwind Studio</b> · <span class="mono">INV-0040</span></span><span class="mono">€800 <span class="tag bad">3 days late</span></span></div>
+<div class="inv"><span><b>Acme Corp</b> · <span class="mono">INV-0042</span></span><span class="mono">€2,650 <span class="c">due 4 Nov</span></span></div>
+<div class="inv"><span><b>Fernway Logistics</b> · <span class="mono">INV-0043</span></span><span class="mono">€1,200 <span class="c">due 12 Nov</span></span></div>
+<div class="alert"><p><b>Acme Corp is 62% of your paid revenue.</b> Losing them would cut this month's income by more than half.</p></div>
+</section>
+</aside></div>
+</main></body></html>

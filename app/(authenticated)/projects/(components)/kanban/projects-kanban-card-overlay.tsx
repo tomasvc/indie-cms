@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Project } from "@/types";
 import { KanbanCardContent } from "./projects-kanban-card";
 
-export function KanbanCardOverlay({ project }: { project: Project }) {
+export function KanbanCardOverlay({ project, clientName }: { project: Project; clientName?: string }) {
   return (
     <Card size="sm" className="ring-2 ring-primary/20">
-      <KanbanCardContent project={project} />
+      <KanbanCardContent project={project} clientName={clientName} />
     </Card>
   );
 }

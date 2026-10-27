@@ -53,6 +53,7 @@ function invoiceWriteError(error: { code?: string; message?: string }, fallback:
     if (error.code === PG_ERROR.UNIQUE_VIOLATION) return DUPLICATE_CODE;
     if (error.code === "P0002") return NOT_FOUND;
     if (error.code === "55000") return { error: "Paid invoices can't be edited. Mark it as unpaid first." };
+    if (error.code === "P0003") return { error: "Some of this time has already been invoiced. Reload the page and try again." };
     return databaseError(error, fallback);
 }
 
@@ -62,11 +63,17 @@ export async function createInvoice(input: InvoiceFormValues): Promise<ActionSta
     if (parsed.data.status === "void") return { error: "A new invoice can't be void." };
 
     const { supabase } = await requireUser();
-    const { error } = await supabase.rpc("create_invoice", toInvoicePayload(parsed.data));
+    const { data: newId, error } = await supabase.rpc("create_invoice", {
+        ...toInvoicePayload(parsed.data),
+        p_time_entry_ids: parsed.data.timeEntryIds ?? [],
+    });
     if (error) return invoiceWriteError(error, "Couldn't create this invoice. Please try again.");
 
     revalidatePath("/invoices");
-    redirect("/invoices");
+    revalidatePath(`/projects/${parsed.data.projectId}`);
+    revalidatePath("/dashboard");
+    // Open the new invoice so it's clear it was created, with print and share one click away
+    redirect(`/invoices/${newId}`);
 }
 
 export async function updateInvoice(id: string, input: InvoiceFormValues): Promise<ActionState> {
@@ -84,7 +91,8 @@ export async function updateInvoice(id: string, input: InvoiceFormValues): Promi
     if (error) return invoiceWriteError(error, "Couldn't save this invoice. Please try again.");
 
     revalidatePath("/invoices");
-    redirect("/invoices");
+    revalidatePath(`/invoices/${parsedId.data}`);
+    redirect(`/invoices/${parsedId.data}`);
 }
 
 export async function markInvoicePaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -139,11 +147,79 @@ export async function deleteInvoice(_prev: ActionState, formData: FormData): Pro
         .eq("id", parsed.data.id)
         .eq("user_id", user.id);
 
-    if (error?.code === PG_ERROR.FOREIGN_KEY_VIOLATION) {
-        return { error: "This invoice has time entries linked to it, so it can't be deleted. Void it instead." };
-    }
+    // Time billed on this invoice goes back to "unbilled" (time_entries.invoice_id is ON DELETE SET NULL)
     if (error) return databaseError(error, "Couldn't delete this invoice. Please try again.");
 
     revalidatePath("/invoices");
+    revalidatePath("/dashboard");
+    return { ok: true };
+}
+
+export async function markInvoiceSent(_prev: ActionState, formData: FormData): Promise<ActionState> {
+    const parsed = invoiceIdSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) return NOT_FOUND;
+
+    const { supabase, user } = await requireUser();
+    // sent_at is stamped by the invoices_stamp_sent_at trigger
+    const { data, error } = await supabase
+        .from("invoices")
+        .update({ status: "sent" })
+        .eq("id", parsed.data.id)
+        .eq("user_id", user.id)
+        .eq("status", "draft")
+        .select("id");
+
+    if (error) return databaseError(error, "Couldn't mark this invoice as sent. Please try again.");
+    if (!data?.length) return { error: "Only draft invoices can be marked as sent." };
+
+    revalidatePath("/invoices");
+    revalidatePath(`/invoices/${parsed.data.id}`);
+    revalidatePath("/dashboard");
+    return { ok: true };
+}
+
+/** Returns the invoice's share token, creating one if it isn't shared yet. */
+export async function enableInvoiceSharing(invoiceId: string): Promise<ActionState & { token?: string }> {
+    const parsed = idSchema("Invoice").safeParse(invoiceId);
+    if (!parsed.success) return NOT_FOUND;
+
+    const { supabase, user } = await requireUser();
+    const { data: existing, error: readError } = await supabase
+        .from("invoices")
+        .select("share_token, status")
+        .eq("id", parsed.data)
+        .eq("user_id", user.id)
+        .maybeSingle();
+    if (readError) return databaseError(readError, "Couldn't create a share link. Please try again.");
+    if (!existing) return NOT_FOUND;
+    if (existing.status === "void") return { error: "Void invoices can't be shared." };
+    if (existing.share_token) return { ok: true, token: existing.share_token };
+
+    const token = crypto.randomUUID();
+    const { error } = await supabase
+        .from("invoices")
+        .update({ share_token: token })
+        .eq("id", parsed.data)
+        .eq("user_id", user.id);
+    if (error) return databaseError(error, "Couldn't create a share link. Please try again.");
+
+    revalidatePath(`/invoices/${parsed.data}`);
+    return { ok: true, token };
+}
+
+/** Turns the link off; anyone holding the old link sees "not found". */
+export async function disableInvoiceSharing(invoiceId: string): Promise<ActionState> {
+    const parsed = idSchema("Invoice").safeParse(invoiceId);
+    if (!parsed.success) return NOT_FOUND;
+
+    const { supabase, user } = await requireUser();
+    const { error } = await supabase
+        .from("invoices")
+        .update({ share_token: null })
+        .eq("id", parsed.data)
+        .eq("user_id", user.id);
+    if (error) return databaseError(error, "Couldn't turn off the share link. Please try again.");
+
+    revalidatePath(`/invoices/${parsed.data}`);
     return { ok: true };
 }

@@ -26,6 +26,7 @@ import {
     CheckCircleIcon,
 } from "lucide-react";
 import { DemoResetButton } from "@/components/demo-reset-button";
+import { AvatarUpload } from "./avatar-upload";
 
 type SettingsFormProps = {
     profile: Profile | null;
@@ -44,7 +45,7 @@ function useSavedFlash() {
 function SaveFeedback({ saved }: { saved: boolean }) {
     if (!saved) return null;
     return (
-        <span className="flex items-center gap-1.5 text-[13px] text-primary font-medium animate-fadein">
+        <span className="flex items-center gap-1.5 text-[14px] text-primary font-medium animate-fadein">
             <CheckCircleIcon className="size-4" />
             Saved
         </span>
@@ -158,13 +159,17 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                         <FieldError errors={[errors.address]} />
                     </Field>
                     <Field className="gap-1.5" data-invalid={!!errors.avatar_url}>
-                        <FieldLabel htmlFor="avatar_url">Avatar URL</FieldLabel>
-                        <Input
-                            id="avatar_url"
-                            type="url"
-                            {...register("avatar_url")}
-                            aria-invalid={!!errors.avatar_url}
-                            placeholder="https://example.com/avatar.jpg"
+                        <FieldLabel>Profile photo</FieldLabel>
+                        <Controller
+                            control={control}
+                            name="avatar_url"
+                            render={({ field }) => (
+                                <AvatarUpload
+                                    value={field.value ?? ""}
+                                    name={form.getValues("full_name")}
+                                    onChange={(url) => field.onChange(url)}
+                                />
+                            )}
                         />
                         <FieldError errors={[errors.avatar_url]} />
                     </Field>
@@ -187,7 +192,7 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                         <Field className="gap-1.5" data-invalid={!!errors.hourly_rate}>
                             <FieldLabel htmlFor="hourly_rate">Default hourly rate</FieldLabel>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[13px]">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[14px]">
                                     {currency}
                                 </span>
                                 <Input
@@ -236,7 +241,7 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
                             placeholder="e.g. GB123456789"
                         />
                         <FieldError errors={[errors.tax_id]} />
-                        <p className="text-[12px] text-muted-foreground">
+                        <p className="text-[13px] text-muted-foreground">
                             Displayed on invoices if provided.
                         </p>
                     </Field>
@@ -335,10 +340,10 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
                 <CardContent className="pt-5 flex flex-col divide-y">
                     <div className="flex items-start justify-between gap-4 pb-4">
                         <div className="flex flex-col gap-0.5">
-                            <Label htmlFor="email_notifications" className="text-[13px] font-medium cursor-pointer">
+                            <Label htmlFor="email_notifications" className="text-[14px] font-medium cursor-pointer">
                                 Email notifications
                             </Label>
-                            <p className="text-[12px] text-muted-foreground">
+                            <p className="text-[13px] text-muted-foreground">
                                 Receive important updates and alerts via email.
                             </p>
                         </div>
@@ -350,10 +355,10 @@ function NotificationsTab({ profile }: { profile: Profile | null }) {
                     </div>
                     <div className="flex items-start justify-between gap-4 pt-4">
                         <div className="flex flex-col gap-0.5">
-                            <Label htmlFor="invoice_reminders" className="text-[13px] font-medium cursor-pointer">
+                            <Label htmlFor="invoice_reminders" className="text-[14px] font-medium cursor-pointer">
                                 Invoice reminders
                             </Label>
-                            <p className="text-[12px] text-muted-foreground">
+                            <p className="text-[13px] text-muted-foreground">
                                 Send automatic reminders for overdue and upcoming invoices.
                             </p>
                         </div>
