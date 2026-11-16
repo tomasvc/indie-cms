@@ -9,19 +9,16 @@ void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 
 export type AuthShaderVariant = "ribbons" | "contours";
 
-// Uniforms and noise shared by both variants. Colours come from the theme tokens so the panel
-// follows light/dark mode.
 const COMMON = `
 precision highp float;
 uniform vec2 u_res;
 uniform float u_time;
-// Theme colours, read from the CSS tokens at runtime.
 uniform vec3 u_base;
 uniform vec3 u_c1;
 uniform vec3 u_c2;
 uniform vec3 u_c3;
-// 0 → 1 intro fade; 0 renders the plain panel background.
 uniform float u_fade;
+uniform float u_turbulence;
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -40,7 +37,6 @@ float noise(vec2 p) {
   );
 }
 
-// 4 octaves: smooth, broad shapes.
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
@@ -53,7 +49,6 @@ float fbm(vec2 p) {
   return v;
 }
 
-// 5 octaves: enough small-scale detail for convincing terrain.
 float fbm5(vec2 p) {
   float v = 0.0;
   float a = 0.5;
@@ -67,7 +62,6 @@ float fbm5(vec2 p) {
 }
 `;
 
-// Domain-warped FBM folded into luminous ribbons that drift diagonally.
 const RIBBONS = `
 vec3 palette(float x) {
   x = fract(x) * 3.0;
@@ -81,11 +75,9 @@ void main() {
   vec2 p = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
   float t = u_time * 0.04;
 
-  // Tilt so the ribbons sweep diagonally, then stretch along the flow for long silky folds.
   p = mat2(0.86, 0.5, -0.5, 0.86) * p;
   p.x *= 0.35;
 
-  // Two levels of domain warping on low-octave FBM keep the folds smooth.
   vec2 q = vec2(
     fbm(p * 1.2 + vec2(0.0, t)),
     fbm(p * 1.2 + vec2(3.1, 7.4) - t)
@@ -97,41 +89,35 @@ void main() {
 
   float y = p.y * 4.2 + q.x * 2.6 + r.y * 1.6;
 
-  // Broad ribbons, with fine strands running through them and a hot edge at each fold.
   float band = 0.5 + 0.5 * sin(y * 2.6);
   float body = pow(band, 1.6);
   float strands = 0.4 + 0.6 * pow(0.5 + 0.5 * sin(y * 16.0 + r.x * 6.0), 1.5);
   float edge = pow(band, 28.0);
 
-  // Large-scale mask leaves pockets of black between ribbon bundles.
   float mask = smoothstep(0.22, 0.58, fbm(p * 0.7 + q * 0.8 - t * 0.5));
 
   vec3 col = palette(y * 0.11 + q.y * 0.6 + t);
   vec3 c = col * body * strands * mask * 2.3;
   c += mix(col, vec3(1.0), 0.3) * edge * mask * 1.8;
 
-  // Subtle depth: dim toward the top-left corner.
   c *= 0.55 + 0.45 * smoothstep(0.0, 1.0, uv.x * 0.6 + (1.0 - uv.y) * 0.4 + 0.3);
 
   c = 1.0 - exp(-c * 1.6);
-  // Screen-blend the ribbons over the panel background.
   vec3 lit = 1.0 - (1.0 - u_base) * (1.0 - c);
   gl_FragColor = vec4(mix(u_base, lit, u_fade), 1.0);
 }
 `;
 
-// The same FBM read as a height map and drawn as topographic contour lines: thin minor lines,
-// a brighter index line every fifth level, and faint hillshading for depth. Drifts very slowly.
 const CONTOURS = `
 float height(vec2 p, float t) {
   vec2 q = vec2(
     fbm(p * 0.9 + vec2(0.0, t)),
     fbm(p * 0.9 + vec2(5.2, 1.3) - t)
   );
-  return fbm5(p * 0.75 + q * 1.3 + vec2(t * 0.6, -t * 0.3));
+  float h = fbm5(p * 0.75 + q * (1.3 + 2.2 * u_turbulence) + vec2(t * 0.6, -t * 0.3));
+  return h + u_turbulence * 0.18 * (fbm(p * 3.5 + q * 3.0 + t * 8.0) - 0.5);
 }
 
-// Anti-aliased line coverage for the iso-lines of v, about px pixels wide.
 float isoLine(float v, float px) {
   float d = abs(fract(v - 0.5) - 0.5);
 #ifdef HAS_DERIVATIVES
@@ -148,7 +134,7 @@ void main() {
   float t = u_time * 0.012;
 
   float h = height(p, t);
-  float levels = h * 40.0;
+  float levels = h * mix(40.0, 64.0, u_turbulence);
 
   float minor = isoLine(levels, 1.0);
   float major = isoLine(levels / 5.0, 1.6);
@@ -179,11 +165,8 @@ void main() {
 `;
 
 const FRAGMENTS: Record<AuthShaderVariant, string> = { ribbons: RIBBONS, contours: CONTOURS };
-
-// Theme tokens the shader is coloured with (see globals.css).
 const TOKENS = ["--auth-panel-bg", "--auth-accent-solid", "--primary", "--auth-accent"] as const;
 
-/** Resolves any CSS colour (hex, oklch, var chains) to 0–1 sRGB by painting it on a 1px canvas. */
 function readThemeColors(el: Element): [number, number, number][] {
   const styles = getComputedStyle(el);
   const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
@@ -211,38 +194,52 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   return shader;
 }
 
+export type AuthShaderControls = {
+  fade: number;
+  turbulence: number;
+};
+
 export function AuthShader({
   className,
   variant = "ribbons",
+  controls,
+  onReady,
 }: {
   className?: string;
   variant?: AuthShaderVariant;
+  controls?: React.RefObject<AuthShaderControls>;
+  onReady?: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const controlsRef = useRef(controls);
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    controlsRef.current = controls;
+    onReadyRef.current = onReady;
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const ready = () => onReadyRef.current?.();
     const gl = canvas.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" });
-    if (!gl) return; // CSS gradient behind the canvas stays visible.
+    if (!gl) return ready();
 
-    const vs = compile(gl, gl.VERTEX_SHADER, VERTEX);
-    // Derivatives give resolution-independent line widths and hillshading; nearly universal in WebGL1.
+    const vs = compile(gl, gl.VERTEX_SHADER, VERTEX); 
     const hasDerivatives = !!gl.getExtension("OES_standard_derivatives");
     const header = hasDerivatives
       ? "#extension GL_OES_standard_derivatives : enable\n#define HAS_DERIVATIVES\n"
       : "";
     const fs = compile(gl, gl.FRAGMENT_SHADER, header + COMMON + FRAGMENTS[variant]);
     const program = gl.createProgram();
-    if (!vs || !fs || !program) return;
+    if (!vs || !fs || !program) return ready();
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return ready();
     gl.useProgram(program);
 
-    // One oversized triangle covers the viewport.
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -253,6 +250,7 @@ export function AuthShader({
     const uRes = gl.getUniformLocation(program, "u_res");
     const uTime = gl.getUniformLocation(program, "u_time");
     const uFade = gl.getUniformLocation(program, "u_fade");
+    const uTurbulence = gl.getUniformLocation(program, "u_turbulence");
     const uColors = ["u_base", "u_c1", "u_c2", "u_c3"].map((n) => gl.getUniformLocation(program, n));
 
     const applyTheme = () => {
@@ -261,7 +259,6 @@ export function AuthShader({
     applyTheme();
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // FBM is fill-rate heavy; cap resolution since the effect is soft anyway.
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const resize = () => {
@@ -276,30 +273,25 @@ export function AuthShader({
 
     let raf = 0;
     let visible = true;
-    const start = performance.now();
-    // Start partway in so the first frame already looks developed.
-    const offset = 40;
-
-    // The intro fade runs in the shader, timed from the second rendered frame: the first draw
-    // is where the GPU finishes compiling, and that stall would otherwise eat the fade.
-    const FADE_MS = 400;
+    let shaderTime = 40;
+    let last = performance.now();
     let framesDrawn = 0;
-    let fadeStart = 0;
-    let fade = reduceMotion ? 1 : 0;
 
     const draw = (now: number) => {
       resize();
-      if (fade < 1) {
-        if (framesDrawn === 1) fadeStart = now;
-        const t = framesDrawn < 1 ? 0 : Math.min(1, (now - fadeStart) / FADE_MS);
-        fade = t * t * (3 - 2 * t); // smoothstep ease-in-out
-      }
+      const c = controlsRef.current?.current;
+      const fade = reduceMotion || !c ? 1 : c.fade;
+      const turbulence = reduceMotion || !c ? 0 : c.turbulence;
+      if (!reduceMotion) shaderTime += (Math.min(now - last, 100) / 1000) * (1 + turbulence * 10);
+      last = now;
+
       gl.uniform1f(uFade, fade);
+      gl.uniform1f(uTurbulence, turbulence);
       gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.uniform1f(uTime, offset + (reduceMotion ? 0 : (now - start) / 1000));
+      gl.uniform1f(uTime, shaderTime);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      // A cleared WebGL canvas is black; reveal it only once it shows the panel colour.
       if (framesDrawn === 0) canvas.style.visibility = "visible";
+      if (framesDrawn === (reduceMotion ? 0 : 1)) ready();
       framesDrawn++;
     };
 
@@ -330,7 +322,6 @@ export function AuthShader({
     });
     ro.observe(canvas);
 
-    // next-themes toggles a class on <html>; recolour when it does.
     const mo = new MutationObserver(() => {
       applyTheme();
       draw(performance.now());

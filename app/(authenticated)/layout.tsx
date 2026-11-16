@@ -30,11 +30,12 @@ export default function ProtectedLayout({
                             href="/dashboard"
                             className="flex items-center gap-2 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
                         >
-                            <div className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md shrink-0">
-                                <span className="text-[13px] font-semibold leading-none tracking-tight">OS</span>
+                            <div className="bg-[#128E28] dark:bg-[#57F57E] text-white dark:text-black grid size-7 place-items-center rounded-md shrink-0">
+                                <span className="text-[13px] font-bold leading-none tracking-tight">OS</span>
                             </div>
                             <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-                                Freelance OS
+                                <span className="text-foreground uppercase font-black tracking-wide">Freelance</span>
+                                <span className="text-[#128E28] dark:text-[#57F57E] font-black tracking-tighter ml-1">OS</span>
                             </span>
                         </Link>
                     </SidebarHeader>
