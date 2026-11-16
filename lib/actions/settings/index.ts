@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
 import { toNullable } from "@/lib/schemas/common";
@@ -45,7 +44,6 @@ export async function updateProfile(input: ProfileFormValues): Promise<ActionSta
         };
     }
     if (error) return databaseError(error, "Couldn't save your settings. Please try again.");
-    revalidatePath("/settings");
     return { ok: true };
 }
 
@@ -69,7 +67,6 @@ export async function updateNotificationPreferences(_prev: ActionState, formData
         .eq("id", user.id);
 
     if (error) return databaseError(error, "Couldn't save your preferences. Please try again.");
-    revalidatePath("/settings");
     return { ok: true };
 }
 

@@ -10,6 +10,7 @@ import { ProjectsKanban } from "./projects-kanban";
 import { ProjectsList } from "./projects-list";
 import { ProjectsTable } from "./projects-table";
 import { updateProjectStatus } from "@/lib/actions/projects";
+import { useServerAction } from "@/hooks/use-server-action";
 import { PROJECT_STATUS_LABEL, PROJECT_STATUS_ORDER, sortProjects } from "@/lib/helpers/projects";
 import { getStoredProjectsView, type ProjectsViewType } from "./projects-fallback";
 
@@ -47,9 +48,7 @@ export function ProjectsView({ projects, clientNames, locale }: ProjectsViewProp
         }
     }, []);
 
-    const handleStatusChange = useCallback(async (projectId: string, newStatus: string) => {
-        return updateProjectStatus(projectId, newStatus);
-    }, []);
+    const [handleStatusChange] = useServerAction(updateProjectStatus);
 
     const visibleProjects = useMemo(() => {
         const needle = query.trim().toLowerCase();

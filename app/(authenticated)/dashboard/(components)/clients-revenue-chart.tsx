@@ -13,13 +13,12 @@ const PIE_COLORS = [
   "var(--chart-5)",
 ];
 
-// Segment label colors, paired with PIE_COLORS: light text on the deeper hues, dark text on amber
 const LABEL_COLORS = [
-  "oklch(0.99 0.01 165)",
-  "oklch(0.99 0.01 165)",
-  "oklch(0.22 0.05 70)",
-  "oklch(0.99 0.01 165)",
-  "oklch(0.99 0.01 165)",
+  "var(--chart-1-foreground)",
+  "var(--chart-2-foreground)",
+  "var(--chart-3-foreground)",
+  "var(--chart-4-foreground)",
+  "var(--chart-5-foreground)",
 ];
 
 // Space reserved above the arc top for labels rendered inside segments

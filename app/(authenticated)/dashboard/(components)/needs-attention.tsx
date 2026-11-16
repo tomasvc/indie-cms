@@ -3,7 +3,7 @@ import { AlertTriangleIcon, CircleCheckIcon, ClockIcon, FileWarningIcon, ListTod
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { getClientRevenueBreakdown } from "@/lib/dashboard/financials";
 import { getOverdueTasks } from "@/lib/dashboard/workload";
 import { clientLabel } from "@/lib/helpers/clients";

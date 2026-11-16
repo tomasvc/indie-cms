@@ -1,7 +1,6 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
@@ -33,7 +32,6 @@ export async function handleCreateClient(_prev: ActionState, formData: FormData)
     });
 
     if (error) return databaseError(error, "Couldn't create this client. Please try again.");
-    revalidatePath('/clients');
     // Land on the new client so it's obvious the save worked
     redirect(`/clients/${id}`);
 }
@@ -63,8 +61,6 @@ export async function handleUpdateClient(_prev: ActionState, formData: FormData)
         .eq('user_id', user.id);
 
     if (error) return databaseError(error, "Couldn't save this client. Please try again.");
-    revalidatePath(`/clients/${id}`);
-    revalidatePath('/clients');
     return { ok: true };
 }
 
@@ -86,7 +82,6 @@ export async function handleDeleteClient(_prev: ActionState, formData: FormData)
         return { error: "This client has invoices or projects, so it can't be deleted. Archive it instead." };
     }
     if (error) return databaseError(error, "Couldn't delete this client. Please try again.");
-    revalidatePath('/clients');
     redirect('/clients');
 }
 
@@ -103,6 +98,5 @@ export async function handleArchiveClient(_prev: ActionState, formData: FormData
         .eq('user_id', user.id);
 
     if (error) return databaseError(error, "Couldn't archive this client. Please try again.");
-    revalidatePath('/clients');
     redirect('/clients');
 }

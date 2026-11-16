@@ -39,7 +39,7 @@ import { ClockIcon, PencilIcon, TrashIcon, PlusIcon, ReceiptIcon } from "lucide-
 import Link from "next/link";
 import { unbilledAmount } from "@/lib/helpers/time-entries";
 import { formatMoney, formatDate } from "@/lib/helpers/format";
-import { useActionWithRefresh } from "@/hooks/use-action-with-refresh";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useEntityDialog } from "@/hooks/use-entity-dialog";
 import { TimeEntryForm } from "./time-entry-form";
 
@@ -71,7 +71,7 @@ export function ProjectTime({
         closeDelete
     } = useEntityDialog<TimeEntry>();
 
-    const { run, isSubmitting } = useActionWithRefresh();
+    const [runDeleteTimeEntry, isSubmitting] = useServerAction(deleteTimeEntry);
 
     const formProps = { projectId, tasks, currency, defaultHourlyRate };
 
@@ -79,13 +79,11 @@ export function ProjectTime({
     const unbilled = unbilledAmount(timeEntries);
 
     async function handleDelete(id: string) {
-        await run(async () => {
-            const formData = new FormData();
-            formData.set("id", id);
-            formData.set("project_id", projectId);
-            await deleteTimeEntry(formData);
-            closeDelete();
-        })
+        const formData = new FormData();
+        formData.set("id", id);
+        formData.set("project_id", projectId);
+        await runDeleteTimeEntry(formData);
+        closeDelete();
     }
 
     return (

@@ -1,6 +1,5 @@
 "use server"
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
 import { id as idSchema } from "@/lib/schemas/common";
@@ -69,9 +68,6 @@ export async function createInvoice(input: InvoiceFormValues): Promise<ActionSta
     });
     if (error) return invoiceWriteError(error, "Couldn't create this invoice. Please try again.");
 
-    revalidatePath("/invoices");
-    revalidatePath(`/projects/${parsed.data.projectId}`);
-    revalidatePath("/dashboard");
     // Open the new invoice so it's clear it was created, with print and share one click away
     redirect(`/invoices/${newId}`);
 }
@@ -89,10 +85,7 @@ export async function updateInvoice(id: string, input: InvoiceFormValues): Promi
         ...toInvoicePayload(parsed.data),
     });
     if (error) return invoiceWriteError(error, "Couldn't save this invoice. Please try again.");
-
-    revalidatePath("/invoices");
-    revalidatePath(`/invoices/${parsedId.data}`);
-    redirect(`/invoices/${parsedId.data}`);
+    return { ok: true };
 }
 
 export async function markInvoicePaid(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -112,8 +105,6 @@ export async function markInvoicePaid(_prev: ActionState, formData: FormData): P
     if (error) return databaseError(error, "Couldn't record this payment. Please try again.");
     if (!data?.length) return { error: "Only draft or sent invoices can be marked as paid." };
 
-    revalidatePath("/invoices");
-    revalidatePath("/dashboard");
     return { ok: true };
 }
 
@@ -131,8 +122,6 @@ export async function markInvoiceUnpaid(_prev: ActionState, formData: FormData):
 
     if (error) return databaseError(error, "Couldn't update this invoice. Please try again.");
 
-    revalidatePath("/invoices");
-    revalidatePath("/dashboard");
     return { ok: true };
 }
 
@@ -150,8 +139,6 @@ export async function deleteInvoice(_prev: ActionState, formData: FormData): Pro
     // Time billed on this invoice goes back to "unbilled" (time_entries.invoice_id is ON DELETE SET NULL)
     if (error) return databaseError(error, "Couldn't delete this invoice. Please try again.");
 
-    revalidatePath("/invoices");
-    revalidatePath("/dashboard");
     return { ok: true };
 }
 
@@ -172,9 +159,6 @@ export async function markInvoiceSent(_prev: ActionState, formData: FormData): P
     if (error) return databaseError(error, "Couldn't mark this invoice as sent. Please try again.");
     if (!data?.length) return { error: "Only draft invoices can be marked as sent." };
 
-    revalidatePath("/invoices");
-    revalidatePath(`/invoices/${parsed.data.id}`);
-    revalidatePath("/dashboard");
     return { ok: true };
 }
 
@@ -203,7 +187,6 @@ export async function enableInvoiceSharing(invoiceId: string): Promise<ActionSta
         .eq("user_id", user.id);
     if (error) return databaseError(error, "Couldn't create a share link. Please try again.");
 
-    revalidatePath(`/invoices/${parsed.data}`);
     return { ok: true, token };
 }
 
@@ -220,6 +203,5 @@ export async function disableInvoiceSharing(invoiceId: string): Promise<ActionSt
         .eq("user_id", user.id);
     if (error) return databaseError(error, "Couldn't turn off the share link. Please try again.");
 
-    revalidatePath(`/invoices/${parsed.data}`);
     return { ok: true };
 }

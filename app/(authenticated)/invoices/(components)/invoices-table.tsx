@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import type { KeyboardEvent } from "react";
 import { useMemo, useState, useTransition } from "react";
 import { markInvoiceSent } from "@/lib/actions/invoices";
+import { useServerAction } from "@/hooks/use-server-action";
 import { BanknoteIcon, EllipsisIcon, FileTextIcon, SendIcon, PencilIcon, SearchIcon, TrashIcon, Undo2Icon, XIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
@@ -55,13 +56,14 @@ export function InvoicesTable({ invoices, clients, projects }: { invoices: Invoi
     const closeDialog = (open: boolean) => !open && setDialog(null);
     const [, startSending] = useTransition();
     const [sendError, setSendError] = useState<string | null>(null);
+    const [runMarkInvoiceSent] = useServerAction(markInvoiceSent);
 
     function markSent(invoice: Invoice) {
         setSendError(null);
         const formData = new FormData();
         formData.set("id", invoice.id);
         startSending(async () => {
-            const result = await markInvoiceSent({}, formData);
+            const result = await runMarkInvoiceSent({}, formData);
             if (result.error) setSendError(result.error);
         });
     }

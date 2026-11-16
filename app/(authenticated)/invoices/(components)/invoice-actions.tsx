@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { CheckIcon, LinkIcon, Link2OffIcon, SendIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFormAction } from "@/hooks/use-form-action";
+import { useServerAction } from "@/hooks/use-server-action";
 import { disableInvoiceSharing, enableInvoiceSharing, markInvoiceSent } from "@/lib/actions/invoices";
 import type { Invoice } from "@/types";
 import { RecordPaymentButton } from "./record-payment-button";
@@ -13,6 +14,8 @@ const shareUrl = (token: string) => `${window.location.origin}/share/invoice/${t
 /** Getting an invoice to the client and paid: mark as sent, share a read-only link, record payment. */
 export function InvoiceActions({ invoice }: { invoice: Invoice }) {
     const sent = useFormAction(markInvoiceSent);
+    const [runEnableSharing] = useServerAction(enableInvoiceSharing);
+    const [runDisableSharing] = useServerAction(disableInvoiceSharing);
     const [isSharing, startSharing] = useTransition();
     const [shareMessage, setShareMessage] = useState<string | null>(null);
     const [shareError, setShareError] = useState<string | null>(null);
@@ -21,7 +24,7 @@ export function InvoiceActions({ invoice }: { invoice: Invoice }) {
     function copyLink() {
         setShareError(null);
         startSharing(async () => {
-            const result = await enableInvoiceSharing(invoice.id);
+            const result = await runEnableSharing(invoice.id);
             if (!result.token) {
                 setShareError(result.error ?? "Couldn't create a share link.");
                 return;
@@ -39,7 +42,7 @@ export function InvoiceActions({ invoice }: { invoice: Invoice }) {
     function stopSharing() {
         setShareError(null);
         startSharing(async () => {
-            const result = await disableInvoiceSharing(invoice.id);
+            const result = await runDisableSharing(invoice.id);
             if (result.error) setShareError(result.error);
             else setShareMessage(null);
         });

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/ui/field";
 import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
 import { loginSchema } from "@/lib/schemas/auth";
+import { AuthHeading } from "@/components/auth-shell";
+import { Eye, EyeOff, CirclePlay } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -50,64 +52,44 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-8", className)} {...props}>
-      <div>
-        <h2
-          className="text-2xl font-semibold text-foreground font-sans tracking-tight"
-        >
-          Welcome back
-        </h2>
-        <p
-          className="mt-1 text-sm text-muted-foreground font-sans tracking-tight"
-        >
-          Sign in to your Freelance OS account
-        </p>
-      </div>
+      <AuthHeading
+        title="Welcome back"
+        description="Enter your email and password to access your account"
+      />
 
       <form onSubmit={handleLogin} noValidate className="flex flex-col gap-5">
-        <div className="grid gap-1.5">
-          <Label
-            htmlFor="email"
-            className="text-sm font-medium"
-          >
-            Email address
+        <div className="grid gap-2">
+          <Label htmlFor="email">
+            Email
           </Label>
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="Enter your email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-invalid={!!fieldErrors.email}
-            className="h-11"
           />
           <FieldError errors={errorsFor(fieldErrors, "email")} />
         </div>
 
-        <div className="grid gap-1.5">
-          <div className="flex items-center justify-between">
-            <Label
-              htmlFor="password"
-              className="text-sm font-medium"
-            >
-              Password
-            </Label>
-            <Link
-              href="/auth/forgot-password"
-              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="password">
+            Password
+          </Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               aria-invalid={!!fieldErrors.password}
-              className="h-11 pr-10"
+              className="pr-10"
             />
             <button
               type="button"
@@ -115,83 +97,41 @@ export function LoginForm({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
           <FieldError errors={errorsFor(fieldErrors, "password")} />
+          <div className="flex justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
-        {error && (
-          <p className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <Button
-          type="submit"
-          className="w-full h-11 text-sm font-medium"
-          disabled={isLoading}
-        >
-          {isLoading ? "Signing in…" : "Sign in"}
-        </Button>
-
-        <div className="relative flex items-center gap-3">
-          <div className="flex-1 border-t border-border" />
-          <span
-            className="text-[13px] text-muted-foreground"
-          >
-            or
-          </span>
-          <div className="flex-1 border-t border-border" />
-        </div>
-
-          <Button
-            onClick={() => startTransition(() => router.push("/auth/demo"))}
-            type="button"
-            variant="secondary"
-            className="w-full h-11"
-            disabled={isLoading || isPending}
-          >
-            {isPending ? "Starting demo..." :
-            <>
-              <span
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(0.92 0.05 163)", color: "oklch(0.45 0.13 163)" }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 8 16 12 12 16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </span>
-              Try the demo
-            </>
-            }
+        <div className="mt-2 flex flex-col gap-3">
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Signing in…" : "Sign in"}
           </Button>
-
-        <p
-          className="text-center text-sm text-muted-foreground"
-        >
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/auth/sign-up"
-            className="font-medium hover:underline underline-offset-4 transition-colors"
-            style={{ color: "var(--c-green, var(--primary))" }}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={isLoading || isPending}
+            onClick={() => startTransition(() => router.push("/auth/demo"))}
           >
-            Sign up free
-          </Link>
-        </p>
+            {isPending ? "Starting demo…" : (
+              <>
+                <CirclePlay className="text-primary" />
+                Try the demo
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );

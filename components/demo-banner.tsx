@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { XIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { DemoResetButton } from "@/components/demo-reset-button";
+import { userQuery } from "@/lib/queries/account";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "indie-cms-demo-banner-dismissed";
 
-export function DismissableDemoBanner() {
+export function DemoBanner() {
+    const { data: user } = useQuery(userQuery);
+    if (!user?.is_anonymous) return null;
+    return <DismissableDemoBanner />;
+}
+
+function DismissableDemoBanner() {
     const [isVisible, setIsVisible] = useState<boolean | null>(null);
 
     useEffect(() => {

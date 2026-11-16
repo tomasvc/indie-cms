@@ -1,6 +1,6 @@
 import { HistoryIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { getSinceLastVisit } from "@/lib/dashboard/since-last-visit";
 import { daysBetween, formatMoneyByCurrency, todayISO } from "@/lib/money";
 

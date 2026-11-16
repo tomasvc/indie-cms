@@ -1,5 +1,6 @@
 import { startTransition, useActionState } from "react";
 import { errorsFor, type ActionState } from "@/lib/forms/action-state";
+import { useServerAction } from "@/hooks/use-server-action";
 
 type FormAction = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -8,9 +9,10 @@ type FormAction = (prev: ActionState, formData: FormData) => Promise<ActionState
  * so React doesn't reset the inputs when the server returns validation errors.
  */
 export function useFormAction(action: FormAction, options: { onSuccess?: () => void } = {}) {
+    const [runAction] = useServerAction(action);
     const [state, dispatch, isPending] = useActionState<ActionState, FormData>(
         async (prev, formData) => {
-            const result = await action(prev, formData);
+            const result = await runAction(prev, formData);
             if (result.ok) options.onSuccess?.();
             return result;
         },

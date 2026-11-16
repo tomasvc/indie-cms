@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { RotateCcwIcon } from "lucide-react";
+import { useServerAction } from "@/hooks/use-server-action";
 import { Button } from "@/components/ui/button";
 import {
     AlertDialog,
@@ -25,21 +25,20 @@ export function DemoResetButton({
     size?: React.ComponentProps<typeof Button>["size"];
     label?: string;
 }) {
-    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const [runResetDemo] = useServerAction(resetDemo);
 
     function reset() {
         setError(null);
         startTransition(async () => {
-            const result = await resetDemo();
+            const result = await runResetDemo();
             if (result.error) {
                 setError(result.error);
                 return;
             }
             setOpen(false);
-            router.refresh();
         });
     }
 

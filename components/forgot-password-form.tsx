@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/ui/field";
 import { errorsFor, toFieldErrors, type FieldErrors } from "@/lib/forms/action-state";
 import { forgotPasswordSchema } from "@/lib/schemas/auth";
+import { AuthHeading } from "@/components/auth-shell";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -48,30 +49,13 @@ export function ForgotPasswordForm({
   if (success) {
     return (
       <div className={cn("flex flex-col gap-8", className)} {...props}>
-        <div>
-          <h2
-            className="text-2xl font-semibold text-foreground font-sans tracking-tight"
-          >
-            Check your email
-          </h2>
-          <p
-            className="mt-1 text-sm text-muted-foreground"
-            style={{ fontFamily: "var(--font-sans)", fontWeight: 300 }}
-          >
-            Password reset instructions sent
-          </p>
-        </div>
-        <p
-          className="text-sm text-muted-foreground leading-relaxed"
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          If you registered using your email and password, you will receive a
-          password reset email shortly.
-        </p>
+        <AuthHeading
+          title="Check your email"
+          description="If an account exists for that address, a password reset link is on its way."
+        />
         <Link
           href="/auth/login"
-          className="text-sm font-medium hover:underline underline-offset-4"
-          style={{ color: "var(--c-green, var(--primary))", fontFamily: "var(--font-sans)" }}
+          className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           ← Back to sign in
         </Link>
@@ -81,70 +65,46 @@ export function ForgotPasswordForm({
 
   return (
     <div className={cn("flex flex-col gap-8", className)} {...props}>
-      <div>
-        <h2
-          className="text-2xl font-semibold text-foreground font-sans tracking-tight"
-        >
-          Reset your password
-        </h2>
-        <p
-          className="mt-1 text-sm text-muted-foreground"
-          style={{ fontFamily: "var(--font-sans)", fontWeight: 300 }}
-        >
-          Enter your email and we&apos;ll send you a reset link
-        </p>
-      </div>
+      <AuthHeading
+        title="Reset your password"
+        description="Enter your email and we’ll send you a reset link"
+      />
 
       <form onSubmit={handleForgotPassword} noValidate className="flex flex-col gap-5">
         <div className="grid gap-1.5">
           <Label
             htmlFor="email"
             className="text-sm font-medium"
-            style={{ fontFamily: "var(--font-sans)" }}
+            
           >
             Email address
           </Label>
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="Enter your email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-invalid={!!fieldErrors.email}
-            className="h-11"
           />
           <FieldError errors={errorsFor(fieldErrors, "email")} />
         </div>
 
         {error && (
-          <p className="text-sm text-destructive" style={{ fontFamily: "var(--font-sans)" }}>
+          <p className="text-sm text-destructive" >
             {error}
           </p>
         )}
 
         <Button
           type="submit"
-          className="w-full h-11 text-sm font-medium"
+          className="w-full"
           disabled={isLoading}
-          style={{ fontFamily: "var(--font-sans)" }}
+          
         >
           {isLoading ? "Sending…" : "Send reset email"}
         </Button>
-
-        <p
-          className="text-center text-sm text-muted-foreground"
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          Remember your password?{" "}
-          <Link
-            href="/auth/login"
-            className="font-medium hover:underline underline-offset-4"
-            style={{ color: "var(--c-green, var(--primary))" }}
-          >
-            Sign in
-          </Link>
-        </p>
       </form>
     </div>
   );

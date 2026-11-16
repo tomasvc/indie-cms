@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { CircleAlertIcon, ClockIcon, UsersIcon, ChevronDownIcon, PercentIcon, InfoIcon, ChartPieIcon } from "lucide-react";
@@ -56,7 +56,7 @@ export function Financials({ data, profile }: FinancialsProps) {
 
     const chartConfig = {
         value: {
-            color: "var(--color-primary)",
+            color: "var(--chart-1)",
         },
     } satisfies ChartConfig;
 

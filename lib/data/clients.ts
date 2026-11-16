@@ -1,32 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
+/** Server-side lookup for page metadata; row level security limits it to the signed-in user's clients. */
 export async function getClient(id: string) {
     const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
-
     const { data, error } = await supabase
         .from("clients")
-        .select("*")
+        .select("name, company")
         .eq("id", id)
-        .eq("user_id", user.id)
         .maybeSingle();
-
-    if (error) throw error;
-    return data;
-}
-
-export async function getClients() {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
-
-    const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", user.id)
 
     if (error) throw error;
     return data;

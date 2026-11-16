@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArchiveIcon, TrashIcon } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { ActionState as ProjectActionState } from "@/lib/forms/action-state";
+import { useServerAction } from "@/hooks/use-server-action";
 
 type ProjectAction = (state: ProjectActionState, formData: FormData) => Promise<ProjectActionState>;
 
@@ -23,8 +24,10 @@ export function DeleteProjectButton({
     archiveProject: ProjectAction;
     iconOnly?: boolean;
 }) {
-    const [deleteState, deleteAction, isDeleting] = useActionState(deleteProject, {});
-    const [archiveState, archiveAction, isArchiving] = useActionState(archiveProject, {});
+    const [runDelete] = useServerAction(deleteProject);
+    const [runArchive] = useServerAction(archiveProject);
+    const [deleteState, deleteAction, isDeleting] = useActionState(runDelete, {});
+    const [archiveState, archiveAction, isArchiving] = useActionState(runArchive, {});
 
     if (!canDelete && isArchived) return null;
 

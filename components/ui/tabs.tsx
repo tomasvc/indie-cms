@@ -30,7 +30,7 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted",
+        default: "bg-foreground/[0.06]",
         line: "gap-6 bg-transparent border-b border-border",
       },
     },
@@ -66,7 +66,8 @@ function TabsTrigger({
       className={cn(
         "font-sans gap-1.5 rounded-[var(--radius)] border border-transparent px-4 py-2.5 text-[14px] font-medium group-data-vertical/tabs:py-[calc(--spacing(1.25))] [&_svg:not([class*='size-'])]:size-3.5 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-muted-foreground hover:text-foreground transition-colors duration-150 group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center whitespace-nowrap",
         "group-data-[state=vertical]/tabs-list:bg-transparent group-data-[state=vertical]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[state=vertical]/tabs-list:data-[state=active]:border-transparent dark:group-data-[state=vertical]/tabs-list:data-[state=active]:bg-transparent",
-        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 data-[state=active]:text-foreground",
+        "data-[state=active]:bg-card data-[state=active]:shadow-[var(--c-shadow)] data-[state=active]:text-foreground dark:data-[state=active]:bg-accent dark:data-[state=active]:border-border",
+        "group-data-[state=vertical]/tabs-list:data-[state=active]:shadow-none group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none",
         "after:bg-foreground after:absolute after:opacity-0 after:transition-opacity after:h-px after:rounded-none after:content-['']",
         "group-data-[state=horizontal]/tabs:after:left-0 group-data-[state=horizontal]/tabs:after:right-0 group-data-[state=horizontal]/tabs:after:bottom-0",
         "group-data-[state=vertical]/tabs:after:inset-y-0 group-data-[state=vertical]/tabs:after:-right-1 group-data-[state=vertical]/tabs:after:w-0.5",

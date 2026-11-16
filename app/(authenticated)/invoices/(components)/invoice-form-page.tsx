@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { Client, Project } from "@/types";
 import { createInvoice, updateInvoice } from "@/lib/actions/invoices";
-import type { InvoiceWithLineItems } from "@/lib/data/invoices";
+import type { InvoiceWithLineItems } from "@/lib/queries/invoices";
+import { useServerAction } from "@/hooks/use-server-action";
 import { applyServerErrors } from "@/lib/forms/apply-server-errors";
 import {
     INVOICE_CURRENCIES,
@@ -114,6 +116,9 @@ export function InvoiceFormPage({
     const isEdit = !!invoice;
     const defaultHourlyRate = defaults.hourlyRate ?? 0;
     const [isPending, startTransition] = useTransition();
+    const [runCreateInvoice] = useServerAction(createInvoice);
+    const [runUpdateInvoice] = useServerAction(updateInvoice);
+    const router = useRouter();
     const form = useForm<InvoiceFormValues>({
         resolver: zodResolver(invoiceCreateSchema),
         defaultValues: invoice
@@ -143,7 +148,9 @@ export function InvoiceFormPage({
 
     const onSubmit = form.handleSubmit((values) =>
         startTransition(async () => {
-            const result = invoice ? await updateInvoice(invoice.id, values) : await createInvoice(values);
+            const result = invoice ? await runUpdateInvoice(invoice.id, values) : await runCreateInvoice(values);
+            // Navigating after the mutation settles means the invoice page opens on the saved data
+            if (invoice && result.ok) router.push(`/invoices/${invoice.id}`);
             applyServerErrors(form.setError, result);
         })
     );

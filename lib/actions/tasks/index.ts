@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { TaskStatus } from "@/types";
 import { databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
@@ -27,7 +26,6 @@ export async function createTask(_prev: ActionState, formData: FormData): Promis
     });
 
     if (error) return databaseError(error, "Couldn't add this task. Please try again.");
-    revalidatePath(`/projects/${parsed.data.project_id}`);
     return { ok: true };
 }
 
@@ -40,14 +38,14 @@ export async function updateTask(_prev: ActionState, formData: FormData): Promis
     const { error } = await supabase
         .from("tasks")
         .update(values.status === "done" ? values : { ...values, completed_date: null })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("project_id", project_id);
     if (error) return databaseError(error, "Couldn't save this task. Please try again.");
 
     if (values.status === "done") {
         await supabase.from("tasks").update({ completed_date: today() }).eq("id", id).is("completed_date", null);
     }
 
-    revalidatePath(`/projects/${project_id}`);
     return { ok: true };
 }
 
@@ -63,7 +61,6 @@ export async function deleteTask(formData: FormData): Promise<ActionState> {
     const supabase = await createClient();
     const { error } = await supabase.from("tasks").delete().eq("id", parsed.data.id);
     if (error) return databaseError(error, "Couldn't delete this task. Please try again.");
-    revalidatePath(`/projects/${parsed.data.project_id}`);
     return { ok: true };
 }
 
@@ -81,6 +78,5 @@ export async function updateTaskStatus(taskId: string, projectId: string, status
         .update({ status: parsed.data.status, completed_date: parsed.data.status === "done" ? today() : null })
         .eq("id", parsed.data.taskId);
     if (error) return databaseError(error, "Couldn't update this task. Please try again.");
-    revalidatePath(`/projects/${parsed.data.projectId}`);
     return { ok: true };
 }

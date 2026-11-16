@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
-import { AuthMarketingPanel } from "@/components/auth-marketing-panel";
+import { AuthShell, AuthFooterLink } from "@/components/auth-shell";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 async function LoginPage({
@@ -27,16 +27,13 @@ export default function Page({
   searchParams: Promise<{ demo_error?: string }>;
 }) {
   return (
-    <div className="flex min-h-svh">
-      <AuthMarketingPanel />
-      <div className="flex flex-1 items-center justify-center bg-background px-6 py-12 lg:px-12">
-        <div className="w-full max-w-md">
-          <Suspense fallback={<LoginForm />}>
-            <LoginPage searchParams={searchParams} />
-          </Suspense>
-        </div>
-      </div>
-    </div>
+    <AuthShell
+      footer={<>Don&apos;t have an account? <AuthFooterLink href="/auth/sign-up">Sign up free</AuthFooterLink></>}
+    >
+      <Suspense fallback={<LoginForm />}>
+        <LoginPage searchParams={searchParams} />
+      </Suspense>
+    </AuthShell>
   );
 }
 

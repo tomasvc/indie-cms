@@ -1,4 +1,4 @@
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { invoiceTotal, isOutstanding, isRevenue } from "@/lib/helpers/invoices";
 import { currencyOf, sumByCurrency, todayISO, type MoneyByCurrency } from "@/lib/money";
 

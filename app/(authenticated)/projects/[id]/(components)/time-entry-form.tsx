@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export function TimeEntryForm({
     defaultHourlyRate,
     entry,
     onDone,
+    leadingFields,
 }: {
     projectId: string;
     tasks: Task[];
@@ -38,6 +40,8 @@ export function TimeEntryForm({
     defaultHourlyRate: number;
     entry?: TimeEntry;
     onDone: () => void;
+    /** Rendered above the entry fields, below the dialog header. */
+    leadingFields?: ReactNode;
 }) {
     const isEdit = !!entry;
     const { state, isPending, onSubmit, errors } = useFormAction(isEdit ? updateTimeEntry : createTimeEntry, {
@@ -58,6 +62,7 @@ export function TimeEntryForm({
                 </DialogDescription>
             </DialogHeader>
             <FieldGroup className="gap-4 py-4">
+                {leadingFields}
                 <Field data-invalid={!!errors("entry_date")}>
                     <FieldLabel htmlFor={`${idPrefix}-date`}>Entry date</FieldLabel>
                     <Input

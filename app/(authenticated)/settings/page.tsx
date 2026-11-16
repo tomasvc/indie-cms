@@ -2,27 +2,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
-import { Suspense } from "react";
-import { getProfile } from "@/lib/data/settings";
-import { createClient } from "@/lib/supabase/server";
-import { SettingsForm } from "./(components)/settings-form";
-import { Typography } from "@/components/ui/typography";
+import { SettingsPageContent } from "./(components)/settings-page-content";
 
-async function Settings() {
-    const [profile, supabase] = await Promise.all([getProfile(), createClient()]);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    return (
-        <div className="flex flex-col gap-6 max-w-2xl mx-auto animate-fadein">
-            <div>
-                <Typography variant="pageTitle" as="h1">Settings</Typography>
-                <Typography variant="subtitle" as="p" className="mt-1">
-                    Manage your account, billing preferences, and notifications.
-                </Typography>
-            </div>
-            <SettingsForm profile={profile} isDemo={Boolean(user?.is_anonymous)} />
-        </div>
-    );
+export default function SettingsPage() {
+    return <SettingsPageContent fallback={<SettingsFallback />} />;
 }
 
 function SettingsFallback() {
@@ -118,14 +101,6 @@ function SettingsFallback() {
                 </div>
             </Tabs>
         </div>
-    );
-}
-
-export default function SettingsPage() {
-    return (
-        <Suspense fallback={<SettingsFallback />}>
-            <Settings />
-        </Suspense>
     );
 }
 

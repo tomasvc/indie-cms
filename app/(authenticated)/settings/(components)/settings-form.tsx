@@ -16,6 +16,7 @@ import { Typography } from "@/components/ui/typography";
 import { updateProfile, updateNotificationPreferences, updatePassword } from "@/lib/actions/settings";
 import { applyServerErrors } from "@/lib/forms/apply-server-errors";
 import { useFormAction } from "@/hooks/use-form-action";
+import { useServerAction } from "@/hooks/use-server-action";
 import { CURRENCY_OPTIONS, LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/constants/profile";
 import { profileSchema, type ProfileFormValues } from "@/lib/schemas/settings";
 import type { Profile } from "@/types";
@@ -71,6 +72,7 @@ function toProfileValues(profile: Profile | null): ProfileFormValues {
 function ProfileTab({ profile }: { profile: Profile | null }) {
     const [isPending, startTransition] = useTransition();
     const [saved, flashSaved] = useSavedFlash();
+    const [runUpdateProfile] = useServerAction(updateProfile);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -81,7 +83,7 @@ function ProfileTab({ profile }: { profile: Profile | null }) {
 
     const onSubmit = form.handleSubmit((values) =>
         startTransition(async () => {
-            const result = await updateProfile(values);
+            const result = await runUpdateProfile(values);
             if (result.ok) {
                 form.reset(values);
                 flashSaved();

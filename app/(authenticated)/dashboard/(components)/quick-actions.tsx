@@ -3,6 +3,7 @@ import { Button } from "../../../../components/ui/button";
 import { Typography } from "../../../../components/ui/typography";
 import { FolderPlus, Receipt } from "lucide-react";
 import Link from "next/link";
+import { CreateProjectDialog } from "../../projects/(components)/create-project-dialog";
 
 export function QuickActions() {
     return (
@@ -22,15 +23,17 @@ export function QuickActions() {
                             </span>
                         </Link>
                     </Button>
-                    <Button variant="outline" className="w-full h-fit justify-start gap-3 px-3 py-2 hover:!bg-muted" asChild>
-                        <Link href="/projects/new">
-                            <FolderPlus />
-                            <span className="flex flex-col items-start">
-                                <Typography variant="label" as="span" className="text-left">New Project</Typography>
-                                <Typography variant="bodySmall" color="muted" as="span" className="text-left">Start a new project workspace</Typography>
-                            </span>
-                        </Link>
-                    </Button>
+                    <CreateProjectDialog
+                        trigger={
+                            <Button variant="outline" className="w-full h-fit justify-start gap-3 px-3 py-2 hover:!bg-muted">
+                                <FolderPlus />
+                                <span className="flex flex-col items-start">
+                                    <Typography variant="label" as="span" className="text-left">New Project</Typography>
+                                    <Typography variant="bodySmall" color="muted" as="span" className="text-left">Start a new project workspace</Typography>
+                                </span>
+                            </Button>
+                        }
+                    />
                 </div>
             </CardContent>
         </Card>

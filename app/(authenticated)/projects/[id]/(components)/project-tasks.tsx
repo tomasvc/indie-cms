@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { isTaskOverdue } from "@/lib/helpers/tasks";
-import { useRouter } from "next/navigation";
+import { useServerAction } from "@/hooks/use-server-action";
 import {
     Card,
     CardContent,
@@ -56,13 +56,13 @@ export function ProjectTasks({
     projectId: string;
     tasks: Task[];
 }) {
-    const router = useRouter();
     const [addOpen, setAddOpen] = useState(false);
     const [editTask, setEditTask] = useState<Task | null>(null);
     const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [runDeleteTask, isSubmitting] = useServerAction(deleteTask);
+    const [runUpdateTaskStatus] = useServerAction(updateTaskStatus);
 
     // Open work first, soonest due at the top; finished tasks sink to the bottom
     const filteredTasks = (statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter))
@@ -77,29 +77,22 @@ export function ProjectTasks({
     const doneCount = tasks.filter((t) => t.status === "done").length;
 
     async function handleDelete(id: string) {
-        setIsSubmitting(true);
         setActionError(null);
         const formData = new FormData();
         formData.set("id", id);
         formData.set("project_id", projectId);
-        const result = await deleteTask(formData);
-        setIsSubmitting(false);
+        const result = await runDeleteTask(formData);
         if (result.error) {
             setActionError(result.error);
             return;
         }
         setDeleteTaskId(null);
-        router.refresh();
     }
 
     async function handleStatusChange(task: Task, newStatus: TaskStatus) {
         setActionError(null);
-        const result = await updateTaskStatus(task.id, projectId, newStatus);
-        if (result.error) {
-            setActionError(result.error);
-            return;
-        }
-        router.refresh();
+        const result = await runUpdateTaskStatus(task.id, projectId, newStatus);
+        if (result.error) setActionError(result.error);
     }
 
     return (

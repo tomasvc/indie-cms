@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { getRecentActivity, type ActivityItem } from "@/lib/dashboard/recent-activity";
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { FileTextIcon, FolderKanbanIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { FlagOutlineIcon } from "./icons";

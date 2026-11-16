@@ -27,8 +27,27 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { profileQuery, userQuery } from "@/lib/queries/account";
 
-export function NavUser({
+export function NavUser() {
+    const { data: authUser } = useQuery(userQuery);
+    const { data: profile } = useQuery(profileQuery);
+    if (!authUser || profile === undefined) return null;
+
+    const demo = Boolean(authUser.is_anonymous);
+    const metadataName = typeof authUser.user_metadata?.full_name === "string" ? authUser.user_metadata.full_name : "";
+    const fullName = profile?.full_name || metadataName;
+
+    return (
+        <NavUserMenu
+            user={{ email: authUser.email ?? "", full_name: fullName || (demo ? "Alex Rivera" : ""), avatar_url: profile?.avatar_url ?? null }}
+            demo={demo}
+        />
+    );
+}
+
+function NavUserMenu({
     user,
     demo,
 }: {

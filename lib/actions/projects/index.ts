@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { PG_ERROR, databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
@@ -51,7 +50,6 @@ export async function handleCreateProject(input: ProjectFormValues): Promise<Act
     });
 
     if (error) return databaseError(error, "Couldn't create this project. Please try again.");
-    revalidatePath("/projects");
     redirect(`/projects/${id}`);
 }
 
@@ -79,8 +77,7 @@ export async function handleUpdateProject(id: string, input: ProjectFormValues):
         .eq("user_id", user.id);
 
     if (error) return databaseError(error, "Couldn't save your changes. Please try again.");
-    revalidatePath("/projects");
-    redirect(`/projects/${parsedId.data}`);
+    return { ok: true };
 }
 
 const projectIdFormSchema = z.object({ id: idSchema("Project") });
@@ -100,7 +97,6 @@ export async function handleDeleteProject(_prev: ActionState, formData: FormData
         return { error: "This project has invoices or time entries, so it can't be deleted. Archive it instead." };
     }
     if (error) return databaseError(error, "Couldn't delete this project. Please try again.");
-    revalidatePath("/projects");
     redirect("/projects");
 }
 
@@ -116,7 +112,6 @@ export async function handleArchiveProject(_prev: ActionState, formData: FormDat
         .eq("user_id", user.id);
 
     if (error) return databaseError(error, "Couldn't archive this project. Please try again.");
-    revalidatePath("/projects");
     redirect("/projects");
 }
 
@@ -136,6 +131,5 @@ export async function updateProjectStatus(projectId: string, status: string): Pr
         .eq("user_id", user.id);
 
     if (error) return databaseError(error, "Couldn't move this project. Please try again.");
-    revalidatePath("/projects");
     return { ok: true };
 }

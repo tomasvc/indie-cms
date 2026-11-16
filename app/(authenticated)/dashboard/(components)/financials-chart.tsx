@@ -9,7 +9,6 @@ type FinancialsChartProps = {
   chartConfig: ChartConfig;
 };
 
-const BAR_GRADIENT_ID = "repeat-business-bar-gradient";
 const MIN_BAR_HEIGHT_PX = 6;
 
 function BarShape(props: {
@@ -52,12 +51,6 @@ export function FinancialsChart({ chartData, chartConfig }: FinancialsChartProps
         margin={{ top: 28, right: 8, bottom: 8, left: 0 }}
         barCategoryGap={8}
       >
-        <defs>
-          <linearGradient id={BAR_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={1} />
-            <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0.9} />
-          </linearGradient>
-        </defs>
         <RechartsPrimitive.CartesianGrid strokeDasharray="3 3" vertical={false} />
         <RechartsPrimitive.XAxis dataKey="name" tickLine={false} axisLine={false} />
         <RechartsPrimitive.YAxis
@@ -81,8 +74,8 @@ export function FinancialsChart({ chartData, chartConfig }: FinancialsChartProps
               payload?: RepeatBusinessChartItem;
             };
             const entry = p.payload;
-            const fill = entry?.isOverall ? "color-mix(in oklch, var(--chart-1) 35%, transparent)" : `url(#${BAR_GRADIENT_ID})`;
-            const stroke = entry?.isOverall ? "var(--chart-3)" : undefined;
+            const fill = entry?.isOverall ? "color-mix(in oklch, var(--chart-1) 18%, transparent)" : "var(--chart-1)";
+            const stroke = entry?.isOverall ? "var(--chart-1)" : undefined;
             return (
               <BarShape
                 x={p.x}

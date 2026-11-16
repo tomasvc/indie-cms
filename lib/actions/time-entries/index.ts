@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { databaseError, validationError, type ActionState } from "@/lib/forms/action-state";
 import { toNullable } from "@/lib/schemas/common";
 import { timeEntryCreateSchema, timeEntryUpdateSchema } from "@/lib/schemas/time-entry";
@@ -23,8 +22,6 @@ export async function createTimeEntry(_prev: ActionState, formData: FormData): P
     });
 
     if (error) return databaseError(error, "Couldn't log this time. Please try again.");
-    revalidatePath(`/projects/${values.project_id}`);
-    revalidatePath("/dashboard");
     return { ok: true };
 }
 
@@ -40,16 +37,15 @@ export async function updateTimeEntry(_prev: ActionState, formData: FormData): P
     const { error } = await supabase.from("time_entries")
         .update({ ...values, description: toNullable(description) })
         .eq("id", id)
+        .eq("project_id", project_id)
         .eq("user_id", user.id);
 
     if (error) return databaseError(error, "Couldn't save this entry. Please try again.");
-    revalidatePath(`/projects/${project_id}`);
     return { ok: true };
 }
 
 export async function deleteTimeEntry(formData: FormData) {
     const id = formData.get("id") as string;
-    const project_id = formData.get("project_id") as string;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
@@ -60,5 +56,4 @@ export async function deleteTimeEntry(formData: FormData) {
         .maybeSingle();
 
     if (error) throw error;
-    revalidatePath(`/projects/${project_id}`);
 }

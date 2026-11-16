@@ -1,4 +1,4 @@
-import type { DashboardCoreData } from "@/lib/data/dashboard";
+import type { DashboardCoreData } from "@/lib/queries/dashboard";
 import { isOverdue } from "@/lib/helpers/invoices";
 import { addDaysISO, todayISO } from "@/lib/money";
 
